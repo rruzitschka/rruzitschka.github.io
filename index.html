@@ -1,95 +1,77 @@
+<!-- index.html - Landing Page -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang=\"en\">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SendLog – Your Climbing Companion</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      line-height: 1.6;
-      background: #f8f8f8;
-      color: #333;
-    }
-    header {
-      background: #000;
-      color: #fff;
-      text-align: center;
-    }
-    header img {
-      width: 100%;
-      max-height: 600px;
-      object-fit: cover;
-    }
-    main {
-      padding: 2rem;
-    }
-    section {
-      margin-bottom: 3rem;
-    }
-    h1, h2 {
-      color: #222;
-    }
-    ul {
-      padding-left: 1.2rem;
-    }
-    footer {
-      background: #222;
-      color: #fff;
-      text-align: center;
-      padding: 1.5rem;
-    }
-    a {
-      color: #1e90ff;
-    }
-  </style>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>SendLog - Climbing Notes App</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; }
+        header { background-color: #222; color: #fff; padding: 20px 0; text-align: center; }
+        section { padding: 20px; max-width: 800px; margin: auto; }
+        h2 { border-bottom: 2px solid #ccc; padding-bottom: 5px; }
+        .faq { margin-bottom: 15px; }
+        footer { background-color: #f8f8f8; padding: 10px; text-align: center; }
+        nav { margin-top: 10px; }
+        nav a { color: #fff; margin: 0 10px; text-decoration: none; }
+    </style>
 </head>
 <body>
+<header>
+    <h1>SendLog - Climbing Notes App</h1>
+    <nav>
+        <a href=\"#about\">About</a>
+        <a href=\"#features\">Features</a>
+        <a href=\"#faq\">Q&A</a>
+        <a href=\"policy.html\">Privacy Policy</a>
+    </nav>
+</header>
 
-  <header>
-    <img src="sendlogheaderpic.jpg" alt="Rock climbing header image">
-    <h1>SendLog – Your Climbing Companion</h1>
-  </header>
+<section>
+    <img src=\"sendlogheaderpic.jpg\" alt=\"Climbing Header Image\" style=\"width: 100%; height: auto;\">
 
-  <main>
-    <section id="overview">
-      <h2>What is SendLog?</h2>
-      <p>
-        <strong>SendLog</strong> is a simple, voice-powered app for rock climbers to record and remember their sends. Whether you’re at the crag or in the gym, just speak your notes and SendLog will take care of the rest. Over time, build a personal climbing log and gain insights through built-in statistics.
-      </p>
-    </section>
+    <h2 id=\"about\">What is SendLog?</h2>
+    <p>SendLog is an intuitive iOS app designed specifically for rock climbers to easily log, track, and analyze their climbing activities. Quickly record your climbing achievements, access detailed statistics, and keep personalized notes for each climb.</p>
 
-    <section id="features">
-      <h2>Key Features</h2>
-      <ul>
-        <li><strong>Voice Logging:</strong> Quickly record route notes using speech recognition.</li>
-        <li><strong>Route Details:</strong> Save route name, area, grade, personal comments, and star ratings.</li>
-        <li><strong>Organized Logbook:</strong> View and filter past sends by area to keep things tidy.</li>
-        <li><strong>Statistics:</strong> Track your climbing progress with stats like most climbed areas, average grades, and more.</li>
-        <li><strong>Export & Share:</strong> Export logs as CSV, or share your favorite sends as custom images.</li>
-        <li><strong>Customizable Settings:</strong> Choose your preferred speech recognition language and grade system.</li>
-      </ul>
-    </section>
+    <h2 id=\"features\">App Features</h2>
+    <ul>
+        <li>Log details for each climbing route: route name, area, date, grade, rating, send type, and notes.</li>
+        <li>Browse and filter your climbing logs easily.</li>
+        <li>Voice notes feature with multilingual speech recognition.</li>
+        <li>Export and import your climbing logs as CSV files.</li>
+        <li>Detailed statistics to track your climbing performance.</li>
+        <li>Intuitive, climber-friendly design.</li>
+    </ul>
 
-    <section id="faq">
-      <h2>FAQ</h2>
-      <h3>Is SendLog free to use?</h3>
-      <p>Yes, SendLog is completely free to download and use.</p>
-      
-      <h3>Does SendLog work offline?</h3>
-      <p>You can view and manage your logs offline. Voice recognition requires an internet connection.</p>
-      
-      <h3>Can I export my data?</h3>
-      <p>Yes! You can export all your send logs as a CSV file from the app’s Settings page.</p>
-    </section>
-  </main>
+    <h2 id=\"faq\">Frequently Asked Questions</h2>
+    <div class=\"faq\">
+        <strong>Q: Is my data secure?</strong>
+        <p>A: Yes, all your data is stored securely on your device and is never shared unless explicitly exported or shared by you.</p>
+    </div>
+    <div class=\"faq\">
+        <strong>Q: Can I change the grade system?</strong>
+        <p>A: Yes, you can select from French, UIAA, or YDS in the app settings.</p>
+    </div>
+    <div class=\"faq\">
+        <strong>Q: How do I backup my data?</strong>
+        <p>A: You can export your logs from Settings → Export SendLogs.</p>
+    </div>
+    <div class=\"faq\">
+        <strong>Q: Can I import my logs from another device?</strong>
+        <p>A: Yes, you can import data from a previously exported ZIP file through Settings → Import SendLogs.</p>
+    </div>
+    <div class=\"faq\">
+        <strong>Q: Is voice note recording available in multiple languages?</strong>
+        <p>A: Yes, the app supports voice notes in English, German, French, and Spanish.</p>
+    </div>
+    <div class=\"faq\">
+        <strong>Q: Does SendLog require an internet connection?</strong>
+        <p>A: No, SendLog works fully offline, ensuring your climbing data is always available.</p>
+    </div>
+</section>
 
-  <footer>
-    <p>&copy; 2025 SendLog</p>
-    <p><a href="/pages/policy.html">Privacy Policy</a></p>
-  </footer>
-
+<footer>
+    &copy; 2025 SendLog App
+</footer>
 </body>
 </html>
