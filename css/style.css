@@ -7,7 +7,7 @@
     --text-light: #f1f5f9;
     --border-color: #e2e8f0;
     --success-color: #22c55e;
-    --section-padding: 4rem 2rem;
+    --section-padding: 1.5rem 2rem;
 }
 
 * {
@@ -27,16 +27,16 @@ body {
 header { 
     background: linear-gradient(to right, var(--dark-bg), #2d3748);
     color: var(--text-light);
-    padding: 1rem 0;
+    padding: 0.3rem 0;
     text-align: center;
     position: relative;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
 .header-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 h1, h2, h3 {
@@ -47,15 +47,16 @@ h1, h2, h3 {
 
 h1 {
     font-size: 2.5rem;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.3rem;
+    padding: 0.5rem;
 }
 
 h2 {
     font-size: 1.8rem;
     color: var(--primary-color);
-    margin: 2rem 0 1.5rem;
-    padding-bottom: 0.5rem;
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.3rem;
     border-bottom: 2px solid var(--border-color);
     position: relative;
 }
@@ -94,7 +95,7 @@ p {
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 1rem;
+    padding: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -139,35 +140,35 @@ nav a:hover {
 
 .header-img {
     width: 100%;
-    max-height: 400px;
+    max-height: none;
     object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .intro {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 0.7rem 1rem;
     max-width: 800px;
     margin: 0 auto;
 }
 
 .intro p {
     font-size: 1.2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 0.7rem;
 }
 
 .feature-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-    margin: 2rem 0;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
 }
 
 .feature-card {
     background-color: white;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1.2rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
     border-top: 3px solid var(--primary-color);
@@ -181,19 +182,19 @@ nav a:hover {
 .feature-card h3 {
     color: var(--primary-color);
     font-size: 1.3rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.7rem;
 }
 
 .whats-new-list {
     background-color: white;
     border-radius: 8px;
-    padding: 2rem;
+    padding: 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin: 2rem 0;
+    margin: 1.5rem 0;
 }
 
 .whats-new-list li {
-    margin-bottom: 1rem;
+    margin-bottom: 0.7rem;
     padding-left: 1.5rem;
     position: relative;
 }
@@ -209,7 +210,7 @@ nav a:hover {
 .download { 
     display: block;
     text-align: center;
-    margin: 3rem 0;
+    margin: 2rem 0;
 }
 
 .download a { 
@@ -234,7 +235,7 @@ nav a:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
-    margin: 2rem 0;
+    margin: 1.5rem 0;
 }
 
 .screenshot-container {
@@ -323,8 +324,8 @@ nav a:hover {
 
 .faq-container {
     display: grid;
-    gap: 1.5rem;
-    margin: 2rem 0;
+    gap: 1rem;
+    margin: 1.5rem 0;
 }
 
 .faq { 
