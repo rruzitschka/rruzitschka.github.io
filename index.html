@@ -5,126 +5,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SendLog - Climbing Notes App</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; }
-        header { background-color: #222; color: #fff; padding: 20px 0; text-align: center; }
-        section { padding: 20px; max-width: 800px; margin: auto; }
-        h2 { border-bottom: 2px solid #ccc; padding-bottom: 5px; }
-        .faq { margin-bottom: 15px; }
-        footer { background-color: #f8f8f8; padding: 10px; text-align: center; }
-        nav { margin-top: 10px; }
-        nav a { color: #fff; margin: 0 10px; text-decoration: none; }
-        .download { display: block; text-align: center; margin: 20px 0; }
-        .download a { background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
-        .screenshots { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; overflow-x: auto; }
-        .screenshots img { width: 150px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; transition: transform 0.2s; }
-        .screenshots img:hover { transform: scale(1.05); }
-        .lightbox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .lightbox img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 4px;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header>
-    <img src="sendlogheaderpic.jpg" alt="Climbing Header Image" style="width: 100%; height: auto;">
-    <h1>SendLog - Climbing Notes App</h1>
+    <div class="header-content">
+        <img src="sendlogheaderpic.jpg" alt="Climbing Header Image" class="header-img">
+        <h1>SendLog - Climbing Notes App</h1>
+    </div>
+</header>
+
+<div class="nav-container">
     <nav>
         <a href="#about">About</a>
         <a href="#features">Features</a>
         <a href="#whats-new">What's New</a>
+        <a href="#screenshots">Screenshots</a>
         <a href="#faq">Q&A</a>
-        <a href="/pages/policy.html">Privacy Policy</a>
+        <a href="#about-me">About Me</a>
+        <a href="pages/policy.html">Privacy Policy</a>
     </nav>
-</header>
+</div>
 
 <section>
+    <div class="intro">
+        <h2 id="about">What is SendLog?</h2>
+        <p>SendLog is an intuitive iOS app designed specifically for rock climbers to easily log, track, and analyze their climbing activities. Quickly record your climbing achievements, access detailed statistics, and keep personalized notes for each climb. And even better, it is free!</p>
+    </div>
 
- <h2 id="about">What is SendLog?</h2>
-    <p>SendLog is an intuitive iOS app designed specifically for rock climbers to easily log, track, and analyze their climbing activities. Quickly record your climbing achievements, access detailed statistics, and keep personalized notes for each climb. And even better, it is free!</p>
-
+    <h2 id="screenshots">Screenshots</h2>
     <div class="screenshots">
-        <img src="/images/screenshot1_thumb.png" alt="Screenshot 1" onclick="showLightbox('/images/screenshot1.png')">
-        <img src="/images/screenshot2_thumb.png" alt="Screenshot 2" onclick="showLightbox('/images/screenshot2.png')">
-        <img src="/images/screenshot3_thumb.png" alt="Screenshot 3" onclick="showLightbox('/images/screenshot3.png')">
-        <img src="/images/screenshot4_thumb.png" alt="Screenshot 4" onclick="showLightbox('/images/screenshot4.png')">
-        <img src="/images/screenshot5_thumb.png" alt="Screenshot 5" onclick="showLightbox('/images/screenshot5.png')">
+        <div class="screenshot-container">
+            <img src="images/screenshot1_thumb.png" alt="Screenshot 1" onclick="showLightbox('images/screenshot1.png', 0)">
+        </div>
+        <div class="screenshot-container">
+            <img src="images/screenshot2_thumb.png" alt="Screenshot 2" onclick="showLightbox('images/screenshot2.png', 1)">
+        </div>
+        <div class="screenshot-container">
+            <img src="images/screenshot3_thumb.png" alt="Screenshot 3" onclick="showLightbox('images/screenshot3.png', 2)">
+        </div>
+        <div class="screenshot-container">
+            <img src="images/screenshot4_thumb.png" alt="Screenshot 4" onclick="showLightbox('images/screenshot4.png', 3)">
+        </div>
+        <div class="screenshot-container">
+            <img src="images/screenshot5_thumb.png" alt="Screenshot 5" onclick="showLightbox('images/screenshot5.png', 4)">
+        </div>
     </div>
 
     <div class="lightbox" id="lightbox" onclick="hideLightbox()">
+        <button class="lightbox-close" onclick="hideLightbox()">&times;</button>
+        <div class="lightbox-controls">
+            <button class="lightbox-btn" id="prev-btn" onclick="event.stopPropagation(); navigateLightbox(-1)">&lt;</button>
+            <button class="lightbox-btn" id="next-btn" onclick="event.stopPropagation(); navigateLightbox(1)">&gt;</button>
+        </div>
         <img id="lightbox-img" src="" alt="Enlarged Screenshot">
     </div>
     
     <h2 id="features">App Features</h2>
-    <ul>
-        <li><strong>Log Climbing Routes</strong>: Record detailed information for each climb including route name, climbing area, date, difficulty grade, personal rating (1-5 stars), send type (redpoint, pinkpoint, on sight), and personal notes.</li>
-        <li><strong>Project Tracking</strong>: Dedicated section to manage climbing projects, track attempts, record high points, add specific notes, update status (active, completed, abandoned), and convert projects into completed sends.</li>
-        <li><strong>Voice Notes</strong>: Conveniently record and transcribe climbing notes using multilingual speech recognition in English, German, French, and Spanish.</li>
-        <li><strong>Enhanced Sharing</strong>: Generate visually appealing climbing achievement cards with send type icons and improved layouts for easy sharing on social media.</li>
-        <li><strong>Comprehensive Statistics</strong>: Gain insights through detailed climbing statistics including total routes climbed, average rating, top climbing areas, and visual grade distribution charts.</li>
-        <li><strong>Data Import & Export</strong>: Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats.</li>
-        <li><strong>Tab-based Navigation</strong>: Easily switch between sections (SendLogs, Projects, Statistics, and Settings) using an intuitive tab-based interface.</li>
-        <li><strong>Appearance Customization</strong>: Toggle between light and dark mode or automatically match your device's system settings.</li>
-        <li><strong>Improved User Interface</strong>: Clear distinction between sends and projects ensures accurate tracking and better climbing progression insights.</li>
-    </ul>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>Log Climbing Routes</h3>
+            <p>Record detailed information for each climb including route name, climbing area, date, difficulty grade, personal rating (1-5 stars), send type (redpoint, pinkpoint, on sight), and personal notes.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Project Tracking</h3>
+            <p>Dedicated section to manage climbing projects, track attempts, record high points, add specific notes, update status (active, completed, abandoned), and convert projects into completed sends.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Voice Notes</h3>
+            <p>Conveniently record and transcribe climbing notes using multilingual speech recognition in English, German, French, and Spanish.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Enhanced Sharing</h3>
+            <p>Generate visually appealing climbing achievement cards with send type icons and improved layouts for easy sharing on social media.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Comprehensive Statistics</h3>
+            <p>Gain insights through detailed climbing statistics including total routes climbed, average rating, top climbing areas, and visual grade distribution charts.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Data Import & Export</h3>
+            <p>Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats.</p>
+        </div>
+    </div>
 
-    <h2 id="whats-new">What's New (May 2025, v.2.0)</h2>
-    <ul>
-        <li>Improved climbing project management with dedicated input flow.</li>
-        <li>Top grade calculation now excludes projects for accuracy.</li>
-        <li>Removed "project" as a send type from regular logs.</li>
-        <li>Tab-based navigation introduced for better structure.</li>
-        <li>Clearer UI separating projects from sends in views and stats.</li>
-    </ul>
+    <h2 id="whats-new">What's New (May 2025)</h2>
+    <div class="whats-new-list">
+        <ul>
+            <li>Improved project management with dedicated input flow</li>
+            <li>Top grade calculation now excludes projects for accuracy</li>
+            <li>Removed "project" as a send type from regular logs</li>
+            <li>Tab-based navigation introduced for better structure</li>
+            <li>Clearer UI separating projects from sends in views and stats</li>
+        </ul>
+    </div>
 
     <div class="download">
         <a href="https://apps.apple.com/at/app/sendlog/id6745050437">Download on the App Store</a>
     </div>
 
-  <h2 id="faq">Frequently Asked Questions</h2>
-    <div class="faq">
-        <strong>Q: Is my data secure?</strong>
-        <p>A: Yes, your data is stored locally and securely on your device. It is only shared externally when explicitly exported or shared by you.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: Can I track climbing projects separately from completed routes?</strong>
-        <p>A: Absolutely. SendLog has a dedicated Projects tab to clearly manage and track all your active, completed, or abandoned climbing projects. If a project is sent, it will become a regular SendLog but the project's history will stay available in the Projects tab.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: How do I backup and restore data?</strong>
-        <p>A: You can quickly export your logs as a ZIP file for backup and later restore this data using the import functionality, which supports both new and older file formats.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: Can I use voice notes in multiple languages?</strong>
-        <p>A: Yes, voice notes can be recorded and transcribed in English, German, French, and Spanish to accommodate diverse users.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: Does SendLog require internet connectivity?</strong>
-        <p>A: No, SendLog functions entirely offline, ensuring you always have access to your climbing logs and statistics even in remote locations.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: Is historical data from older versions supported?</strong>
-        <p>A: Yes, SendLog fully supports importing data from previous versions, ensuring continuity and preservation of your climbing history.</p>
-    </div>
-    <div class="faq">
-        <strong>Q: How is the top climbing grade determined?</strong>
-        <p>A: The app automatically calculates and displays your highest climbing grade based on successfully completed (sent) routes, providing a clear view of your climbing progression over time.</p>
+    <h2 id="faq">Frequently Asked Questions</h2>
+    <div class="faq-container">
+        <div class="faq">
+            <strong>Q: Is my data secure?</strong>
+            <p>A: Yes, your data is stored locally and securely on your device. It is only shared externally when explicitly exported or shared by you.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Can I track climbing projects separately from completed routes?</strong>
+            <p>A: Absolutely. SendLog has a dedicated Projects tab to clearly manage and track all your active, completed, or abandoned climbing projects.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: How do I backup and restore data?</strong>
+            <p>A: You can quickly export your logs as a ZIP file for backup and later restore this data using the import functionality, which supports both new and older file formats.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Can I use voice notes in multiple languages?</strong>
+            <p>A: Yes, voice notes can be recorded and transcribed in English, German, French, and Spanish to accommodate diverse users.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Does SendLog require internet connectivity?</strong>
+            <p>A: No, SendLog functions entirely offline, ensuring you always have access to your climbing logs and statistics even in remote locations.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Is historical data from older versions supported?</strong>
+            <p>A: Yes, SendLog fully supports importing data from previous versions, ensuring continuity and preservation of your climbing history.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: How is the top climbing grade determined?</strong>
+            <p>A: The app automatically calculates and displays your highest climbing grade based on successfully completed (sent) routes, providing a clear view of your climbing progression over time.</p>
+        </div>
     </div>
 
-    <h2 id="about-me">About Me</h2>
-    <p>Hi! I'm Robert, the developer behind SendLog. I created this app as a passionate climber who wanted a simple yet powerful way to track climbing progress. I'm constantly working to improve the app based on user feedback and my own climbing experiences.</p>
-    <p>Have suggestions or feature requests? Reach out to me on Bluesky: <a href="https://bsky.app/profile/ruzitschka.at">@ruzitschka.at</a></p>
+    <div class="about-me" id="about-me">
+        <h2>About Me</h2>
+        <p>Hi! I'm Robert, the developer behind SendLog. I created this app as a passionate climber who wanted a simple yet powerful way to track climbing progress. I'm constantly working to improve the app based on user feedback and my own climbing experiences.</p>
+        <p>Have suggestions or feature requests? Reach out to me on Bluesky: <a href="https://bsky.app/profile/ruzitschka.at">@ruzitschka.at</a></p>
+    </div>
 </section>
 
 <footer>
@@ -132,16 +151,65 @@
 </footer>
 
 <script>
-    function showLightbox(src) {
+    const screenshots = [
+        'images/screenshot1.png',
+        'images/screenshot2.png',
+        'images/screenshot3.png',
+        'images/screenshot4.png',
+        'images/screenshot5.png'
+    ];
+    
+    let currentIndex = 0;
+    
+    function showLightbox(src, index) {
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightbox-img');
+        currentIndex = index;
         lightboxImg.src = src;
         lightbox.style.display = 'flex';
+        event.stopPropagation();
     }
 
     function hideLightbox() {
         document.getElementById('lightbox').style.display = 'none';
     }
+    
+    function navigateLightbox(direction) {
+        currentIndex = (currentIndex + direction + screenshots.length) % screenshots.length;
+        document.getElementById('lightbox-img').src = screenshots[currentIndex];
+    }
+    
+    // Close lightbox when pressing Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            hideLightbox();
+        } else if (event.key === 'ArrowRight') {
+            navigateLightbox(1);
+        } else if (event.key === 'ArrowLeft') {
+            navigateLightbox(-1);
+        }
+    });
+    
+    // Highlight current section in navigation
+    const sections = document.querySelectorAll('section h2');
+    const navLinks = document.querySelectorAll('nav a');
+    
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            if (scrollY >= sectionTop) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
 </script>
     
 </body>
