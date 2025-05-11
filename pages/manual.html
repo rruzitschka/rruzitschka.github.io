@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Manual - SendLog Climbing Notes App</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .user-manual {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .user-manual h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .user-manual h2 {
+            margin-top: 2.5rem;
+        }
+        
+        .user-manual h3 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .toc ol {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .back-to-home {
+            text-align: center;
+            margin: 3rem 0 1rem;
+        }
+        
+        .back-to-home a {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-home a:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .last-updated {
+            text-align: right;
+            font-style: italic;
+            color: #666;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <h1>SendLog - User Manual</h1>
+    </div>
+</header>
+
+<div class="nav-container">
+    <nav>
+        <a href="../index.html">Home</a>
+        <a href="../index.html#about">About</a>
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#screenshots">Screenshots</a>
+        <a href="../index.html#faq">Q&A</a>
+        <a href="../index.html#about-me">About Me</a>
+        <a href="policy.html">Privacy Policy</a>
+    </nav>
+</div>
+
+<div class="user-manual">
+    <div class="section">
+        <h1 id="top">SendLog - Climbing Notes User Manual</h1>
+        <p class="version-info" style="text-align: center; margin-bottom: 1.5rem; font-weight: 500; color: var(--accent-color);">Version 3.0</p>
+        
+        <div class="toc">
+            <h2>Table of Contents</h2>
+            <ol>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#main-features">Main Features</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#logging-climbs">Logging Climbs</a></li>
+                <li><a href="#project-tracking">Project Tracking</a></li>
+                <li><a href="#route-types">Route Types</a></li>
+                <li><a href="#statistics-and-progress-analysis">Statistics and Progress Analysis</a></li>
+                <li><a href="#voice-notes">Voice Notes</a></li>
+                <li><a href="#sharing-your-achievements">Sharing Your Achievements</a></li>
+                <li><a href="#data-management">Data Management</a></li>
+                <li><a href="#settings-and-preferences">Settings and Preferences</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="section" id="introduction">
+        <h2>Introduction</h2>
+        <p>SendLog (ClimbingNotes) is an iOS app designed specifically for climbers to log, track, and analyze their climbing achievements. Whether you're documenting sent routes, working on projects, or tracking your progress over time, SendLog provides all the tools you need to enhance your climbing journey.</p>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="main-features">
+        <h2>Main Features</h2>
+        <ol>
+            <li><strong>Climbing Log Management</strong>: Record details of routes you've successfully climbed</li>
+            <li><strong>Project Tracking</strong>: Track progress on routes you're working on</li>
+            <li><strong>Statistics and Analytics</strong>: Visualize your climbing progress and achievements</li>
+            <li><strong>Voice Notes</strong>: Use speech recognition to easily record notes about your climbs</li>
+            <li><strong>Sharing Features</strong>: Generate custom cards to share your achievements</li>
+            <li><strong>Grade System Support</strong>: Choose between multiple grade systems (French, UIAA, YDS)</li>
+            <li><strong>Data Import/Export</strong>: Back up and transfer your climbing data</li>
+            <li><strong>Personalized Settings</strong>: Customize the app to your preferences</li>
+            <li><strong>Climbing Days Tracking</strong>: Monitor and visualize your climbing frequency across different time periods</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="getting-started">
+        <h2>Getting Started</h2>
+        
+        <h3>Interface Overview</h3>
+        <ol>
+            <li>When you first open SendLog, you'll land on the main tab interface</li>
+            <li>The app consists of four main tabs:
+                <ul>
+                    <li>SendLogs: View your completed climbs</li>
+                    <li>Projects: Track routes you're working on</li>
+                    <li>Statistics: Analyze your climbing data</li>
+                    <li>Settings: Customize your preferences</li>
+                </ul>
+            </li>
+            <li>To start logging your climbing achievements, navigate to the SendLogs tab and tap the "+" button</li>
+        </ol>
+
+        <h3>Creating Your First Entry</h3>
+        <ol>
+            <li>Tap the "Create New SendLog" button to record your first climb</li>
+            <li>Fill in the details about your route:
+                <ul>
+                    <li>Climbing area and crag</li>
+                    <li>Route name</li>
+                    <li>Difficulty grade (based on your chosen grade system)</li>
+                    <li>Send type (onsight, flash, redpoint, etc.)</li>
+                    <li>Personal rating</li>
+                    <li>Notes</li>
+                </ul>
+            </li>
+            <li>Save your entry to add it to your climbing log</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="logging-climbs">
+        <h2>Logging Climbs</h2>
+        
+        <h3>Recording a Send</h3>
+        <ol>
+            <li>From the SendLogs tab, tap the "+" button to create a new entry</li>
+            <li>Fill in the route details:
+                <ul>
+                    <li><strong>Area</strong>: The general climbing location (e.g., "Yosemite")</li>
+                    <li><strong>Crag</strong>: The specific wall or sector (e.g., "El Capitan")</li>
+                    <li><strong>Route</strong>: The name of the climb</li>
+                    <li><strong>Grade</strong>: Select the difficulty from the grade picker</li>
+                    <li><strong>Send Type</strong>: Choose how you completed the route (onsight, flash, redpoint, etc.)</li>
+                    <li><strong>Route Type</strong>: Select the type of route (Sport, Boulder, or Multi-Pitch)</li>
+                    <li><strong>Rating</strong>: Your personal rating of the route (1-5 stars)</li>
+                    <li><strong>Date</strong>: When you completed the climb</li>
+                    <li><strong>Notes</strong>: Any additional information you want to remember</li>
+                </ul>
+            </li>
+            <li>Tap "Save" to add the climb to your log</li>
+        </ol>
+
+        <h3>Viewing and Editing Logs</h3>
+        <ol>
+            <li>All your sends appear chronologically in the SendLogs tab</li>
+            <li>Tap on any entry to view its details</li>
+            <li>In detail view, you can:
+                <ul>
+                    <li>See all information about your climb</li>
+                    <li>Edit any fields by tapping the "Edit" button</li>
+                    <li>Delete the log if needed (with confirmation)</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Filtering and Searching</h3>
+        <ul>
+            <li>Use the search field to find specific entries by name, area, or crag</li>
+            <li>Use the filter menus at the top of the SendLogs tab to narrow down your climbing logs:
+                <ul>
+                    <li><strong>Area Filter</strong>: Tap "Filter by Area" to select a specific climbing location</li>
+                    <li><strong>Route Type Filter</strong>: Tap "Filter by Route Type" to view only Sport, Boulder, or Multi-Pitch routes</li>
+                    <li><strong>Interactive Filtering</strong>: When you select a route type, the area filter automatically updates to show only areas with that type of climb. Similarly, when you select an area, the route type filter shows only types available in that area.</li>
+                    <li><strong>Clear Filters</strong>: Select "All Areas" or "All Route Types" to remove those filters</li>
+                </ul>
+            </li>
+            <li>Combine both filters to quickly find specific climbs (e.g., all boulder problems in a specific area)</li>
+            <li>The filters work together - if you select an area that has no boulders, the boulder option won't appear in the route type filter</li>
+        </ul>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="project-tracking">
+        <h2>Project Tracking</h2>
+        
+        <h3>Adding a New Project</h3>
+        <ol>
+            <li>Navigate to the Projects tab</li>
+            <li>Tap the "+" button to add a new project</li>
+            <li>Fill in the route details similar to a regular send log</li>
+            <li>The route will automatically be marked with "active" status</li>
+        </ol>
+
+        <h3>Logging Attempts</h3>
+        <ol>
+            <li>From the Projects tab, select a project</li>
+            <li>Tap "Log Attempt" to record a new attempt</li>
+            <li>For each attempt, you can record:
+                <ul>
+                    <li>Date of the attempt</li>
+                    <li>High point reached</li>
+                    <li>Detailed notes about what worked or didn't work</li>
+                    <li>Whether you successfully completed the route</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Project Management</h3>
+        <p>Projects are organized into three categories:</p>
+        <ol>
+            <li><strong>Active Projects</strong>: Routes you're currently working on</li>
+            <li><strong>Completed Projects</strong>: Projects you've successfully sent</li>
+            <li><strong>Abandoned Projects</strong>: Projects you've decided to put aside</li>
+        </ol>
+
+        <p>When you complete a project:</p>
+        <ol>
+            <li>Log your final successful attempt</li>
+            <li>Mark "Was Successful" during attempt logging</li>
+            <li>The project will automatically move to the "Completed" section and be added to your SendLogs</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="route-types">
+        <h2>Route Types</h2>
+        
+        <p>SendLog allows you to categorize your climbs based on their type, providing better organization and more detailed statistics.</p>
+
+        <h3>Route Type Categories</h3>
+        <p>The app supports three main route types:</p>
+        <ol>
+            <li><strong>Sport</strong>: Traditional single-pitch sport climbing routes with bolted protection</li>
+            <li><strong>Boulder</strong>: Boulder problems that don't require a rope</li>
+            <li><strong>Multi-Pitch</strong>: Routes with multiple pitches, typically requiring longer climbing sessions</li>
+        </ol>
+
+        <h3>Setting Route Types</h3>
+        <p>When adding or editing a climb entry:</p>
+        <ol>
+            <li>Look for the "Route Type" dropdown menu</li>
+            <li>Select the appropriate route type (Sport, Boulder, or Multi-Pitch)</li>
+            <li>The default selection is "Sport" for new entries</li>
+        </ol>
+
+        <h3>Visual Indicators</h3>
+        <p>Different route types are color-coded throughout the app for easy identification:</p>
+        <ul>
+            <li><strong>Sport</strong>: Blue indicators</li>
+            <li><strong>Boulder</strong>: Orange indicators</li>
+            <li><strong>Multi-Pitch</strong>: Purple indicators</li>
+        </ul>
+        
+        <p>These visual indicators appear in:</p>
+        <ul>
+            <li>SendLog lists</li>
+            <li>Project lists</li>
+            <li>Detail views</li>
+            <li>Statistics charts</li>
+        </ul>
+
+        <h3>Filtering by Route Type</h3>
+        <p>Your route type selections help you:</p>
+        <ol>
+            <li>Quickly identify different types of climbs in your lists</li>
+            <li>See your distribution of climbing activities in the Statistics tab</li>
+            <li>Share more detailed information when posting your achievements</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="statistics-and-progress-analysis">
+        <h2>Statistics and Progress Analysis</h2>
+        
+        <p>The Statistics tab provides several insights into your climbing journey:</p>
+
+        <h3>Summary Statistics</h3>
+        <ul>
+            <li>Total routes climbed</li>
+            <li>Average route rating</li>
+            <li>Top climbing area</li>
+            <li>Highest grade achieved</li>
+            <li>Unique climbing days</li>
+        </ul>
+
+        <h3>Grade Distribution Chart</h3>
+        <ul>
+            <li>Visual representation of climbs across different grades</li>
+            <li>Track your progression and frequency at each difficulty level</li>
+            <li>Now includes expanded grade range (French 3b-10b, UIAA 3-14, YDS 5.3-5.16c)</li>
+        </ul>
+
+        <h3>Route Type Distribution</h3>
+        <ul>
+            <li>See how your climbing is distributed across different route types</li>
+            <li>Color-coded chart showing the number of Sport, Boulder, and Multi-Pitch routes you've climbed</li>
+        </ul>
+
+        <h3>Top Grade Tracking</h3>
+        <ul>
+            <li>Automatically identifies your highest sent grade</li>
+            <li>Only includes successfully completed climbs (not projects)</li>
+        </ul>
+
+        <h3>Climbing Frequency Analysis</h3>
+        <ul>
+            <li>Calendar heatmap visualizing your climbing days</li>
+            <li>Identify patterns in your climbing schedule</li>
+            <li>Track consistency over time</li>
+        </ul>
+
+        <h3>Time Period Filtering</h3>
+        <ul>
+            <li>Filter statistics by different time periods:
+                <ul>
+                    <li>Week</li>
+                    <li>Month</li>
+                    <li>Year</li>
+                    <li>Custom date range</li>
+                    <li>All time</li>
+                </ul>
+            </li>
+            <li>Compare performance across different periods</li>
+        </ul>
+
+        <h3>Climbing Days Statistics</h3>
+        <ul>
+            <li>Track unique climbing days (days when you climbed at least once)</li>
+            <li>View metrics for different time periods</li>
+            <li>Monitor your climbing consistency</li>
+        </ul>
+
+        <h3>Using Time Period Filters</h3>
+        <p>The enhanced Statistics View allows you to filter data by time period:</p>
+        <ol>
+            <li>At the top of the Statistics tab, select your desired time period</li>
+            <li>All statistics and visualizations will update to reflect data from that period only</li>
+            <li>Compare performance across different time frames</li>
+            <li>Track your progress over specific intervals</li>
+        </ol>
+
+        <h3>Calendar Heatmap</h3>
+        <p>The new calendar heatmap provides a visual representation of your climbing frequency:</p>
+        <ol>
+            <li>Each cell represents a day, with color intensity indicating climbing activity</li>
+            <li>Darker colors represent more climbs on a given day</li>
+            <li>Hover over any cell to see details about that day's climbs</li>
+            <li>Identify patterns in your climbing schedule</li>
+            <li>Track your consistency over weeks and months</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="voice-notes">
+        <h2>Voice Notes</h2>
+        
+        <h3>Recording Voice Notes</h3>
+        <ol>
+            <li>When adding or editing a climb log, tap the microphone icon</li>
+            <li>Start speaking to record your thoughts</li>
+            <li>The speech recognition system will convert your voice to text</li>
+            <li>Review and edit the transcribed text before saving</li>
+        </ol>
+
+        <h3>Language Support</h3>
+        <p>Configure your preferred language for speech recognition in Settings:</p>
+        <ul>
+            <li>English</li>
+            <li>German</li>
+            <li>French</li>
+            <li>Spanish</li>
+        </ul>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="sharing-your-achievements">
+        <h2>Sharing Your Achievements</h2>
+        
+        <h3>Creating Share Cards</h3>
+        <ol>
+            <li>Navigate to any climb in your SendLog list</li>
+            <li>Tap the "Share" button</li>
+            <li>The app will generate a visually appealing card featuring:
+                <ul>
+                    <li>Route name and grade</li>
+                    <li>Climbing area</li>
+                    <li>Send type with appropriate icon</li>
+                    <li>Route type (Sport, Boulder, or Multi-Pitch)</li>
+                    <li>Date of completion</li>
+                    <li>Your personal rating</li>
+                    <li>Custom background</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Sharing Options</h3>
+        <p>Once your share card is generated:</p>
+        <ol>
+            <li>Save the image to your photo library</li>
+            <li>Share directly to social media platforms</li>
+            <li>Send via messaging apps</li>
+        </ol>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="data-management">
+        <h2>Data Management</h2>
+        
+        <h3>Exporting Your Data</h3>
+        <ol>
+            <li>Go to Settings → Export SendLogs</li>
+            <li>The app will create a ZIP archive containing all your climbing data in CSV format
+                <ul>
+                    <li>The export includes all details including route types</li>
+                </ul>
+            </li>
+            <li>Choose where to save or share the export file</li>
+            <li>A progress indicator will show the export status</li>
+        </ol>
+
+        <h3>Importing Data</h3>
+        <ol>
+            <li>Go to Settings → Import SendLogs</li>
+            <li>Select a previously exported ZIP file</li>
+            <li>The app will validate the file format</li>
+            <li>Choose whether to merge with or replace existing data</li>
+            <li>A progress indicator will show the import status</li>
+        </ol>
+
+        <p>The import system features:</p>
+        <ul>
+            <li>Support for older export formats</li>
+            <li>Error handling for corrupted files</li>
+            <li>Data validation to ensure integrity</li>
+        </ul>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="section" id="settings-and-preferences">
+        <h2>Settings and Preferences</h2>
+        
+        <h3>Grade System</h3>
+        <p>Choose your preferred climbing grade system:</p>
+        <ol>
+            <li>French (3b to 10b) - Now with expanded lower grade range</li>
+            <li>UIAA (3 to 14) - Now with expanded lower grade range</li>
+            <li>YDS (5.3 to 5.16c) - Now with expanded lower grade range</li>
+        </ol>
+
+        <h3>Appearance</h3>
+        <p>Configure the app's visual style:</p>
+        <ul>
+            <li>Light mode</li>
+            <li>Dark mode</li>
+            <li>Follow system settings</li>
+        </ul>
+
+        <h3>Speech Recognition</h3>
+        <p>Select your preferred language for voice notes:</p>
+        <ul>
+            <li>English</li>
+            <li>German</li>
+            <li>French</li>
+            <li>Spanish</li>
+        </ul>
+
+        <h3>Data Management</h3>
+        <p>Access options for:</p>
+        <ul>
+            <li>Exporting your climbing logs</li>
+            <li>Importing previously exported data</li>
+            <li>Managing backup files</li>
+        </ul>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
+    <div class="back-to-home">
+        <a href="../index.html">Return to Home Page</a>
+    </div>
+    
+    <p class="last-updated">Last Updated: May 11, 2025</p>
+</div>
+
+<footer>
+    &copy; 2025 SendLog App
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth scrolling for all anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
