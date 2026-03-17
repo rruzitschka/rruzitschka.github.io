@@ -56,6 +56,9 @@
         <div class="screenshot-container">
             <img src="images/screenshot5_thumb.png" alt="Screenshot 5" onclick="showLightbox('images/screenshot5.png', 4)">
         </div>
+        <div class="screenshot-container">
+            <img src="images/screenshot6_thumb.png" alt="Screenshot 6" onclick="showLightbox('images/screenshot6.png', 5)">
+        </div>
     </div>
 
     <div class="lightbox" id="lightbox" onclick="hideLightbox()">
@@ -74,6 +77,14 @@
             <p>Record detailed information for each climb including route name, climbing area, date, difficulty grade, personal rating (1-5 stars), send type (redpoint, pinkpoint, on sight), and personal notes.</p>
         </div>
         <div class="feature-card">
+            <h3>Photo Attachments</h3>
+            <p>Attach photos directly to your climbing routes to capture beta, celebrate achievements, or document memorable climbs. Photos are stored locally and fully integrated with your send logs.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Training Session Tracking</h3>
+            <p>Track your climbing training sessions separately from route logs. Record duration, training type, notes, and monitor your training consistency over time.</p>
+        </div>
+        <div class="feature-card">
             <h3>Project Tracking</h3>
             <p>Dedicated section to manage climbing projects, track attempts, record high points, add specific notes, update status (active, completed, abandoned), and convert projects into completed sends.</p>
         </div>
@@ -87,15 +98,30 @@
         </div>
         <div class="feature-card">
             <h3>Comprehensive Statistics</h3>
-            <p>Gain insights through detailed climbing statistics including total routes climbed, average rating, top climbing areas, and visual grade distribution charts.</p>
+            <p>Gain insights through detailed climbing statistics including total routes climbed, average rating, top climbing areas, visual grade distribution charts, and calendar heatmap showing climbing frequency.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Multi-Pitch & Route Types</h3>
+            <p>Distinguish between Sport, Multi-Pitch, and Boulder routes with dedicated tracking and filtering options for each climbing style.</p>
         </div>
         <div class="feature-card">
             <h3>Data Import & Export</h3>
-            <p>Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats.</p>
+            <p>Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats with full backward compatibility.</p>
         </div>
     </div>
 
-    <h2 id="whats-new">What's New (May 2025, v3.0)</h2>
+    <h2 id="whats-new">What's New</h2>
+    
+    <h3>Version 3.6 (March 2026)</h3>
+    <div class="whats-new-list">
+        <ul>
+            <li><strong>Photo Attachments:</strong> Attach photos to your climbing routes to capture beta, document achievements, or remember memorable climbs</li>
+            <li><strong>Training Session Tracking:</strong> Dedicated training log to track your gym sessions, training duration, and consistency</li>
+            <li><strong>Performance Improvements:</strong> General refactoring to improve app stability and performance across all features</li>
+        </ul>
+    </div>
+    
+    <h3>Version 3.0 (May 2025)</h3>
     <div class="whats-new-list">
         <ul>
             <li>Added the possibility to distinguish between Sport, Multi-Pitch and Boulder routes</li>
@@ -118,6 +144,14 @@
 
     <h2 id="faq">Frequently Asked Questions</h2>
     <div class="faq-container">
+        <div class="faq">
+            <strong>Q: Can I add photos to my climbing routes?</strong>
+            <p>A: Yes! You can attach photos directly to each climb to capture beta, celebrate achievements, or document memorable routes. Photos are stored locally and securely on your device.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Can I track training sessions separately from route logs?</strong>
+            <p>A: Absolutely. SendLog includes a dedicated Training tab where you can log gym sessions, track training duration, and monitor your training consistency over time.</p>
+        </div>
         <div class="faq">
             <strong>Q: Is my data secure?</strong>
             <p>A: Yes, your data is stored locally and securely on your device. It is only shared externally when explicitly exported or shared by you.</p>
@@ -165,7 +199,8 @@
         'images/screenshot2.png',
         'images/screenshot3.png',
         'images/screenshot4.png',
-        'images/screenshot5.png'
+        'images/screenshot5.png',
+        'images/screenshot6.png'
     ];
     
     let currentIndex = 0;
