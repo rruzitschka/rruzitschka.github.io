@@ -159,12 +159,13 @@
         <h2>Main Features</h2>
         <ol>
             <li><strong>Climbing Log Management</strong>: Record details of routes you've successfully climbed</li>
+            <li><strong>Repeat Ascent Tracking</strong>: Log and manage multiple ascents of the same route with full history</li>
             <li><strong>Project Tracking</strong>: Track progress on routes you're working on</li>
-            <li><strong>Statistics and Analytics</strong>: Visualize your climbing progress and achievements</li>
+            <li><strong>Statistics and Analytics</strong>: Visualize your climbing progress and achievements with unique vs total climb analysis</li>
             <li><strong>Voice Notes</strong>: Use speech recognition to easily record notes about your climbs</li>
             <li><strong>Sharing Features</strong>: Generate custom cards to share your achievements</li>
             <li><strong>Grade System Support</strong>: Choose between multiple grade systems (French, UIAA, YDS)</li>
-            <li><strong>Data Import/Export</strong>: Back up and transfer your climbing data</li>
+            <li><strong>Enhanced Data Import/Export</strong>: Complete backup and restore including all repeat ascent data</li>
             <li><strong>Personalized Settings</strong>: Customize the app to your preferences</li>
             <li><strong>Climbing Days Tracking</strong>: Monitor and visualize your climbing frequency across different time periods</li>
         </ol>
@@ -241,6 +242,46 @@
             </li>
         </ol>
 
+        <h3>Managing Repeat Ascents (New!)</h3>
+        <p>SendLog now supports comprehensive repeat ascent tracking for routes you've climbed multiple times:</p>
+        
+        <h4>Viewing Ascent History:</h4>
+        <ol>
+            <li>From the route detail view, scroll down to see the "Ascent History" section</li>
+            <li>View all your ascents of this route in chronological order</li>
+            <li>Each ascent shows the date, send type, and any notes you've added</li>
+            <li>The original send is marked as "(First Send)" with accent color</li>
+            <li>Subsequent climbs are marked as "(Repeat)" with secondary color</li>
+        </ol>
+
+        <h4>Adding Repeat Ascents:</h4>
+        <ol>
+            <li>In the route detail view, tap "Add Repeat Ascent"</li>
+            <li>Fill in the ascent details in the overlay:
+                <ul>
+                    <li><strong>Date</strong>: When you repeated the route</li>
+                    <li><strong>Send Type</strong>: How you climbed it this time (may be different from original)</li>
+                    <li><strong>Notes</strong>: Specific details about this ascent</li>
+                </ul>
+            </li>
+            <li>Tap "Save" to add the repeat ascent</li>
+            <li><strong>Improved Navigation</strong>: You'll remain in the detail view to see your new ascent and can add more if needed</li>
+        </ol>
+
+        <h4>Managing Ascents:</h4>
+        <ol>
+            <li>Tap on any ascent in the history to edit its details</li>
+            <li>Use swipe-to-delete to remove incorrect ascent entries</li>
+            <li>All changes maintain the route's ascent history integrity</li>
+        </ol>
+
+        <h4>Statistics Integration:</h4>
+        <ul>
+            <li>Repeat ascents are included in your climbing statistics when using "All Climbs (Including Repeats)" mode</li>
+            <li>Use the toggle in Statistics to choose between unique routes or total climbs including repeats</li>
+            <li>Climbing days calculation includes days when you only did repeat ascents</li>
+        </ul>
+
         <h3>Filtering and Searching</h3>
         <ul>
             <li>Use the search field to find specific entries by name, area, or crag</li>
@@ -297,6 +338,14 @@
             <li>Mark "Was Successful" during attempt logging</li>
             <li>The project will automatically move to the "Completed" section and be added to your SendLogs</li>
         </ol>
+
+        <h3>Important: Deleting Completed Projects</h3>
+        <ul>
+            <li>When you delete a <strong>completed project</strong>, you're also deleting the associated send log and all repeat ascent history</li>
+            <li>The app will warn you with: <em>"This will permanently delete the project and its send log, including all ascent history. This action cannot be undone."</em></li>
+            <li>For active or abandoned projects, deletion only removes the project without affecting send logs</li>
+            <li>This enhanced warning helps prevent accidental loss of your climbing achievements</li>
+        </ul>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
@@ -350,46 +399,99 @@
     <div class="section" id="statistics-and-progress-analysis">
         <h2>Statistics and Progress Analysis</h2>
         
-        <p>The Statistics tab provides several insights into your climbing journey:</p>
+        <p>The Statistics tab provides comprehensive insights into your climbing journey with advanced metrics that distinguish between unique route achievements and total climbing activity.</p>
 
-        <h3>Summary Statistics</h3>
+        <h3>Overview</h3>
+        <p>The enhanced Statistics tab now offers two viewing modes to help you understand different aspects of your climbing:</p>
+        <ol>
+            <li><strong>Unique Routes Focus</strong>: Track your progression and route exploration</li>
+            <li><strong>Total Activity Focus</strong>: Monitor your climbing volume and training consistency</li>
+        </ol>
+
+        <h3>Statistics Viewing Modes</h3>
+        
+        <h4>Toggle Between Views</h4>
+        <p>At the top of the Statistics tab, you'll find a toggle switch that lets you choose between:</p>
         <ul>
-            <li>Total routes climbed</li>
-            <li>Average route rating</li>
-            <li>Top climbing area</li>
-            <li>Highest grade achieved</li>
-            <li>Unique climbing days</li>
+            <li><strong>"Unique Routes Only"</strong>: Statistics based on the first time you climbed each route</li>
+            <li><strong>"All Climbs (Including Repeats)"</strong>: Statistics including repeat ascents and total climbing activity</li>
         </ul>
 
-        <h3>Grade Distribution Chart</h3>
+        <h4>Understanding Each Mode</h4>
+        <p><strong>Unique Routes Only Mode:</strong></p>
         <ul>
-            <li>Visual representation of climbs across different grades</li>
-            <li>Track your progression and frequency at each difficulty level</li>
-            <li>Now includes expanded grade range (French 3b-10b, UIAA 3-14, YDS 5.3-5.16c)</li>
+            <li>Focuses on your route achievements and exploration</li>
+            <li>Shows progression to new grades and areas</li>
+            <li>Excludes repeat ascents from most calculations</li>
+            <li>Best for tracking personal bests and climbing development</li>
         </ul>
 
-        <h3>Route Type Distribution</h3>
+        <p><strong>All Climbs (Including Repeats) Mode:</strong></p>
         <ul>
-            <li>See how your climbing is distributed across different route types</li>
-            <li>Color-coded chart showing the number of Sport, Boulder, and Multi-Pitch routes you've climbed</li>
+            <li>Shows your complete climbing activity and training volume</li>
+            <li>Includes all ascents: first sends and repeat climbs</li>
+            <li>Provides insights into climbing frequency and consistency</li>
+            <li>Best for understanding your overall climbing practice</li>
         </ul>
 
-        <h3>Top Grade Tracking</h3>
-        <ul>
-            <li>Automatically identifies your highest sent grade</li>
-            <li>Only includes successfully completed climbs (not projects)</li>
-        </ul>
+        <h3>Key Statistics Explained</h3>
+        <ol>
+            <li><strong>Summary Statistics</strong>:
+                <ul>
+                    <li><strong>Unique Routes</strong>: Number of different routes you've successfully climbed</li>
+                    <li><strong>Total Climbs</strong>: Complete climbing count including repeat ascents</li>
+                    <li><strong>Repeat Rate</strong>: Percentage of your climbs that are repeat ascents</li>
+                    <li><strong>Average Route Rating</strong>: Your average personal rating of climbed routes</li>
+                    <li><strong>Top Climbing Area</strong>: Most frequently visited climbing location</li>
+                    <li><strong>Highest Grade Achieved</strong>: Your personal best grade</li>
+                    <li><strong>Unique Climbing Days</strong>: Days when you climbed at least once (includes repeat-only days)</li>
+                    <li><strong>Average Climbs per Day</strong>: Total climbs divided by climbing days</li>
+                </ul>
+            </li>
+            <li><strong>Grade Distribution Chart</strong>:
+                <ul>
+                    <li>Visual representation of climbs across different grades</li>
+                    <li>Updates based on your selected viewing mode (unique vs total)</li>
+                    <li>Track your progression and frequency at each difficulty level</li>
+                    <li>Includes expanded grade range (French 3b-10b, UIAA 3-14, YDS 5.3-5.16c)</li>
+                </ul>
+            </li>
+            <li><strong>Route Type Distribution</strong>:
+                <ul>
+                    <li>Shows distribution across Sport, Boulder, and Multi-Pitch routes</li>
+                    <li>Color-coded chart reflecting your selected viewing mode</li>
+                    <li>Updates to show either unique routes or total climbs</li>
+                </ul>
+            </li>
+            <li><strong>Top Grade Tracking</strong>:
+                <ul>
+                    <li>Automatically identifies your highest sent grade</li>
+                    <li>Only includes successfully completed climbs (not projects)</li>
+                    <li>Reflects your personal best achievement</li>
+                </ul>
+            </li>
+            <li><strong>Climbing Frequency Analysis</strong>:
+                <ul>
+                    <li>Calendar heatmap visualizing your climbing days</li>
+                    <li>Includes days with repeat ascents</li>
+                    <li>Identify patterns in your climbing schedule</li>
+                    <li>Track consistency over time</li>
+                </ul>
+            </li>
+        </ol>
 
-        <h3>Climbing Frequency Analysis</h3>
+        <h3>Getting Help</h3>
+        <p>Tap the "?" button in the Statistics tab to access the help screen, which explains:</p>
         <ul>
-            <li>Calendar heatmap visualizing your climbing days</li>
-            <li>Identify patterns in your climbing schedule</li>
-            <li>Track consistency over time</li>
+            <li>The difference between viewing modes</li>
+            <li>How each metric is calculated</li>
+            <li>What each statistic means for your climbing progress</li>
         </ul>
 
         <h3>Time Period Filtering</h3>
-        <ul>
-            <li>Filter statistics by different time periods:
+        <p>The Statistics View allows you to filter data by time period:</p>
+        <ol>
+            <li>At the top of the Statistics tab, select your desired time period:
                 <ul>
                     <li>Week</li>
                     <li>Month</li>
@@ -398,30 +500,18 @@
                     <li>All time</li>
                 </ul>
             </li>
-            <li>Compare performance across different periods</li>
-        </ul>
-
-        <h3>Climbing Days Statistics</h3>
-        <ul>
-            <li>Track unique climbing days (days when you climbed at least once)</li>
-            <li>View metrics for different time periods</li>
-            <li>Monitor your climbing consistency</li>
-        </ul>
-
-        <h3>Using Time Period Filters</h3>
-        <p>The enhanced Statistics View allows you to filter data by time period:</p>
-        <ol>
-            <li>At the top of the Statistics tab, select your desired time period</li>
             <li>All statistics and visualizations will update to reflect data from that period only</li>
+            <li>Works with both viewing modes (unique routes and total climbs)</li>
             <li>Compare performance across different time frames</li>
             <li>Track your progress over specific intervals</li>
         </ol>
 
         <h3>Calendar Heatmap</h3>
-        <p>The new calendar heatmap provides a visual representation of your climbing frequency:</p>
+        <p>The calendar heatmap provides a visual representation of your climbing frequency:</p>
         <ol>
             <li>Each cell represents a day, with color intensity indicating climbing activity</li>
-            <li>Darker colors represent more climbs on a given day</li>
+            <li>Darker colors represent more climbs on a given day (including repeats)</li>
+            <li>Shows all climbing days, including days with only repeat ascents</li>
             <li>Hover over any cell to see details about that day's climbs</li>
             <li>Identify patterns in your climbing schedule</li>
             <li>Track your consistency over weeks and months</li>
@@ -484,12 +574,18 @@
     <div class="section" id="data-management">
         <h2>Data Management</h2>
         
+        <h3>Enhanced Export/Import System (New!)</h3>
+        <p>SendLog now features a comprehensive export/import system that preserves all your climbing data including repeat ascents and detailed climbing history.</p>
+        
         <h3>Exporting Your Data</h3>
         <ol>
             <li>Go to Settings → Export SendLogs</li>
-            <li>The app will create a ZIP archive containing all your climbing data in CSV format
+            <li>The app will create a ZIP archive containing all your climbing data in enhanced CSV format:
                 <ul>
-                    <li>The export includes all details including route types</li>
+                    <li><strong>Complete Data</strong>: Includes all route details, repeat ascents, and climbing history</li>
+                    <li><strong>Enhanced Format</strong>: New format includes ascent type marking (FirstSend vs Repeat)</li>
+                    <li><strong>Backward Compatible</strong>: Files can be imported by older versions of the app</li>
+                    <li><strong>Ascent Data</strong>: Each repeat ascent is exported with its own date, send type, and notes</li>
                 </ul>
             </li>
             <li>Choose where to save or share the export file</li>
@@ -500,16 +596,39 @@
         <ol>
             <li>Go to Settings → Import SendLogs</li>
             <li>Select a previously exported ZIP file</li>
-            <li>The app will validate the file format</li>
-            <li>Choose whether to merge with or replace existing data</li>
-            <li>A progress indicator will show the import status</li>
+            <li>The app automatically detects file format:
+                <ul>
+                    <li><strong>Legacy Format</strong>: Files from older versions import seamlessly</li>
+                    <li><strong>Enhanced Format</strong>: New files with repeat ascent data are fully restored</li>
+                </ul>
+            </li>
+            <li>The app will validate the file format and show import progress</li>
+            <li>All data including repeat ascents will be recreated with proper relationships</li>
         </ol>
 
-        <p>The import system features:</p>
+        <h3>Import Features</h3>
         <ul>
-            <li>Support for older export formats</li>
-            <li>Error handling for corrupted files</li>
-            <li>Data validation to ensure integrity</li>
+            <li><strong>Automatic Format Detection</strong>: Seamlessly handles both old and new export formats</li>
+            <li><strong>Data Preservation</strong>: Zero data loss - all climbing history including repeats is restored</li>
+            <li><strong>Error Handling</strong>: Robust validation with detailed error messages</li>
+            <li><strong>Progress Reporting</strong>: Shows count of imported routes and ascents</li>
+            <li><strong>Data Validation</strong>: Ensures data integrity and handles corrupted files gracefully</li>
+        </ul>
+
+        <h3>What's Included in Enhanced Exports</h3>
+        <ul>
+            <li>All route information (name, area, crag, grade, etc.)</li>
+            <li>Original send logs with complete details</li>
+            <li>All repeat ascents with individual dates, send types, and notes</li>
+            <li>Project information and attempt history</li>
+            <li>Statistics-ready data for comprehensive analysis</li>
+        </ul>
+
+        <h3>Backward Compatibility Guarantee</h3>
+        <ul>
+            <li>Files exported from older versions continue to work perfectly</li>
+            <li>Enhanced exports can be imported by newer versions for full feature access</li>
+            <li>No data loss during version transitions</li>
         </ul>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
@@ -556,7 +675,7 @@
         <a href="../index.html">Return to Home Page</a>
     </div>
     
-    <p class="last-updated">Last Updated: May 11, 2025</p>
+    <p class="last-updated">Last Updated: June 27, 2025</p>
 </div>
 
 <footer>
