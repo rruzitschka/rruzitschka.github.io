@@ -1592,7 +1592,7 @@ body {
   justify-content: space-between;
   margin-bottom: 1rem;
 }
-.training-page-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.training-page-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; line-height: 1; padding: .3rem 0; }
 
 .period-tabs {
   display: flex;
@@ -1733,7 +1733,7 @@ body {
   margin-bottom: .75rem;
   width: 100%;
 }
-.table-header-row h3 { margin: 0; }
+.table-header-row h3 { margin: 0; line-height: 1; padding: .3rem 0; }
 
 /* Action button inside header — must not flex-grow */
 .btn-action {
