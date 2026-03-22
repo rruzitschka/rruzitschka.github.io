@@ -4,6 +4,9 @@
 
 let _allClimbs = [];
 let _currentRefresh = null;
+let _currentPage = 1;
+let _filteredClimbs = [];
+const ITEMS_PER_PAGE = 20;
 
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
@@ -47,22 +50,29 @@ function renderStatsBar(stats) {
 // ---------- Climbs Table ----------
 
 function renderClimbsTable(climbs) {
+  _filteredClimbs = climbs || [];
   const tbody   = document.getElementById('climbs-tbody');
   const table   = document.getElementById('climbs-table');
   const empty   = document.getElementById('empty-state');
 
   tbody.innerHTML = '';
 
-  if (!climbs || climbs.length === 0) {
+  if (_filteredClimbs.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'block';
+    renderPagination(0, 0);
     return;
   }
 
   table.style.display = '';
   empty.style.display = 'none';
 
-  for (const climb of climbs) {
+  const totalPages = Math.ceil(_filteredClimbs.length / ITEMS_PER_PAGE);
+  if (_currentPage > totalPages) _currentPage = totalPages;
+  const start = (_currentPage - 1) * ITEMS_PER_PAGE;
+  const pageClimbs = _filteredClimbs.slice(start, start + ITEMS_PER_PAGE);
+
+  for (const climb of pageClimbs) {
     const gradeClass = gradeBadgeClass(climb.difficulty);
     const sendClass  = SEND_CLASSES[climb.sendType] ?? 'send-proj';
     const tr = document.createElement('tr');
@@ -79,6 +89,29 @@ function renderClimbsTable(climbs) {
     tr.addEventListener('click', () => showDetailModal(climb));
     tbody.appendChild(tr);
   }
+
+  renderPagination(_filteredClimbs.length, totalPages);
+}
+
+function renderPagination(total, totalPages) {
+  const bar = document.getElementById('pagination-bar');
+  if (!bar) return;
+  if (totalPages <= 1) {
+    bar.classList.add('hidden');
+    return;
+  }
+  bar.classList.remove('hidden');
+  bar.innerHTML = `
+    <button class="page-btn" id="page-prev" ${_currentPage <= 1 ? 'disabled' : ''}>&#8249; Prev</button>
+    <span class="page-info">Page ${_currentPage} of ${totalPages} <span class="page-count">(${total} climbs)</span></span>
+    <button class="page-btn" id="page-next" ${_currentPage >= totalPages ? 'disabled' : ''}>Next &#8250;</button>
+  `;
+  document.getElementById('page-prev').addEventListener('click', () => {
+    if (_currentPage > 1) { _currentPage--; renderClimbsTable(_filteredClimbs); }
+  });
+  document.getElementById('page-next').addEventListener('click', () => {
+    if (_currentPage < totalPages) { _currentPage++; renderClimbsTable(_filteredClimbs); }
+  });
 }
 
 // ---------- Detail Modal ----------
@@ -254,6 +287,7 @@ function bindFilterHandlers(initialClimbs) {
   let activeView = 'all'; // 'all' | 'projects' | 'sent'
 
   function refresh() {
+    _currentPage = 1; // reset to first page on any filter/search change
     const area      = document.getElementById('filter-area').value;
     const year      = document.getElementById('filter-year').value;
     const sendType  = document.getElementById('filter-sendtype').value;

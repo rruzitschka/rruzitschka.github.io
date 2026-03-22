@@ -522,46 +522,39 @@ td {
 /* Grade Badge */
 .badge {
     display: inline-block;
-    padding: 0.35rem 0.75rem;
+    padding: 0.1rem 0.3rem;
     border-radius: var(--border-radius-full);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .grade-hard {
-    background: rgba(239, 68, 68, 0.1);
     color: var(--grade-hard);
 }
 
 .grade-normal {
-    background: rgba(59, 130, 246, 0.1);
     color: var(--grade-normal);
 }
 
 .send-rp {
-    background: rgba(34, 197, 94, 0.1);
     color: var(--send-rp);
 }
 
 .send-os {
-    background: rgba(245, 158, 11, 0.1);
     color: var(--send-os);
 }
 
 .send-fl {
-    background: rgba(249, 115, 22, 0.1);
     color: var(--send-fl);
 }
 
 .send-proj {
-    background: rgba(156, 163, 175, 0.1);
     color: var(--send-proj);
 }
 
 .send-pp {
-    background: rgba(236, 72, 153, 0.1);
     color: var(--send-pp);
 }
 
@@ -1806,3 +1799,29 @@ body {
   margin-left: 6px;
   text-transform: uppercase;
 }
+
+/* ============================================================================
+   PAGINATION
+   ============================================================================ */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: .75rem 0 .25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.page-btn {
+  padding: .3rem .75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--white);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.page-btn:hover:not(:disabled) { background: var(--light-bg); }
+.page-btn:disabled { opacity: .4; cursor: default; }
+.page-count { color: var(--text-secondary); }
