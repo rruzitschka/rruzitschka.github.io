@@ -96,6 +96,7 @@ New overlay, separate from the send overlay.
 | Grade | — | Text input |
 | Type | — | Select: Sport / Boulder / Multi-Pitch |
 | Attempts | — | Number input, default 0 |
+| Last Attempt Date | — | Date input |
 | High Point | — | Text input (e.g. "2nd bolt") |
 | Status | — | Select: Working / Close / Abandoned |
 | Notes | — | Textarea |
@@ -120,15 +121,16 @@ Projects and sends are both stored as `ClimbNote` records. The distinguishing fi
 - Sends: `sendType` = `Redpoint` | `On Sight` | `Flash` | `Pinkpoint`
 - Projects: `sendType` = `Project`
 
-Project-specific fields map to existing or new `ClimbNote` CloudKit fields:
+Project-specific fields map to **existing** `ClimbNote` CloudKit fields:
 
-| UI field | CloudKit field |
-|---|---|
-| Attempts | `CD_attempts` (Number) |
-| High Point | `CD_highPoint` (String) |
-| Status | `CD_projectStatus` (String) |
+| UI field | CloudKit field | Type |
+|---|---|---|
+| Attempts | `CD_attemptCount` (existing) | Integer 16 |
+| Last Attempt Date | `CD_lastAttemptDate` (existing) | Date |
+| High Point | `CD_highPoint` (existing) | String |
+| Status | `CD_projectStatus` (existing) | String |
 
-These fields are ignored / hidden for non-project records. `CD_attempts` and `CD_highPoint` are new fields — a lightweight CloudKit schema addition (additive only, backward compatible).
+All four fields already exist in the iOS Core Data model — no schema additions required. The web app just needs to read and write them.
 
 ### Mock Data
 
@@ -174,8 +176,8 @@ New classes to add to `app/css/app.css`:
 | `app/css/app.css` | Add `.table-header-row`, `.btn-action`, `.btn-project`, `.style-tabs`, `.style-tab` + active variants |
 | `app/index.html` | Replace `btn-add-climb` with `btn-log-send` + `btn-add-project`; replace climb overlay with Log Send overlay (style pills); add Project overlay |
 | `app/js/ui.js` | `showAddSendOverlay()`, `showEditSendOverlay(climb)`, `showAddProjectOverlay()`, `showEditProjectOverlay(climb)`, `handleMarkAsSent(project)`, `bindSendOverlayHandlers()`, `bindProjectOverlayHandlers()`, update `setActiveView` for context-aware button |
-| `app/js/mock.js` | Add `CD_attempts`, `CD_highPoint`, `CD_projectStatus` to 3 existing project entries in `MOCK_CLIMBS` |
-| `app/js/climbs.js` | Map `CD_attempts`, `CD_highPoint`, `CD_projectStatus` in `fetchClimbs()` field mapping |
+| `app/js/mock.js` | Add `CD_attemptCount`, `CD_lastAttemptDate`, `CD_highPoint`, `CD_projectStatus` to 3 existing project entries in `MOCK_CLIMBS` |
+| `app/js/climbs.js` | Map `CD_attemptCount`, `CD_lastAttemptDate`, `CD_highPoint`, `CD_projectStatus` in `fetchClimbs()` field mapping |
 
 No new files. Training overlay unchanged.
 
