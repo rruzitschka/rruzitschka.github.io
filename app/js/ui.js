@@ -1,5 +1,10 @@
 // ui.js — Dashboard UI rendering and interaction
 
+// ---------- Module-level state ----------
+
+let _allClimbs = [];
+let _currentRefresh = null;
+
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
   'On Sight':  'send-os',
@@ -231,7 +236,8 @@ function updateCountBadges(filtered, all) {
 
 // ---------- Filter + search handler wiring ----------
 
-function bindFilterHandlers(allClimbs) {
+function bindFilterHandlers(initialClimbs) {
+  _allClimbs = initialClimbs;
   let activeView = 'all'; // 'all' | 'projects' | 'sent'
 
   function refresh() {
@@ -242,11 +248,11 @@ function bindFilterHandlers(allClimbs) {
     const search    = document.getElementById('search-input').value;
     const sort      = document.getElementById('sort-select').value;
 
-    let filtered = filterClimbs(allClimbs, { area, year, sendType, routeType, search, sort });
+    let filtered = filterClimbs(_allClimbs, { area, year, sendType, routeType, search, sort });
 
     // Update badges from search/filter result BEFORE applying the view filter
     // so "All Climbs" count stays stable regardless of which view is active
-    updateCountBadges(filtered, allClimbs);
+    updateCountBadges(filtered, _allClimbs);
 
     // Apply sidebar view filter on top
     if (activeView === 'projects') filtered = filtered.filter(c => c.isProject === true);
@@ -254,6 +260,8 @@ function bindFilterHandlers(allClimbs) {
 
     renderClimbsTable(filtered);
   }
+
+  _currentRefresh = refresh;
 
   ['filter-area', 'filter-year', 'filter-sendtype', 'filter-routetype', 'sort-select'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', refresh);
@@ -268,6 +276,7 @@ function bindFilterHandlers(allClimbs) {
   // Sidebar view links
   function setActiveView(view) {
     activeView = view;
+    showLogbookView();
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
@@ -292,10 +301,10 @@ function bindFilterHandlers(allClimbs) {
   // Header nav links — delegate to same view switching
   document.getElementById('nav-logbook')?.addEventListener('click', e => { e.preventDefault(); setActiveView('all'); });
   document.getElementById('nav-projects')?.addEventListener('click', e => { e.preventDefault(); setActiveView('projects'); });
-  document.getElementById('nav-training')?.addEventListener('click', e => { e.preventDefault(); showToast('Training coming in Phase 3 🏋️', 'info'); });
+  document.getElementById('nav-training')?.addEventListener('click', e => { e.preventDefault(); showTrainingView(); });
 
   // Initial badge update
-  updateCountBadges(allClimbs, allClimbs);
+  updateCountBadges(_allClimbs, _allClimbs);
 }
 
 // ---------- Modal close handlers ----------
@@ -308,7 +317,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') hideDetailModal();
   });
+
+  // Training view sidebar item
+  document.querySelector('[data-view="training"]')?.addEventListener('click', e => {
+    e.preventDefault();
+    showTrainingView();
+  });
+
+  bindClimbOverlayHandlers();
+  bindTrainingOverlayHandlers();
+  bindPeriodTabs();
 });
+
 
 // ---------- Utility ----------
 
@@ -319,4 +339,427 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ---------- loadData ----------
+
+async function loadData() {
+  showLoading(true);
+  try {
+    const climbs = await fetchClimbs();
+    showLoading(false);
+    _allClimbs = climbs;
+    const stats = computeStats(climbs);
+    renderStatsBar(stats);
+    populateFilters(climbs);
+    if (_currentRefresh) {
+      _currentRefresh();
+    } else {
+      renderClimbsTable(climbs);
+      bindFilterHandlers(climbs);
+    }
+  } catch (err) {
+    showLoading(false);
+    showToast('Failed to load climbs. Please try again.', 'error');
+    console.error('Load error:', err);
+  }
+}
+
+// ---------- Training view toggle ----------
+
+function showTrainingView() {
+  document.getElementById('stats-bar').classList.add('hidden');
+  document.querySelector('.table-container').classList.add('hidden');
+  document.getElementById('training-view').classList.remove('hidden');
+  document.getElementById('nav-training')?.classList.add('active');
+  document.getElementById('nav-logbook')?.classList.remove('active');
+  document.getElementById('nav-projects')?.classList.remove('active');
+  loadTrainingData();
+}
+
+function showLogbookView() {
+  document.getElementById('stats-bar').classList.remove('hidden');
+  document.querySelector('.table-container').classList.remove('hidden');
+  document.getElementById('training-view').classList.add('hidden');
+}
+
+// ---------- Confirm dialog ----------
+
+function showConfirmDialog(title, message) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    const dialog = document.getElementById('confirm-dialog');
+    dialog.classList.remove('hidden');
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    function cleanup() {
+      dialog.classList.add('hidden');
+      ok.removeEventListener('click', onOk);
+      cancel.removeEventListener('click', onCancel);
+    }
+    function onOk()     { cleanup(); resolve(true);  }
+    function onCancel() { cleanup(); resolve(false); }
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+  });
+}
+
+// ---------- Star rating picker ----------
+
+let currentStarRating = 0;
+
+function setStarRating(value) {
+  currentStarRating = value;
+  document.querySelectorAll('#co-rating span').forEach((span, i) => {
+    span.classList.toggle('filled', i < value);
+  });
+}
+
+function bindStarPicker() {
+  document.querySelectorAll('#co-rating span').forEach(span => {
+    span.addEventListener('click', () => setStarRating(Number(span.dataset.value)));
+    span.addEventListener('mouseenter', () => {
+      const v = Number(span.dataset.value);
+      document.querySelectorAll('#co-rating span').forEach((s, i) => {
+        s.classList.toggle('filled', i < v);
+      });
+    });
+    span.addEventListener('mouseleave', () => setStarRating(currentStarRating));
+  });
+}
+
+// ---------- Climb overlay ----------
+
+function showAddClimbOverlay() {
+  const overlay = document.getElementById('climb-overlay');
+  document.getElementById('climb-overlay-title').textContent = 'Add Climb';
+  document.getElementById('co-record-name').value = '';
+  document.getElementById('co-route').value = '';
+  document.getElementById('co-area').value = '';
+  document.getElementById('co-crag').value = '';
+  document.getElementById('co-difficulty').value = '';
+  document.getElementById('co-routetype').value = 'Sport';
+  document.getElementById('co-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('co-sendtype').value = 'Redpoint';
+  document.getElementById('co-notes').value = '';
+  document.getElementById('co-attempts').value = '0';
+  document.getElementById('co-highpoint').value = '';
+  document.getElementById('co-project-notes').value = '';
+  setStarRating(0);
+  document.getElementById('co-project-section').classList.add('hidden');
+  document.getElementById('co-ascents-section').classList.add('hidden');
+  document.getElementById('climb-overlay-delete').classList.add('hidden');
+  document.getElementById('co-route-error').classList.add('hidden');
+  overlay.classList.remove('hidden');
+}
+
+function showEditClimbOverlay(climb) {
+  showAddClimbOverlay();
+  document.getElementById('climb-overlay-title').textContent = 'Edit Climb';
+  document.getElementById('co-record-name').value = climb.recordName ?? '';
+  document.getElementById('co-route').value = climb.route ?? '';
+  document.getElementById('co-area').value = climb.climbingArea ?? '';
+  document.getElementById('co-crag').value = climb.crag ?? '';
+  document.getElementById('co-difficulty').value = climb.difficulty ?? '';
+  document.getElementById('co-routetype').value = climb.routeType ?? 'Sport';
+  document.getElementById('co-date').value = climb.date ? climb.date.toISOString().slice(0, 10) : '';
+  document.getElementById('co-sendtype').value = climb.sendType ?? 'Redpoint';
+  document.getElementById('co-notes').value = climb.noteText ?? '';
+  document.getElementById('co-attempts').value = climb.attemptCount ?? 0;
+  document.getElementById('co-highpoint').value = climb.highPoint ?? '';
+  document.getElementById('co-project-notes').value = climb.projectNotes ?? '';
+  setStarRating(climb.rating ?? 0);
+  if (climb.sendType === 'Project') {
+    document.getElementById('co-project-section').classList.remove('hidden');
+  }
+  document.getElementById('co-ascents-section').classList.remove('hidden');
+  document.getElementById('climb-overlay-delete').classList.remove('hidden');
+  renderAscentsList(climb);
+}
+
+function bindClimbOverlayHandlers() {
+  function closeOverlay() {
+    document.getElementById('climb-overlay').classList.add('hidden');
+  }
+  document.getElementById('climb-overlay-close').addEventListener('click', closeOverlay);
+  document.getElementById('climb-overlay-cancel').addEventListener('click', closeOverlay);
+  document.getElementById('climb-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeOverlay();
+  });
+
+  document.getElementById('co-sendtype').addEventListener('change', function () {
+    const projectSection = document.getElementById('co-project-section');
+    projectSection.classList.toggle('hidden', this.value !== 'Project');
+  });
+
+  document.getElementById('climb-overlay-save').addEventListener('click', async function () {
+    const routeVal = document.getElementById('co-route').value.trim();
+    if (!routeVal) {
+      document.getElementById('co-route').classList.add('error');
+      document.getElementById('co-route-error').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('co-route').classList.remove('error');
+    document.getElementById('co-route-error').classList.add('hidden');
+
+    const btn = this;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const recordName = document.getElementById('co-record-name').value || undefined;
+      const dateVal = document.getElementById('co-date').value;
+      await saveClimbNote({
+        recordName,
+        id:           recordName ? undefined : crypto.randomUUID(),
+        route:        routeVal,
+        climbingArea: document.getElementById('co-area').value.trim() || null,
+        crag:         document.getElementById('co-crag').value.trim() || null,
+        difficulty:   document.getElementById('co-difficulty').value.trim() || null,
+        date:         dateVal ? new Date(dateVal) : null,
+        sendType:     document.getElementById('co-sendtype').value,
+        routeType:    document.getElementById('co-routetype').value,
+        rating:       currentStarRating,
+        noteText:     document.getElementById('co-notes').value.trim() || null,
+        attemptCount: Number(document.getElementById('co-attempts').value) || 0,
+        highPoint:    document.getElementById('co-highpoint').value.trim() || null,
+        projectNotes: document.getElementById('co-project-notes').value.trim() || null,
+      });
+      closeOverlay();
+      await loadData();
+    } catch (err) {
+      console.error('Save climb failed:', err);
+      alert('Save failed: ' + (err.message ?? err));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Climb';
+    }
+  });
+
+  document.getElementById('climb-overlay-delete').addEventListener('click', async function () {
+    const recordName = document.getElementById('co-record-name').value;
+    const name = document.getElementById('co-route').value;
+    const confirmed = await showConfirmDialog('Delete Climb?', `"${name}" will be permanently deleted.`);
+    if (!confirmed) return;
+    try {
+      await deleteClimbNote(recordName);
+      document.getElementById('climb-overlay').classList.add('hidden');
+      await loadData();
+    } catch (err) {
+      alert('Delete failed: ' + (err.message ?? err));
+    }
+  });
+
+  document.getElementById('btn-add-climb').addEventListener('click', showAddClimbOverlay);
+  bindStarPicker();
+}
+
+// ---------- Training overlay ----------
+
+function setIntensity(value) {
+  document.querySelectorAll('.intensity-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.value) === value);
+  });
+}
+
+function showAddTrainingOverlay() {
+  const overlay = document.getElementById('training-overlay');
+  document.getElementById('training-overlay-title').textContent = 'Log Session';
+  document.getElementById('to-record-name').value = '';
+  document.getElementById('to-type').value = 'Hangboard';
+  document.getElementById('to-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('to-duration').value = '60';
+  document.getElementById('to-notes').value = '';
+  setIntensity(3);
+  document.getElementById('training-overlay-delete').classList.add('hidden');
+  overlay.classList.remove('hidden');
+}
+
+function showEditTrainingOverlay(session) {
+  showAddTrainingOverlay();
+  document.getElementById('training-overlay-title').textContent = 'Edit Session';
+  document.getElementById('to-record-name').value = session.recordName ?? '';
+  document.getElementById('to-type').value = session.type ?? 'Gym Session';
+  document.getElementById('to-date').value = session.date ? session.date.toISOString().slice(0, 10) : '';
+  document.getElementById('to-duration').value = session.duration ?? 60;
+  document.getElementById('to-notes').value = session.notes ?? '';
+  setIntensity(session.intensity ?? 3);
+  document.getElementById('training-overlay-delete').classList.remove('hidden');
+}
+
+function bindTrainingOverlayHandlers() {
+  function closeOverlay() {
+    document.getElementById('training-overlay').classList.add('hidden');
+  }
+  document.getElementById('training-overlay-close').addEventListener('click', closeOverlay);
+  document.getElementById('training-overlay-cancel').addEventListener('click', closeOverlay);
+  document.getElementById('training-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeOverlay();
+  });
+
+  document.querySelectorAll('.intensity-btn').forEach(btn => {
+    btn.addEventListener('click', () => setIntensity(Number(btn.dataset.value)));
+  });
+
+  document.getElementById('training-overlay-save').addEventListener('click', async function () {
+    const btn = this;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const recordName = document.getElementById('to-record-name').value || undefined;
+      const dateVal = document.getElementById('to-date').value;
+      const activeIntensityBtn = document.querySelector('.intensity-btn.active');
+      await saveTrainingSession({
+        recordName,
+        id:        recordName ? undefined : crypto.randomUUID(),
+        type:      document.getElementById('to-type').value,
+        date:      dateVal ? new Date(dateVal) : new Date(),
+        duration:  Number(document.getElementById('to-duration').value),
+        intensity: activeIntensityBtn ? Number(activeIntensityBtn.dataset.value) : 3,
+        notes:     document.getElementById('to-notes').value.trim() || null,
+      });
+      closeOverlay();
+      await loadTrainingData();
+    } catch (err) {
+      alert('Save failed: ' + (err.message ?? err));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Session';
+    }
+  });
+
+  document.getElementById('training-overlay-delete').addEventListener('click', async function () {
+    const recordName = document.getElementById('to-record-name').value;
+    const type = document.getElementById('to-type').value;
+    const confirmed = await showConfirmDialog('Delete Session?', `This ${type} session will be permanently deleted.`);
+    if (!confirmed) return;
+    try {
+      await deleteTrainingSession(recordName);
+      document.getElementById('training-overlay').classList.add('hidden');
+      await loadTrainingData();
+    } catch (err) {
+      alert('Delete failed: ' + (err.message ?? err));
+    }
+  });
+
+  document.getElementById('btn-log-session').addEventListener('click', showAddTrainingOverlay);
+
+  document.getElementById('training-list').addEventListener('click', e => {
+    const row = e.target.closest('.session-row');
+    if (!row) return;
+    const session = allSessions.find(s => s.recordName === row.dataset.record);
+    if (session) showEditTrainingOverlay(session);
+  });
+}
+
+// ---------- Training data + rendering ----------
+
+let allSessions = [];
+let trainingPeriod = 'allTime';
+let trainingLoaded = false;
+
+async function loadTrainingData() {
+  allSessions = await fetchTrainingSessions();
+  document.getElementById('badge-sessions').textContent = allSessions.length;
+  renderTrainingPage(allSessions, trainingPeriod);
+}
+
+function renderTrainingPage(sessions, period) {
+  const stats = computeTrainingStats(sessions, period);
+
+  document.getElementById('ts-total').textContent = stats.totalSessions;
+  document.getElementById('ts-time').textContent = stats.formattedTotalTime(stats.totalMinutes);
+  document.getElementById('ts-days').textContent = stats.trainingDays;
+  document.getElementById('ts-avg').textContent = stats.avgPerWeek.toFixed(1);
+
+  const barsEl = document.getElementById('training-bars');
+  const maxCount = Math.max(1, ...Object.values(stats.sessionsByType));
+  barsEl.innerHTML = Object.entries(stats.sessionsByType)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count]) => {
+      const pct = Math.round((count / maxCount) * 100);
+      const emoji = (typeof TYPE_EMOJI !== 'undefined' ? TYPE_EMOJI[type] : '') || '🏋️';
+      return `<div class="training-bar-wrap">
+        <div class="training-bar" style="height:${pct}%"></div>
+        <div class="training-bar-label">${emoji} ${type.split(' ')[0]}</div>
+      </div>`;
+    }).join('');
+
+  const listEl = document.getElementById('training-list');
+  const filtered = sessions.filter(s => {
+    if (period === 'allTime') return true;
+    const now = new Date();
+    if (!s.date) return false;
+    if (period === 'week')  { const w = new Date(now); w.setDate(now.getDate() - 7); return s.date >= w; }
+    if (period === 'month') return s.date.getFullYear() === now.getFullYear() && s.date.getMonth() === now.getMonth();
+    if (period === 'year')  return s.date.getFullYear() === now.getFullYear();
+    return true;
+  });
+  listEl.innerHTML = filtered.map(s => {
+    const emoji = (typeof TYPE_EMOJI !== 'undefined' ? TYPE_EMOJI[s.type] : '') || '🏋️';
+    const dateStr = s.date ? s.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+    const dots = [1, 2, 3, 4, 5].map(i =>
+      `<div class="intensity-dot${i <= (s.intensity ?? 0) ? ' filled' : ''}"></div>`
+    ).join('');
+    return `<div class="session-row" data-record="${s.recordName}">
+      <div class="type-icon">${emoji}</div>
+      <div class="session-info">
+        <div class="session-type">${s.type}</div>
+        <div class="session-meta">${dateStr}${s.notes ? ' · ' + s.notes.slice(0, 40) + (s.notes.length > 40 ? '…' : '') : ''}</div>
+      </div>
+      <div class="session-right">
+        <div class="intensity-dots">${dots}</div>
+        <div class="session-duration">${s.duration} min</div>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:#94a3b8;font-size:.875rem;padding:.5rem 0">No sessions in this period.</p>';
+}
+
+// ---------- Period tabs ----------
+
+function bindPeriodTabs() {
+  document.getElementById('training-period-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('[data-period]');
+    if (!btn) return;
+    trainingPeriod = btn.dataset.period;
+    document.querySelectorAll('#training-period-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+    renderTrainingPage(allSessions, trainingPeriod);
+  });
+}
+
+// ---------- Ascent list ----------
+
+function renderAscentsList(climb) {
+  const container = document.getElementById('co-ascents-list');
+  const ascents = climb.ascents ?? [];
+  container.innerHTML = ascents.length
+    ? ascents.map(a => {
+        const d = a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+        return `<div class="ascent-row">
+          <span class="ascent-date">${d}</span>
+          <span class="ascent-type">${a.sendType ?? 'Redpoint'}</span>
+          <button class="ascent-delete" data-record="${a.recordName}" title="Delete ascent">✕</button>
+        </div>`;
+      }).join('')
+    : '<p style="color:#94a3b8;font-size:.8rem">No repeat ascents logged.</p>';
+
+  container.querySelectorAll('.ascent-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const confirmed = await showConfirmDialog('Delete Ascent?', 'This ascent record will be removed.');
+      if (!confirmed) return;
+      await deleteAscent(btn.dataset.record);
+      climb.ascents = (climb.ascents ?? []).filter(a => a.recordName !== btn.dataset.record);
+      renderAscentsList(climb);
+    });
+  });
+
+  document.getElementById('co-add-ascent').onclick = async () => {
+    const dateVal = document.getElementById('asc-date').value;
+    const sendType = document.getElementById('asc-sendtype').value;
+    if (!dateVal) return;
+    const climbNoteRecordName = document.getElementById('co-record-name').value;
+    const notes = document.getElementById('asc-notes').value.trim() || null;
+    const saved = await saveAscent({ date: new Date(dateVal), sendType, notes, climbNoteRecordName });
+    document.getElementById('asc-notes').value = '';
+    if (!climb.ascents) climb.ascents = [];
+    climb.ascents.push({ recordName: saved.recordName, date: new Date(dateVal), sendType });
+    renderAscentsList(climb);
+    document.getElementById('asc-date').value = '';
+  };
 }

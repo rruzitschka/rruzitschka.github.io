@@ -379,20 +379,7 @@
       if (!user) return;
       renderUserChip(user);
       document.getElementById('signout-btn').addEventListener('click', signOut);
-      showLoading(true);
-      try {
-        const climbs = await fetchClimbs();
-        showLoading(false);
-        const stats = computeStats(climbs);
-        renderStatsBar(stats);
-        populateFilters(climbs);
-        renderClimbsTable(climbs);
-        bindFilterHandlers(climbs);
-      } catch (err) {
-        showLoading(false);
-        showToast('Failed to load climbs. Please try again.', 'error');
-        console.error('Load error:', err);
-      }
+      await loadData();
     })();
   </script>
 
