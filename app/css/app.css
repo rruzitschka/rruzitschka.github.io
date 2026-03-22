@@ -1733,6 +1733,7 @@ body {
   margin-bottom: .75rem;
   width: 100%;
 }
+.table-header-row h3 { margin: 0; }
 
 /* Action button inside header — must not flex-grow */
 .btn-action {
