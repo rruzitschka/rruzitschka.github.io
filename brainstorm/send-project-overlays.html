@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SendLog — Design: Send & Project Overlays</title>
+  <link rel="stylesheet" href="../app/css/app.css">
+  <style>
+    body { background: #f1f5f9; font-family: var(--font-family); margin: 0; }
+
+    /* ---- Brainstorm page chrome ---- */
+    .bs-header {
+      background: var(--dark-bg);
+      color: #fff;
+      padding: 2rem 2.5rem 1.5rem;
+    }
+    .bs-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 .3rem; }
+    .bs-header p  { font-size: .9rem; color: #94a3b8; margin: 0; }
+
+    .bs-section {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .bs-section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 1rem;
+    }
+    .bs-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      margin-bottom: 1.5rem;
+    }
+    .bs-card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 1.25rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .bs-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .bs-label-bad  { display: inline-block; background: #fee2e2; color: #dc2626; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .04em; margin-bottom: .75rem; text-transform: uppercase; }
+    .bs-label-good { display: inline-block; background: #dcfce7; color: #16a34a; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .04em; margin-bottom: .75rem; text-transform: uppercase; }
+    .bs-label-info { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .04em; margin-bottom: .75rem; text-transform: uppercase; }
+    .bs-note { font-size: .8rem; color: #64748b; margin-top: .75rem; padding: .6rem .9rem; background: #f8fafc; border-left: 3px solid #e2e8f0; border-radius: 0 6px 6px 0; }
+
+    /* ---- Mock table-container (current app styles) ---- */
+    .mock-view {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .mock-table-container {
+      background: var(--white);
+      padding: 1.25rem 1.5rem;
+    }
+
+    /* ---- BEFORE: broken alignment ---- */
+    .before-header {
+      /* simulates the bug: inline-block parent doesn't stretch */
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .75rem;
+      width: auto; /* bug: not full-width */
+      gap: .5rem;
+    }
+
+    /* ---- AFTER: fixed alignment ---- */
+    .after-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    .after-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--dark-bg); }
+    .after-header .btn-primary,
+    .after-header .btn-secondary { flex: 0 0 auto; padding: .45rem 1rem; font-size: .85rem; }
+
+    /* Context-aware button row */
+    .view-btn-row {
+      display: flex;
+      gap: .5rem;
+    }
+
+    /* ---- Overlay previews (non-modal, inline) ---- */
+    .overlay-preview {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+    .overlay-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--white);
+    }
+    .overlay-preview-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .overlay-preview-body {
+      background: var(--white);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+    }
+    .overlay-preview-footer {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .9rem 1.25rem;
+      border-top: 1px solid var(--border-color);
+      background: var(--white);
+    }
+
+    /* Reuse app form styles */
+    .section-divider {
+      border-top: 1px solid var(--border-color);
+      padding-top: .9rem;
+      margin-top: .1rem;
+    }
+    .section-divider-title {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .7rem;
+    }
+
+    /* Faux input */
+    .faux-input {
+      padding: .48rem .75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: .88rem;
+      color: #94a3b8;
+      background: var(--white);
+      font-family: inherit;
+    }
+    .faux-select {
+      padding: .48rem .75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: .88rem;
+      color: var(--dark-bg);
+      background: var(--white);
+      font-family: inherit;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .6rem center;
+      padding-right: 1.8rem;
+    }
+
+    .star-preview { font-size: 1.2rem; color: #d1d5db; letter-spacing: 2px; }
+    .star-preview .on { color: #f59e0b; }
+
+    /* Project badge */
+    .project-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: .2rem .7rem;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .project-pill svg { width: 12px; height: 12px; }
+
+    /* Style selector tabs (send form) */
+    .style-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .style-tab {
+      padding: .3rem .75rem;
+      border-radius: 6px;
+      border: 1.5px solid var(--border-color);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #64748b;
+      background: var(--white);
+      transition: all .15s;
+    }
+    .style-tab.active-rp  { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+    .style-tab.active-os  { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+    .style-tab.active-fl  { border-color: #f59e0b; background: #fffbeb; color: #d97706; }
+    .style-tab.active-pk  { border-color: #ec4899; background: #fdf2f8; color: #be185d; }
+
+    /* Intensity dots preview */
+    .intensity-preview { display: flex; gap: 3px; align-items: center; }
+    .intensity-preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .intensity-preview-dot.on { background: var(--primary-color); }
+    .intensity-preview-dot.off { background: #e2e8f0; }
+
+    .diff-tag {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: .5rem;
+      vertical-align: middle;
+    }
+    .diff-tag.added   { background: #dcfce7; color: #16a34a; }
+    .diff-tag.removed { background: #fee2e2; color: #dc2626; }
+    .diff-tag.changed { background: #fef9c3; color: #854d0e; }
+  </style>
+</head>
+<body>
+
+<div class="bs-header">
+  <h1>SendLog — Design Proposal</h1>
+  <p>Button alignment fix · Context-aware add buttons · Separate Send vs Project overlays</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECTION 1: BUTTON ALIGNMENT
+══════════════════════════════════════════ -->
+<div class="bs-section">
+  <div class="bs-section-title">1 — Button Alignment Fix</div>
+  <div class="bs-two-col">
+
+    <!-- BEFORE -->
+    <div class="bs-card">
+      <span class="bs-label-bad">Before (bug)</span>
+      <div class="mock-view">
+        <div class="mock-table-container">
+          <div class="before-header">
+            <h3 class="table-title" style="margin:0">All Climbs</h3>
+            <button class="btn btn-primary btn-sm">+ Add Climb</button>
+          </div>
+          <div style="height:40px;background:#f8fafc;border-radius:6px;margin-bottom:.5rem;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;margin-bottom:4px;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;margin-bottom:4px;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;"></div>
+        </div>
+      </div>
+      <p class="bs-note">Container doesn't stretch full-width — button crowds the heading.</p>
+    </div>
+
+    <!-- AFTER -->
+    <div class="bs-card">
+      <span class="bs-label-good">After (fixed)</span>
+      <div class="mock-view">
+        <div class="mock-table-container">
+          <div class="after-header">
+            <h3>All Climbs</h3>
+            <button class="btn btn-primary btn-sm">+ Log Send</button>
+          </div>
+          <div style="height:40px;background:#f8fafc;border-radius:6px;margin-bottom:.5rem;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;margin-bottom:4px;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;margin-bottom:4px;"></div>
+          <div style="height:28px;background:#f1f5f9;border-radius:4px;"></div>
+        </div>
+      </div>
+      <p class="bs-note">Full-width flex row with <code>justify-content: space-between</code> properly pushes button to the right edge.</p>
+    </div>
+  </div>
+
+  <!-- Context-aware buttons -->
+  <div class="bs-card">
+    <h2>Context-Aware Action Buttons</h2>
+    <div class="bs-two-col">
+      <div>
+        <div class="bs-label-info">All Climbs / Sent view</div>
+        <div class="after-header">
+          <h3 style="margin:0;font-size:1.1rem;font-weight:700">All Climbs</h3>
+          <button class="btn btn-primary btn-sm">+ Log Send</button>
+        </div>
+        <p class="bs-note">Only "Log Send" shown — makes sense when browsing all sends.</p>
+      </div>
+      <div>
+        <div class="bs-label-info">Projects view</div>
+        <div class="after-header">
+          <h3 style="margin:0;font-size:1.1rem;font-weight:700">Projects</h3>
+          <button class="btn btn-primary btn-sm" style="background:#7c3aed;border-color:#7c3aed">+ Add Project</button>
+        </div>
+        <p class="bs-note">"Add Project" replaces "Log Send" when the Projects filter is active.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECTION 2: LOG SEND OVERLAY
+══════════════════════════════════════════ -->
+<div class="bs-section">
+  <div class="bs-section-title">2 — "Log Send" Overlay (Add / Edit)</div>
+  <div class="bs-two-col">
+
+    <!-- ADD SEND -->
+    <div class="bs-card">
+      <span class="bs-label-good">Add Send</span>
+      <div class="overlay-preview">
+        <div class="overlay-preview-header">
+          <h2>Log Send</h2>
+          <button class="btn-close">✕</button>
+        </div>
+        <div class="overlay-preview-body">
+          <div class="form-group">
+            <label>Route Name <span style="color:red">*</span></label>
+            <div class="faux-input">e.g. Biographie</div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Area</label><div class="faux-input">e.g. Ceüse</div></div>
+            <div class="form-group"><label>Crag</label><div class="faux-input">e.g. La Face</div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Grade</label><div class="faux-input">e.g. 9a</div></div>
+            <div class="form-group">
+              <label>Type</label>
+              <select class="faux-select" style="width:100%"><option>Sport</option><option>Boulder</option><option>Multi-Pitch</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Date <span style="color:red">*</span></label>
+            <div class="faux-input">2026-03-22</div>
+          </div>
+          <!-- Style as pill buttons instead of dropdown -->
+          <div class="form-group">
+            <label>Style <span style="color:red">*</span></label>
+            <div class="style-tabs">
+              <div class="style-tab active-rp">Redpoint</div>
+              <div class="style-tab">On Sight</div>
+              <div class="style-tab">Flash</div>
+              <div class="style-tab">Pinkpoint</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <div class="star-preview">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <div class="faux-input" style="min-height:56px;color:#94a3b8">Any notes about this send…</div>
+          </div>
+        </div>
+        <div class="overlay-preview-footer">
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary">Save Send</button>
+        </div>
+      </div>
+      <p class="bs-note">Style as <strong>pill buttons</strong> instead of dropdown — clearer, faster, coloured per style. No Project option here.</p>
+    </div>
+
+    <!-- EDIT SEND -->
+    <div class="bs-card">
+      <span class="bs-label-info">Edit Send (with Repeat Ascents)</span>
+      <div class="overlay-preview">
+        <div class="overlay-preview-header">
+          <h2>Edit Send</h2>
+          <button class="btn-close">✕</button>
+        </div>
+        <div class="overlay-preview-body">
+          <div class="form-group">
+            <label>Route Name <span style="color:red">*</span></label>
+            <div class="faux-input" style="color:var(--dark-bg);font-weight:600">Biographie</div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Area</label><div class="faux-input" style="color:var(--dark-bg)">Ceüse</div></div>
+            <div class="form-group"><label>Crag</label><div class="faux-input" style="color:var(--dark-bg)">La Face</div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Grade</label><div class="faux-input" style="color:var(--dark-bg)">9a</div></div>
+            <div class="form-group">
+              <label>Type</label>
+              <select class="faux-select" style="width:100%"><option selected>Sport</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <div class="faux-input" style="color:var(--dark-bg)">2026-08-15</div>
+          </div>
+          <div class="form-group">
+            <label>Style</label>
+            <div class="style-tabs">
+              <div class="style-tab active-rp">Redpoint</div>
+              <div class="style-tab">On Sight</div>
+              <div class="style-tab">Flash</div>
+              <div class="style-tab">Pinkpoint</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <div class="star-preview">
+              <span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span>
+            </div>
+          </div>
+          <!-- Repeat ascents (edit only) -->
+          <div class="section-divider">
+            <div class="section-divider-title">Repeat Ascents <span class="diff-tag added">Edit only</span></div>
+            <div class="ascent-row">
+              <span class="ascent-date">Mar 1, 2026</span>
+              <span class="ascent-type">Redpoint</span>
+              <button class="ascent-delete">✕</button>
+            </div>
+            <div class="add-ascent-row" style="margin-top:.5rem">
+              <div class="faux-input" style="font-size:.82rem;color:#94a3b8">date</div>
+              <select class="faux-select" style="font-size:.82rem"><option>Redpoint</option></select>
+              <div class="faux-input" style="font-size:.82rem;color:#94a3b8">Notes</div>
+              <button class="btn btn-ghost btn-sm">+ Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="overlay-preview-footer">
+          <button class="btn btn-ghost" style="color:#ef4444;">Delete</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary">Save Send</button>
+        </div>
+      </div>
+      <p class="bs-note">Repeat Ascents section only visible in edit mode. Delete button shown bottom-left.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECTION 3: ADD/EDIT PROJECT OVERLAY
+══════════════════════════════════════════ -->
+<div class="bs-section">
+  <div class="bs-section-title">3 — "Add Project" Overlay (Add / Edit)</div>
+  <div class="bs-two-col">
+
+    <!-- ADD PROJECT -->
+    <div class="bs-card">
+      <span class="bs-label-good">Add Project</span>
+      <div class="overlay-preview">
+        <div class="overlay-preview-header">
+          <h2>Add Project</h2>
+          <button class="btn-close">✕</button>
+        </div>
+        <div class="overlay-preview-body">
+          <div class="form-group">
+            <label>Route Name <span style="color:red">*</span></label>
+            <div class="faux-input">e.g. La Dura Dura</div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Area</label><div class="faux-input">e.g. Oliana</div></div>
+            <div class="form-group"><label>Crag</label><div class="faux-input">e.g. Sector Pal</div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Grade</label><div class="faux-input">e.g. 9a+</div></div>
+            <div class="form-group">
+              <label>Type</label>
+              <select class="faux-select" style="width:100%"><option>Sport</option><option>Boulder</option><option>Multi-Pitch</option></select>
+            </div>
+          </div>
+          <!-- Project-specific fields -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Attempts</label>
+              <div class="faux-input" style="color:#94a3b8">0</div>
+            </div>
+            <div class="form-group">
+              <label>High Point</label>
+              <div class="faux-input" style="color:#94a3b8">e.g. 2nd bolt</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="faux-select" style="width:100%">
+              <option>Working</option><option>Close</option><option>Abandoned</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <div class="faux-input" style="min-height:56px;color:#94a3b8">Beta, conditions, goals…</div>
+          </div>
+        </div>
+        <div class="overlay-preview-footer">
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed">Save Project</button>
+        </div>
+      </div>
+      <p class="bs-note">No Date, No Style dropdown, No Rating — projects are works in progress. Status replaces style. Save button purple to visually distinguish from sends.</p>
+    </div>
+
+    <!-- EDIT PROJECT -->
+    <div class="bs-card">
+      <span class="bs-label-info">Edit Project</span>
+      <div class="overlay-preview">
+        <div class="overlay-preview-header">
+          <h2>Edit Project</h2>
+          <button class="btn-close">✕</button>
+        </div>
+        <div class="overlay-preview-body">
+          <div class="form-group">
+            <label>Route Name</label>
+            <div class="faux-input" style="color:var(--dark-bg);font-weight:600">La Dura Dura</div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Area</label><div class="faux-input" style="color:var(--dark-bg)">Oliana</div></div>
+            <div class="form-group"><label>Crag</label><div class="faux-input" style="color:var(--dark-bg)">Sector Pal</div></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Grade</label><div class="faux-input" style="color:var(--dark-bg)">9a+</div></div>
+            <div class="form-group"><label>Type</label><select class="faux-select" style="width:100%"><option>Sport</option></select></div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Attempts</label>
+              <div class="faux-input" style="color:var(--dark-bg)">14</div>
+            </div>
+            <div class="form-group">
+              <label>High Point</label>
+              <div class="faux-input" style="color:var(--dark-bg)">3rd bolt</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="faux-select" style="width:100%"><option selected>Close</option></select>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <div class="faux-input" style="min-height:56px;color:var(--dark-bg)">Crux at 3rd bolt, keep trying!</div>
+          </div>
+          <!-- Mark as sent CTA -->
+          <div class="section-divider">
+            <div class="section-divider-title">Ready to Celebrate? <span class="diff-tag added">Edit only</span></div>
+            <button class="btn btn-primary" style="width:100%;background:#22c55e;border-color:#22c55e">🎉 Mark as Sent</button>
+          </div>
+        </div>
+        <div class="overlay-preview-footer">
+          <button class="btn btn-ghost" style="color:#ef4444;">Delete</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed">Save Project</button>
+        </div>
+      </div>
+      <p class="bs-note">"Mark as Sent" button converts the project to a send — opens the Log Send overlay pre-filled with route name/grade/area so you can add date, style and rating.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECTION 4: TRAINING OVERLAY (unchanged + note)
+══════════════════════════════════════════ -->
+<div class="bs-section">
+  <div class="bs-section-title">4 — Training Overlay (existing, shown for comparison)</div>
+  <div class="bs-card">
+    <h2>Log Session — unchanged design</h2>
+    <div style="max-width:480px">
+      <div class="overlay-preview">
+        <div class="overlay-preview-header">
+          <h2>Log Session</h2>
+          <button class="btn-close">✕</button>
+        </div>
+        <div class="overlay-preview-body">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="faux-select" style="width:100%">
+              <option selected>Hangboard</option><option>Campus Board</option><option>System Wall</option><option>Gym Session</option><option>Yoga</option><option>Running</option><option>Strength</option>
+            </select>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group"><label>Date</label><div class="faux-input" style="color:var(--dark-bg)">2026-03-22</div></div>
+            <div class="form-group"><label>Duration (min)</label><div class="faux-input" style="color:var(--dark-bg)">45</div></div>
+          </div>
+          <div class="form-group">
+            <label>Intensity</label>
+            <div class="intensity-picker">
+              <button class="intensity-btn active">1</button>
+              <button class="intensity-btn active">2</button>
+              <button class="intensity-btn active">3</button>
+              <button class="intensity-btn active">4</button>
+              <button class="intensity-btn">5</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <div class="faux-input" style="min-height:56px;color:#94a3b8">Any notes about this session…</div>
+          </div>
+        </div>
+        <div class="overlay-preview-footer">
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary">Cancel</button>
+          <button class="btn btn-primary">Save Session</button>
+        </div>
+      </div>
+    </div>
+    <p class="bs-note">Training overlay is already correct — no changes needed here.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECTION 5: CHANGE SUMMARY
+══════════════════════════════════════════ -->
+<div class="bs-section">
+  <div class="bs-section-title">5 — Change Summary</div>
+  <div class="bs-card">
+    <h2>What Changes</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:.875rem">
+      <thead>
+        <tr style="background:#f8fafc">
+          <th style="text-align:left;padding:.6rem .75rem;font-weight:700;color:#64748b;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0">Area</th>
+          <th style="text-align:left;padding:.6rem .75rem;font-weight:700;color:#64748b;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0">Before</th>
+          <th style="text-align:left;padding:.6rem .75rem;font-weight:700;color:#64748b;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0">After</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Button alignment</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">Button crowds heading</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">Full-width flex row, right-aligned</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Add button label</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">+ Add Climb (always)</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">+ Log Send OR + Add Project (context-aware)</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Send overlay title</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">Add Climb</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">Log Send / Edit Send</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Send style picker</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">Dropdown with "Project" option</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">Coloured pill buttons (no Project)</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Project overlay</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">Hidden section inside climb overlay</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">Separate overlay with status, attempts, high point</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Project date/rating</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">Date and rating shown (confusing)</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">Removed — projects aren't sent yet</td></tr>
+        <tr><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9">Project → Send</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#dc2626">No path</td><td style="padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;color:#16a34a">"Mark as Sent" button opens Log Send pre-filled</td></tr>
+        <tr><td style="padding:.6rem .75rem">Training overlay</td><td style="padding:.6rem .75rem;color:#16a34a">Already correct</td><td style="padding:.6rem .75rem;color:#16a34a">No changes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div style="height:3rem"></div>
+
+</body>
+</html>
