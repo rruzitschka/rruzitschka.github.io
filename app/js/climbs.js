@@ -107,3 +107,67 @@ function filterClimbs(climbs, { area, year, sendType, routeType, search, sort } 
   // default: date-desc (already sorted from fetch)
   return result;
 }
+
+// ---- Write Operations ----
+
+async function saveClimbNote(climbData) {
+  const record = {
+    recordType: 'CD_ClimbNote',
+    fields: {
+      CD_id:            { value: climbData.id ?? crypto.randomUUID() },
+      CD_route:         { value: climbData.route },
+      CD_climbingArea:  { value: climbData.climbingArea || null },
+      CD_crag:          { value: climbData.crag || null },
+      CD_difficulty:    { value: climbData.difficulty || null },
+      CD_date:          { value: climbData.date ? climbData.date.getTime() : null },
+      CD_sendType:      { value: climbData.sendType ?? 'Redpoint' },
+      CD_routeType:     { value: climbData.routeType ?? 'Sport' },
+      CD_rating:        { value: Number(climbData.rating ?? 0) },
+      CD_noteText:      { value: climbData.noteText || null },
+      CD_attemptCount:  { value: Number(climbData.attemptCount ?? 0) },
+      CD_highPoint:     { value: climbData.highPoint || null },
+      CD_projectStatus: { value: climbData.projectStatus || null },
+      CD_projectNotes:  { value: climbData.projectNotes || null },
+    }
+  };
+  if (climbData.recordName) record.recordName = climbData.recordName;
+  const response = await database.saveRecords([record]);
+  return response.records[0];
+}
+
+async function deleteClimbNote(recordName) {
+  // CloudKit does not cascade deletes — delete child Ascent records first
+  const ascentResponse = await database.performQuery({
+    recordType: 'CD_Ascent',
+    filterBy: [{
+      fieldName: 'CD_climbNote',
+      comparator: 'EQUALS',
+      fieldValue: { value: { recordName } }
+    }]
+  });
+  const ascentIDs = (ascentResponse.records ?? []).map(r => ({
+    recordName: r.recordName, recordType: 'CD_Ascent'
+  }));
+  if (ascentIDs.length) await database.deleteRecords(ascentIDs);
+  await database.deleteRecords([{ recordName, recordType: 'CD_ClimbNote' }]);
+}
+
+async function saveAscent(ascentData) {
+  const record = {
+    recordType: 'CD_Ascent',
+    fields: {
+      CD_id:       { value: ascentData.id ?? crypto.randomUUID() },
+      CD_date:     { value: ascentData.date ? ascentData.date.getTime() : Date.now() },
+      CD_sendType: { value: ascentData.sendType ?? 'Redpoint' },
+      CD_notes:    { value: ascentData.notes || null },
+      CD_climbNote: { value: { recordName: ascentData.climbNoteRecordName } },
+    }
+  };
+  if (ascentData.recordName) record.recordName = ascentData.recordName;
+  const response = await database.saveRecords([record]);
+  return response.records[0];
+}
+
+async function deleteAscent(recordName) {
+  await database.deleteRecords([{ recordName, recordType: 'CD_Ascent' }]);
+}
