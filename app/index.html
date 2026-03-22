@@ -105,9 +105,10 @@
 
           <div class="table-container">
             <div class="table-header">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
-                <h3 class="table-title" id="view-label" style="margin:0">All Climbs</h3>
-                <button class="btn btn-primary btn-sm" id="btn-add-climb">+ Add Climb</button>
+              <div class="table-header-row">
+                <h3 class="table-title" id="view-label">All Climbs</h3>
+                <button class="btn-action" id="btn-log-send">+ Log Send</button>
+                <button class="btn-action btn-project hidden" id="btn-add-project">+ Add Project</button>
               </div>
             </div>
 
@@ -183,63 +184,61 @@
   <!-- Toast (position:fixed, outside #app) -->
   <div id="toast" class="toast hidden"></div>
 
-  <!-- Climb Overlay -->
-  <div id="climb-overlay" class="edit-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="climb-overlay-title">
+  <!-- Send overlay (Log Send / Edit Send) -->
+  <div id="send-overlay" class="edit-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="send-overlay-title">
     <div class="edit-overlay-content">
       <div class="edit-overlay-header">
-        <h2 id="climb-overlay-title">Add Climb</h2>
-        <button class="btn-close" id="climb-overlay-close" aria-label="Close">✕</button>
+        <h2 id="send-overlay-title">Log Send</h2>
+        <button class="btn-close" id="send-overlay-close" aria-label="Close">✕</button>
       </div>
       <div class="edit-overlay-body">
-        <input type="hidden" id="co-record-name">
+        <input type="hidden" id="so-record-name">
         <div class="form-group">
-          <label for="co-route">Route Name <span style="color:red">*</span></label>
-          <input type="text" id="co-route" placeholder="e.g. Biographie">
-          <div class="form-error hidden" id="co-route-error">Route name is required.</div>
+          <label for="so-route">Route Name <span style="color:red">*</span></label>
+          <input type="text" id="so-route" placeholder="e.g. Biographie">
+          <div class="form-error hidden" id="so-route-error">Route name is required.</div>
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label for="co-area">Area</label>
-            <input type="text" id="co-area" placeholder="e.g. Ceüse">
+            <label for="so-area">Area</label>
+            <input type="text" id="so-area" placeholder="e.g. Ceüse">
           </div>
           <div class="form-group">
-            <label for="co-crag">Crag</label>
-            <input type="text" id="co-crag" placeholder="e.g. La Face">
+            <label for="so-crag">Crag</label>
+            <input type="text" id="so-crag" placeholder="e.g. La Face">
           </div>
         </div>
         <div class="form-row-2">
           <div class="form-group">
-            <label for="co-difficulty">Grade</label>
-            <input type="text" id="co-difficulty" placeholder="e.g. 9a">
+            <label for="so-difficulty">Grade</label>
+            <input type="text" id="so-difficulty" placeholder="e.g. 9a">
           </div>
           <div class="form-group">
-            <label for="co-routetype">Type</label>
-            <select id="co-routetype">
-              <option value="Sport">Sport</option>
-              <option value="Boulder">Boulder</option>
-              <option value="Multi-Pitch">Multi-Pitch</option>
+            <label for="so-routetype">Type</label>
+            <select id="so-routetype">
+              <option>Sport</option>
+              <option>Boulder</option>
+              <option>Multi-Pitch</option>
             </select>
           </div>
         </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label for="co-date">Date</label>
-            <input type="date" id="co-date">
+        <div class="form-group">
+          <label for="so-date">Date <span style="color:red">*</span></label>
+          <input type="date" id="so-date">
+        </div>
+        <div class="form-group">
+          <label>Style <span style="color:red">*</span></label>
+          <div class="style-tabs" id="so-style-tabs">
+            <div class="style-tab active-rp" data-style="Redpoint">Redpoint</div>
+            <div class="style-tab" data-style="On Sight">On Sight</div>
+            <div class="style-tab" data-style="Flash">Flash</div>
+            <div class="style-tab" data-style="Pinkpoint">Pinkpoint</div>
           </div>
-          <div class="form-group">
-            <label for="co-sendtype">Style</label>
-            <select id="co-sendtype">
-              <option value="Redpoint">Redpoint</option>
-              <option value="On Sight">On Sight</option>
-              <option value="Flash">Flash</option>
-              <option value="Pinkpoint">Pinkpoint</option>
-              <option value="Project">Project</option>
-            </select>
-          </div>
+          <input type="hidden" id="so-sendtype" value="Redpoint">
         </div>
         <div class="form-group">
           <label>Rating</label>
-          <div class="star-picker" id="co-rating" role="group" aria-label="Rating 1 to 5">
+          <div class="star-picker" id="so-rating" role="group" aria-label="Rating 1 to 5">
             <span data-value="1">★</span>
             <span data-value="2">★</span>
             <span data-value="3">★</span>
@@ -248,44 +247,108 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="co-notes">Notes</label>
-          <textarea id="co-notes" rows="2" placeholder="Any notes about this climb…"></textarea>
+          <label for="so-notes">Notes</label>
+          <textarea id="so-notes" rows="2" placeholder="Any notes about this send…"></textarea>
         </div>
-        <div class="form-section hidden" id="co-project-section">
-          <div class="form-section-title">Project Details</div>
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="co-attempts">Attempts</label>
-              <input type="number" id="co-attempts" min="0" value="0">
-            </div>
-            <div class="form-group">
-              <label for="co-highpoint">High Point</label>
-              <input type="text" id="co-highpoint" placeholder="e.g. 2nd bolt">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="co-project-notes">Project Notes</label>
-            <textarea id="co-project-notes" rows="2" placeholder="Beta, conditions, goals…"></textarea>
-          </div>
-        </div>
-        <div class="form-section hidden" id="co-ascents-section">
-          <div class="form-section-title">Repeat Ascents</div>
-          <div id="co-ascents-list"></div>
-          <div class="add-ascent-row">
-            <input type="date" id="asc-date">
-            <select id="asc-sendtype">
-              <option>Redpoint</option><option>On Sight</option><option>Flash</option><option>Pinkpoint</option>
+        <div class="form-section hidden" id="so-ascents-section">
+          <div class="form-section-title">Repeat Ascents <span class="badge-edit-only">Edit only</span></div>
+          <div id="so-ascents-list"></div>
+          <div class="ascent-add-row">
+            <input type="date" id="so-ascent-date">
+            <select id="so-ascent-type">
+              <option>Redpoint</option>
+              <option>On Sight</option>
+              <option>Flash</option>
+              <option>Pinkpoint</option>
             </select>
-            <input type="text" id="asc-notes" placeholder="Notes (optional)">
-            <button class="btn btn-ghost btn-sm" id="co-add-ascent">+ Add</button>
+            <input type="text" id="so-ascent-notes" placeholder="Notes">
+            <button class="btn btn-sm btn-secondary" id="so-ascent-add">+ Add</button>
           </div>
         </div>
       </div>
       <div class="edit-overlay-footer">
-        <button class="btn btn-ghost hidden" id="climb-overlay-delete" style="color:#ef4444;">Delete</button>
+        <button class="btn btn-ghost hidden" id="send-overlay-delete" style="color:#ef4444;">Delete</button>
         <div style="flex:1"></div>
-        <button class="btn btn-secondary" id="climb-overlay-cancel">Cancel</button>
-        <button class="btn btn-primary" id="climb-overlay-save">Save Climb</button>
+        <button class="btn btn-secondary" id="send-overlay-cancel">Cancel</button>
+        <button class="btn btn-primary" id="send-overlay-save">Save Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project overlay (Add Project / Edit Project) -->
+  <div id="project-overlay" class="edit-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="project-overlay-title">
+    <div class="edit-overlay-content">
+      <div class="edit-overlay-header">
+        <h2 id="project-overlay-title">Add Project</h2>
+        <button class="btn-close" id="project-overlay-close" aria-label="Close">✕</button>
+      </div>
+      <div class="edit-overlay-body">
+        <input type="hidden" id="po-record-name">
+        <div class="form-group">
+          <label for="po-route">Route Name <span style="color:red">*</span></label>
+          <input type="text" id="po-route" placeholder="e.g. La Dura Dura">
+          <div class="form-error hidden" id="po-route-error">Route name is required.</div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="po-area">Area</label>
+            <input type="text" id="po-area" placeholder="e.g. Oliana">
+          </div>
+          <div class="form-group">
+            <label for="po-crag">Crag</label>
+            <input type="text" id="po-crag" placeholder="e.g. Sector Pal">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="po-difficulty">Grade</label>
+            <input type="text" id="po-difficulty" placeholder="e.g. 9a+">
+          </div>
+          <div class="form-group">
+            <label for="po-routetype">Type</label>
+            <select id="po-routetype">
+              <option>Sport</option>
+              <option>Boulder</option>
+              <option>Multi-Pitch</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="po-attempts">Attempts</label>
+            <input type="number" id="po-attempts" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="po-last-attempt-date">Last Attempt Date</label>
+            <input type="date" id="po-last-attempt-date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="po-highpoint">High Point</label>
+          <input type="text" id="po-highpoint" placeholder="e.g. 2nd bolt">
+        </div>
+        <div class="form-group">
+          <label for="po-status">Status</label>
+          <select id="po-status">
+            <option>Working</option>
+            <option>Close</option>
+            <option>Abandoned</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="po-notes">Notes</label>
+          <textarea id="po-notes" rows="2" placeholder="Beta, conditions, goals…"></textarea>
+        </div>
+        <div class="form-section hidden" id="po-mark-sent-section">
+          <div class="form-section-title">Ready to Celebrate? <span class="badge-edit-only">Edit only</span></div>
+          <button class="btn-success" id="po-mark-sent" style="width:100%">🎉 Mark as Sent</button>
+        </div>
+      </div>
+      <div class="edit-overlay-footer">
+        <button class="btn btn-ghost hidden" id="project-overlay-delete" style="color:#ef4444;">Delete</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary" id="project-overlay-cancel">Cancel</button>
+        <button class="btn btn-primary btn-project" id="project-overlay-save">Save Project</button>
       </div>
     </div>
   </div>
