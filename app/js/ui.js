@@ -150,7 +150,11 @@ function showDetailModal(climb) {
 
   document.getElementById('detail-edit-btn').addEventListener('click', () => {
     hideDetailModal();
-    showEditClimbOverlay(climb);
+    if (climb.sendType === 'Project') {
+      showEditProjectOverlay(climb);
+    } else {
+      showEditSendOverlay(climb);
+    }
   });
 }
 
@@ -300,6 +304,13 @@ function bindFilterHandlers(initialClimbs) {
     if (navMap[view]) document.getElementById(navMap[view])?.classList.add('active');
     const lbl = document.getElementById('view-label');
     if (lbl) lbl.textContent = labelMap[view] ?? 'All Climbs';
+    // Context-aware action button
+    const logSendBtn = document.getElementById('btn-log-send');
+    const addProjectBtn = document.getElementById('btn-add-project');
+    if (logSendBtn && addProjectBtn) {
+      logSendBtn.classList.toggle('hidden', view === 'projects' || view === 'training');
+      addProjectBtn.classList.toggle('hidden', view !== 'projects');
+    }
     refresh();
   }
 
@@ -333,7 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showTrainingView();
   });
 
-  bindClimbOverlayHandlers();
+  bindSendOverlayHandlers();
+  bindProjectOverlayHandlers();
   bindTrainingOverlayHandlers();
   bindPeriodTabs();
 });
@@ -383,6 +395,8 @@ function showTrainingView() {
   document.getElementById('nav-training')?.classList.add('active');
   document.getElementById('nav-logbook')?.classList.remove('active');
   document.getElementById('nav-projects')?.classList.remove('active');
+  document.getElementById('btn-log-send')?.classList.add('hidden');
+  document.getElementById('btn-add-project')?.classList.add('hidden');
   loadTrainingData();
 }
 
@@ -420,17 +434,17 @@ let currentStarRating = 0;
 
 function setStarRating(value) {
   currentStarRating = value;
-  document.querySelectorAll('#co-rating span').forEach((span, i) => {
+  document.querySelectorAll('#so-rating span').forEach((span, i) => {
     span.classList.toggle('filled', i < value);
   });
 }
 
 function bindStarPicker() {
-  document.querySelectorAll('#co-rating span').forEach(span => {
+  document.querySelectorAll('#so-rating span').forEach(span => {
     span.addEventListener('click', () => setStarRating(Number(span.dataset.value)));
     span.addEventListener('mouseenter', () => {
       const v = Number(span.dataset.value);
-      document.querySelectorAll('#co-rating span').forEach((s, i) => {
+      document.querySelectorAll('#so-rating span').forEach((s, i) => {
         s.classList.toggle('filled', i < v);
       });
     });
@@ -438,127 +452,285 @@ function bindStarPicker() {
   });
 }
 
-// ---------- Climb overlay ----------
+function setStylePill(value) {
+  const styleMap = {
+    'Redpoint':  'active-rp',
+    'On Sight':  'active-os',
+    'Flash':     'active-fl',
+    'Pinkpoint': 'active-pk',
+  };
+  document.querySelectorAll('#so-style-tabs .style-tab').forEach(tab => {
+    tab.className = 'style-tab';
+    if (tab.dataset.style === value) tab.classList.add(styleMap[value] ?? '');
+  });
+  const hidden = document.getElementById('so-sendtype');
+  if (hidden) hidden.value = value;
+}
 
-function showAddClimbOverlay() {
-  const overlay = document.getElementById('climb-overlay');
-  document.getElementById('climb-overlay-title').textContent = 'Add Climb';
-  document.getElementById('co-record-name').value = '';
-  document.getElementById('co-route').value = '';
-  document.getElementById('co-area').value = '';
-  document.getElementById('co-crag').value = '';
-  document.getElementById('co-difficulty').value = '';
-  document.getElementById('co-routetype').value = 'Sport';
-  document.getElementById('co-date').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('co-sendtype').value = 'Redpoint';
-  document.getElementById('co-notes').value = '';
-  document.getElementById('co-attempts').value = '0';
-  document.getElementById('co-highpoint').value = '';
-  document.getElementById('co-project-notes').value = '';
+// ---------- Send overlay ----------
+
+function showAddSendOverlay(prefill = {}) {
+  const overlay = document.getElementById('send-overlay');
+  document.getElementById('send-overlay-title').textContent = 'Log Send';
+  document.getElementById('so-record-name').value = '';
+  document.getElementById('so-route').value = prefill.route ?? '';
+  document.getElementById('so-area').value = prefill.climbingArea ?? '';
+  document.getElementById('so-crag').value = prefill.crag ?? '';
+  document.getElementById('so-difficulty').value = prefill.difficulty ?? '';
+  document.getElementById('so-routetype').value = prefill.routeType ?? 'Sport';
+  document.getElementById('so-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('so-notes').value = '';
   setStarRating(0);
-  document.getElementById('co-project-section').classList.add('hidden');
-  document.getElementById('co-ascents-section').classList.add('hidden');
-  document.getElementById('climb-overlay-delete').classList.add('hidden');
-  document.getElementById('co-route-error').classList.add('hidden');
+  setStylePill('Redpoint');
+  document.getElementById('so-ascents-section').classList.add('hidden');
+  document.getElementById('send-overlay-delete').classList.add('hidden');
+  document.getElementById('so-route-error').classList.add('hidden');
+  document.getElementById('so-route').classList.remove('error');
+  overlay.dataset.projectRecordName = prefill.projectRecordName ?? '';
   overlay.classList.remove('hidden');
 }
 
-function showEditClimbOverlay(climb) {
-  showAddClimbOverlay();
-  document.getElementById('climb-overlay-title').textContent = 'Edit Climb';
-  document.getElementById('co-record-name').value = climb.recordName ?? '';
-  document.getElementById('co-route').value = climb.route ?? '';
-  document.getElementById('co-area').value = climb.climbingArea ?? '';
-  document.getElementById('co-crag').value = climb.crag ?? '';
-  document.getElementById('co-difficulty').value = climb.difficulty ?? '';
-  document.getElementById('co-routetype').value = climb.routeType ?? 'Sport';
-  document.getElementById('co-date').value = climb.date ? climb.date.toISOString().slice(0, 10) : '';
-  document.getElementById('co-sendtype').value = climb.sendType ?? 'Redpoint';
-  document.getElementById('co-notes').value = climb.noteText ?? '';
-  document.getElementById('co-attempts').value = climb.attemptCount ?? 0;
-  document.getElementById('co-highpoint').value = climb.highPoint ?? '';
-  document.getElementById('co-project-notes').value = climb.projectNotes ?? '';
+function showEditSendOverlay(climb) {
+  showAddSendOverlay();
+  document.getElementById('send-overlay-title').textContent = 'Edit Send';
+  document.getElementById('so-record-name').value = climb.recordName ?? '';
+  document.getElementById('so-route').value = climb.route ?? '';
+  document.getElementById('so-area').value = climb.climbingArea ?? '';
+  document.getElementById('so-crag').value = climb.crag ?? '';
+  document.getElementById('so-difficulty').value = climb.difficulty ?? '';
+  document.getElementById('so-routetype').value = climb.routeType ?? 'Sport';
+  document.getElementById('so-date').value = climb.date ? climb.date.toISOString().slice(0, 10) : '';
+  document.getElementById('so-notes').value = climb.noteText ?? '';
   setStarRating(climb.rating ?? 0);
-  if (climb.sendType === 'Project') {
-    document.getElementById('co-project-section').classList.remove('hidden');
-  }
-  document.getElementById('co-ascents-section').classList.remove('hidden');
-  document.getElementById('climb-overlay-delete').classList.remove('hidden');
+  setStylePill(climb.sendType ?? 'Redpoint');
+  document.getElementById('so-ascents-section').classList.remove('hidden');
+  document.getElementById('send-overlay-delete').classList.remove('hidden');
   renderAscentsList(climb);
 }
 
-function bindClimbOverlayHandlers() {
+function showAddProjectOverlay() {
+  const overlay = document.getElementById('project-overlay');
+  document.getElementById('project-overlay-title').textContent = 'Add Project';
+  document.getElementById('po-record-name').value = '';
+  document.getElementById('po-route').value = '';
+  document.getElementById('po-area').value = '';
+  document.getElementById('po-crag').value = '';
+  document.getElementById('po-difficulty').value = '';
+  document.getElementById('po-routetype').value = 'Sport';
+  document.getElementById('po-attempts').value = '0';
+  document.getElementById('po-last-attempt-date').value = '';
+  document.getElementById('po-highpoint').value = '';
+  document.getElementById('po-status').value = 'Working';
+  document.getElementById('po-notes').value = '';
+  document.getElementById('po-mark-sent-section').classList.add('hidden');
+  document.getElementById('project-overlay-delete').classList.add('hidden');
+  document.getElementById('po-route-error').classList.add('hidden');
+  document.getElementById('po-route').classList.remove('error');
+  overlay.classList.remove('hidden');
+}
+
+function showEditProjectOverlay(climb) {
+  showAddProjectOverlay();
+  document.getElementById('project-overlay-title').textContent = 'Edit Project';
+  document.getElementById('po-record-name').value = climb.recordName ?? '';
+  document.getElementById('po-route').value = climb.route ?? '';
+  document.getElementById('po-area').value = climb.climbingArea ?? '';
+  document.getElementById('po-crag').value = climb.crag ?? '';
+  document.getElementById('po-difficulty').value = climb.difficulty ?? '';
+  document.getElementById('po-routetype').value = climb.routeType ?? 'Sport';
+  document.getElementById('po-attempts').value = climb.attemptCount ?? 0;
+  document.getElementById('po-last-attempt-date').value =
+    climb.lastAttemptDate ? climb.lastAttemptDate.toISOString().slice(0, 10) : '';
+  document.getElementById('po-highpoint').value = climb.highPoint ?? '';
+  document.getElementById('po-status').value = climb.projectStatus ?? 'Working';
+  document.getElementById('po-notes').value = climb.noteText ?? '';
+  document.getElementById('po-mark-sent-section').classList.remove('hidden');
+  document.getElementById('project-overlay-delete').classList.remove('hidden');
+}
+
+function bindSendOverlayHandlers() {
   function closeOverlay() {
-    document.getElementById('climb-overlay').classList.add('hidden');
+    document.getElementById('send-overlay').classList.add('hidden');
   }
-  document.getElementById('climb-overlay-close').addEventListener('click', closeOverlay);
-  document.getElementById('climb-overlay-cancel').addEventListener('click', closeOverlay);
-  document.getElementById('climb-overlay').addEventListener('click', e => {
+  document.getElementById('send-overlay-close').addEventListener('click', closeOverlay);
+  document.getElementById('send-overlay-cancel').addEventListener('click', closeOverlay);
+  document.getElementById('send-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeOverlay();
   });
 
-  document.getElementById('co-sendtype').addEventListener('change', function () {
-    const projectSection = document.getElementById('co-project-section');
-    projectSection.classList.toggle('hidden', this.value !== 'Project');
+  document.querySelectorAll('#so-style-tabs .style-tab').forEach(tab => {
+    tab.addEventListener('click', () => setStylePill(tab.dataset.style));
   });
 
-  document.getElementById('climb-overlay-save').addEventListener('click', async function () {
-    const routeVal = document.getElementById('co-route').value.trim();
+  document.getElementById('send-overlay-save').addEventListener('click', async function () {
+    const routeVal = document.getElementById('so-route').value.trim();
     if (!routeVal) {
-      document.getElementById('co-route').classList.add('error');
-      document.getElementById('co-route-error').classList.remove('hidden');
+      document.getElementById('so-route').classList.add('error');
+      document.getElementById('so-route-error').classList.remove('hidden');
       return;
     }
-    document.getElementById('co-route').classList.remove('error');
-    document.getElementById('co-route-error').classList.add('hidden');
+    document.getElementById('so-route').classList.remove('error');
+    document.getElementById('so-route-error').classList.add('hidden');
 
     const btn = this;
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const recordName = document.getElementById('co-record-name').value || undefined;
-      const dateVal = document.getElementById('co-date').value;
+      const recordName = document.getElementById('so-record-name').value || undefined;
+      const projectRecordName = document.getElementById('send-overlay').dataset.projectRecordName;
       await saveClimbNote({
         recordName,
         id:           recordName ? undefined : crypto.randomUUID(),
         route:        routeVal,
-        climbingArea: document.getElementById('co-area').value.trim() || null,
-        crag:         document.getElementById('co-crag').value.trim() || null,
-        difficulty:   document.getElementById('co-difficulty').value.trim() || null,
-        date:         dateVal ? new Date(dateVal) : null,
-        sendType:     document.getElementById('co-sendtype').value,
-        routeType:    document.getElementById('co-routetype').value,
+        climbingArea: document.getElementById('so-area').value.trim() || null,
+        crag:         document.getElementById('so-crag').value.trim() || null,
+        difficulty:   document.getElementById('so-difficulty').value.trim() || null,
+        date:         document.getElementById('so-date').value ? new Date(document.getElementById('so-date').value) : null,
+        sendType:     document.getElementById('so-sendtype').value,
+        routeType:    document.getElementById('so-routetype').value,
         rating:       currentStarRating,
-        noteText:     document.getElementById('co-notes').value.trim() || null,
-        attemptCount: Number(document.getElementById('co-attempts').value) || 0,
-        highPoint:    document.getElementById('co-highpoint').value.trim() || null,
-        projectNotes: document.getElementById('co-project-notes').value.trim() || null,
+        noteText:     document.getElementById('so-notes').value.trim() || null,
       });
+
+      if (projectRecordName) {
+        try {
+          await deleteClimbNote(projectRecordName);
+        } catch (delErr) {
+          console.error('Mark as Sent: project delete failed', delErr);
+          alert('Send saved, but the original project could not be deleted — please delete it manually.');
+        }
+      }
+
       closeOverlay();
       await loadData();
     } catch (err) {
-      console.error('Save climb failed:', err);
+      console.error('Save send failed:', err);
       alert('Save failed: ' + (err.message ?? err));
     } finally {
-      btn.disabled = false; btn.textContent = 'Save Climb';
+      btn.disabled = false; btn.textContent = 'Save Send';
     }
   });
 
-  document.getElementById('climb-overlay-delete').addEventListener('click', async function () {
-    const recordName = document.getElementById('co-record-name').value;
-    const name = document.getElementById('co-route').value;
-    const confirmed = await showConfirmDialog('Delete Climb?', `"${name}" will be permanently deleted.`);
+  document.getElementById('send-overlay-delete').addEventListener('click', async function () {
+    const recordName = document.getElementById('so-record-name').value;
+    const name = document.getElementById('so-route').value;
+    const confirmed = await showConfirmDialog('Delete Send?', `"${name}" will be permanently deleted.`);
     if (!confirmed) return;
     try {
       await deleteClimbNote(recordName);
-      document.getElementById('climb-overlay').classList.add('hidden');
+      closeOverlay();
       await loadData();
     } catch (err) {
       alert('Delete failed: ' + (err.message ?? err));
     }
   });
 
-  document.getElementById('btn-add-climb').addEventListener('click', showAddClimbOverlay);
+  document.getElementById('so-ascent-add').addEventListener('click', async function () {
+    const climbRecordName = document.getElementById('so-record-name').value;
+    if (!climbRecordName) return;
+    const dateVal = document.getElementById('so-ascent-date').value;
+    const typeVal = document.getElementById('so-ascent-type').value;
+    const notesVal = document.getElementById('so-ascent-notes').value.trim();
+    try {
+      await saveAscent({
+        id: crypto.randomUUID(),
+        date: dateVal ? new Date(dateVal) : new Date(),
+        sendType: typeVal,
+        notes: notesVal || null,
+        climbNoteRecordName: climbRecordName,
+      });
+      document.getElementById('so-ascent-date').value = '';
+      document.getElementById('so-ascent-notes').value = '';
+      const climb = _allClimbs.find(c => c.recordName === climbRecordName);
+      if (climb) renderAscentsList(climb);
+      await loadData();
+    } catch (err) {
+      alert('Add ascent failed: ' + (err.message ?? err));
+    }
+  });
+
+  document.getElementById('btn-log-send').addEventListener('click', showAddSendOverlay);
   bindStarPicker();
+}
+
+function bindProjectOverlayHandlers() {
+  function closeOverlay() {
+    document.getElementById('project-overlay').classList.add('hidden');
+  }
+  document.getElementById('project-overlay-close').addEventListener('click', closeOverlay);
+  document.getElementById('project-overlay-cancel').addEventListener('click', closeOverlay);
+  document.getElementById('project-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeOverlay();
+  });
+
+  document.getElementById('project-overlay-save').addEventListener('click', async function () {
+    const routeVal = document.getElementById('po-route').value.trim();
+    if (!routeVal) {
+      document.getElementById('po-route').classList.add('error');
+      document.getElementById('po-route-error').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('po-route').classList.remove('error');
+    document.getElementById('po-route-error').classList.add('hidden');
+
+    const btn = this;
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const recordName = document.getElementById('po-record-name').value || undefined;
+      const lastAttemptVal = document.getElementById('po-last-attempt-date').value;
+      await saveClimbNote({
+        recordName,
+        id:               recordName ? undefined : crypto.randomUUID(),
+        route:            routeVal,
+        climbingArea:     document.getElementById('po-area').value.trim() || null,
+        crag:             document.getElementById('po-crag').value.trim() || null,
+        difficulty:       document.getElementById('po-difficulty').value.trim() || null,
+        sendType:         'Project',
+        routeType:        document.getElementById('po-routetype').value,
+        attemptCount:     Number(document.getElementById('po-attempts').value) || 0,
+        lastAttemptDate:  lastAttemptVal ? new Date(lastAttemptVal) : null,
+        highPoint:        document.getElementById('po-highpoint').value.trim() || null,
+        projectStatus:    document.getElementById('po-status').value,
+        noteText:         document.getElementById('po-notes').value.trim() || null,
+      });
+      closeOverlay();
+      await loadData();
+    } catch (err) {
+      console.error('Save project failed:', err);
+      alert('Save failed: ' + (err.message ?? err));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Project';
+    }
+  });
+
+  document.getElementById('project-overlay-delete').addEventListener('click', async function () {
+    const recordName = document.getElementById('po-record-name').value;
+    const name = document.getElementById('po-route').value;
+    const confirmed = await showConfirmDialog('Delete Project?', `"${name}" will be permanently deleted.`);
+    if (!confirmed) return;
+    try {
+      await deleteClimbNote(recordName);
+      closeOverlay();
+      await loadData();
+    } catch (err) {
+      alert('Delete failed: ' + (err.message ?? err));
+    }
+  });
+
+  document.getElementById('po-mark-sent').addEventListener('click', function () {
+    const projectRecordName = document.getElementById('po-record-name').value;
+    const prefill = {
+      route:            document.getElementById('po-route').value,
+      climbingArea:     document.getElementById('po-area').value,
+      crag:             document.getElementById('po-crag').value,
+      difficulty:       document.getElementById('po-difficulty').value,
+      routeType:        document.getElementById('po-routetype').value,
+      projectRecordName,
+    };
+    closeOverlay();
+    showAddSendOverlay(prefill);
+  });
+
+  document.getElementById('btn-add-project').addEventListener('click', showAddProjectOverlay);
 }
 
 // ---------- Training overlay ----------
@@ -739,7 +911,7 @@ function bindPeriodTabs() {
 // ---------- Ascent list ----------
 
 function renderAscentsList(climb) {
-  const container = document.getElementById('co-ascents-list');
+  const container = document.getElementById('so-ascents-list');
   const ascents = climb.ascents ?? [];
   container.innerHTML = ascents.length
     ? ascents.map(a => {
@@ -761,18 +933,4 @@ function renderAscentsList(climb) {
       renderAscentsList(climb);
     });
   });
-
-  document.getElementById('co-add-ascent').onclick = async () => {
-    const dateVal = document.getElementById('asc-date').value;
-    const sendType = document.getElementById('asc-sendtype').value;
-    if (!dateVal) return;
-    const climbNoteRecordName = document.getElementById('co-record-name').value;
-    const notes = document.getElementById('asc-notes').value.trim() || null;
-    const saved = await saveAscent({ date: new Date(dateVal), sendType, notes, climbNoteRecordName });
-    document.getElementById('asc-notes').value = '';
-    if (!climb.ascents) climb.ascents = [];
-    climb.ascents.push({ recordName: saved.recordName, date: new Date(dateVal), sendType });
-    renderAscentsList(climb);
-    document.getElementById('asc-date').value = '';
-  };
 }
