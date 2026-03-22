@@ -129,6 +129,7 @@ const MOCK_CLIMBS = [
   },
   {
     recordName: 'mock-3',
+
     route: 'La Dura Dura',
     climbingArea: 'Oliana',
     crag: 'Sector Pal',
@@ -140,7 +141,7 @@ const MOCK_CLIMBS = [
     routeType: 'Sport',
     attemptCount: 23,
     isProject: true,
-    projectStatus: 'In Progress',
+    projectStatus: 'Close',
     highPoint: 'Third bolt clip',
     lastAttemptDate: new Date('2026-03-01'),
     projectNotes: 'Need to work the lower crux more. The move off the sidepull is the key.'
@@ -158,7 +159,7 @@ const MOCK_CLIMBS = [
     routeType: 'Sport',
     attemptCount: 8,
     isProject: true,
-    projectStatus: 'In Progress',
+    projectStatus: 'Working',
     highPoint: 'Move 4 of 7',
     lastAttemptDate: new Date('2025-11-10'),
     projectNotes: null
@@ -176,7 +177,7 @@ const MOCK_CLIMBS = [
     routeType: 'Sport',
     attemptCount: 3,
     isProject: true,
-    projectStatus: 'In Progress',
+    projectStatus: 'Working',
     highPoint: null,
     lastAttemptDate: null,
     projectNotes: null
