@@ -87,11 +87,12 @@ function computeStats(climbs) {
 }
 
 // Filter climbs in-memory (used by UI filter handlers)
-function filterClimbs(climbs, { area, year, sendType, search, sort } = {}) {
+function filterClimbs(climbs, { area, year, sendType, routeType, search, sort } = {}) {
   let result = [...climbs];
-  if (area)     result = result.filter(r => r.climbingArea === area);
-  if (year)     result = result.filter(r => r.date?.getFullYear() === parseInt(year));
-  if (sendType) result = result.filter(r => r.sendType === sendType);
+  if (area)      result = result.filter(r => r.climbingArea === area);
+  if (year)      result = result.filter(r => r.date?.getFullYear() === parseInt(year));
+  if (sendType)  result = result.filter(r => r.sendType === sendType);
+  if (routeType) result = result.filter(r => r.routeType === routeType);
   if (search) {
     const q = search.toLowerCase();
     result = result.filter(r =>

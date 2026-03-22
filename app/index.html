@@ -12,136 +12,153 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="topbar-logo">Send<span class="accent">Log</span></div>
-    <nav class="topbar-nav">
-      <a href="#" class="nav-link active">My Logbook</a>
-      <a href="#" class="nav-link">Projects</a>
-      <a href="#" class="nav-link">Training</a>
-      <a href="#" class="nav-link">Goals</a>
-    </nav>
-    <div class="topbar-user">
-      <span id="user-chip" class="user-chip"></span>
-      <button id="signout-btn" class="btn-signout">Sign Out</button>
-    </div>
-  </header>
+  <!-- #app shell: header + sidebar + main. Modal/toast sit outside (position:fixed). -->
+  <div id="app">
 
-  <div class="app-body">
-
-    <aside class="sidebar">
-      <div class="sidebar-search">
-        <input type="text" id="search-input" placeholder="Search climbs…" />
-      </div>
-
-      <div class="sidebar-section-label">View</div>
-      <nav class="sidebar-nav">
-        <a href="#" class="sidebar-nav-item active" id="view-all">
-          All Climbs <span class="count-badge" id="badge-all">0</span>
-        </a>
-        <a href="#" class="sidebar-nav-item" id="view-projects">
-          Projects <span class="count-badge" id="badge-projects">0</span>
-        </a>
-        <a href="#" class="sidebar-nav-item" id="view-sent">Sent</a>
+    <header class="app-header">
+      <div class="app-header-logo">SendLog</div>
+      <nav class="app-nav-links">
+        <a href="#" id="nav-logbook" class="active">My Logbook</a>
+        <a href="#" id="nav-projects">Projects</a>
+        <a href="#" id="nav-training">Training</a>
       </nav>
-
-      <div class="sidebar-section-label">Filters</div>
-      <div class="sidebar-filters">
-        <select id="filter-area">
-          <option value="">All Areas</option>
-        </select>
-        <select id="filter-year">
-          <option value="">All Years</option>
-        </select>
-        <select id="filter-sendtype">
-          <option value="">All Styles</option>
-          <option value="Redpoint">Redpoint</option>
-          <option value="On Sight">On Sight</option>
-          <option value="Flash">Flash</option>
-          <option value="Pinkpoint">Pinkpoint</option>
-          <option value="Project">Project</option>
-        </select>
+      <div class="app-header-user">
+        <span id="user-chip" class="app-user-chip"></span>
+        <button id="signout-btn" class="btn-signout">Sign Out</button>
       </div>
+    </header>
 
-      <div class="sidebar-section-label">Sort</div>
-      <div class="sidebar-filters">
-        <select id="sort-select">
-          <option value="date-desc">Date (Newest)</option>
-          <option value="date-asc">Date (Oldest)</option>
-          <option value="grade-desc">Grade (Hardest)</option>
-          <option value="grade-asc">Grade (Easiest)</option>
-        </select>
-      </div>
-    </aside>
+    <div class="app-body">
 
-    <main class="main">
-
-      <div id="stats-bar" class="stats-bar">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-total">—</div>
-          <div class="stat-label">Total Climbs</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-this-year">—</div>
-          <div class="stat-label">This Year</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-streak">—</div>
-          <div class="stat-label">Day Streak 🔥</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-hardest">—</div>
-          <div class="stat-label">Hardest This Year</div>
-        </div>
-      </div>
-
-      <div class="table-card">
-        <div class="table-header">
-          <h3>All Climbs</h3>
+      <aside class="app-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-search">
+            <input type="text" id="search-input" placeholder="Search climbs…" />
+          </div>
         </div>
 
-        <div id="loading-skeleton" class="loading-skeleton">
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row"></div>
-          <div class="skeleton-row"></div>
+        <nav class="sidebar-nav">
+          <div class="sidebar-section-label">View</div>
+          <a href="#" class="sidebar-nav-item active" id="view-all">
+            All Climbs <span class="count-badge" id="badge-all">0</span>
+          </a>
+          <a href="#" class="sidebar-nav-item" id="view-projects">
+            Projects <span class="count-badge" id="badge-projects">0</span>
+          </a>
+          <a href="#" class="sidebar-nav-item" id="view-sent">Sent <span class="count-badge" id="badge-sent">0</span></a>
+        </nav>
+
+        <div class="sidebar-filters">
+          <div class="sidebar-section-label">Filters</div>
+          <select id="filter-area">
+            <option value="">All Areas</option>
+          </select>
+          <select id="filter-year">
+            <option value="">All Years</option>
+          </select>
+          <select id="filter-sendtype">
+            <option value="">All Styles</option>
+            <option value="Redpoint">Redpoint</option>
+            <option value="On Sight">On Sight</option>
+            <option value="Flash">Flash</option>
+            <option value="Pinkpoint">Pinkpoint</option>
+            <option value="Project">Project</option>
+          </select>
+          <select id="filter-routetype">
+            <option value="">All Types</option>
+          </select>
+          <div class="sidebar-section-label">Sort</div>
+          <select id="sort-select">
+            <option value="date-desc">Date (Newest)</option>
+            <option value="date-asc">Date (Oldest)</option>
+            <option value="grade-desc">Grade (Hardest)</option>
+            <option value="grade-asc">Grade (Easiest)</option>
+          </select>
         </div>
+      </aside>
 
-        <table id="climbs-table" class="climbs-table" style="display:none">
-          <thead>
-            <tr>
-              <th>Route</th>
-              <th>Area</th>
-              <th>Grade</th>
-              <th>Date</th>
-              <th>Style</th>
-              <th>Rating</th>
-            </tr>
-          </thead>
-          <tbody id="climbs-tbody"></tbody>
-        </table>
+      <main class="app-main">
+        <div class="app-content">
 
-        <div id="empty-state" class="empty-state" style="display:none">
-          <p>No climbs found. Try adjusting your filters.</p>
+          <div id="stats-bar" class="stats-container">
+            <div class="stat-card accent-primary">
+              <div class="stat-value" id="stat-total">—</div>
+              <div class="stat-label">Total Climbs</div>
+            </div>
+            <div class="stat-card accent-success">
+              <div class="stat-value" id="stat-this-year">—</div>
+              <div class="stat-label">This Year</div>
+            </div>
+            <div class="stat-card accent-warning">
+              <div class="stat-value" id="stat-streak">—</div>
+              <div class="stat-label">Day Streak 🔥</div>
+            </div>
+            <div class="stat-card accent-danger">
+              <div class="stat-value" id="stat-hardest">—</div>
+              <div class="stat-label">Hardest This Year</div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <div class="table-header">
+              <h3 class="table-title" id="view-label">All Climbs</h3>
+            </div>
+
+            <div id="loading-skeleton" class="skeleton-table">
+              <table style="width:100%;border-collapse:collapse">
+                <tbody>
+                  <tr class="skeleton-row-tr"><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td></tr>
+                  <tr class="skeleton-row-tr"><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td></tr>
+                  <tr class="skeleton-row-tr"><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td></tr>
+                  <tr class="skeleton-row-tr"><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td></tr>
+                  <tr class="skeleton-row-tr"><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td><td class="skeleton-cell skeleton"></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <table id="climbs-table" style="display:none">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Area</th>
+                  <th>Type</th>
+                  <th>Grade</th>
+                  <th>Date</th>
+                  <th>Style</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody id="climbs-tbody"></tbody>
+            </table>
+
+            <div id="empty-state" class="empty-state" style="display:none">
+              <p>No climbs found. Try adjusting your filters.</p>
+            </div>
+          </div>
+
         </div>
-      </div>
-
-    </main>
+      </main>
+    </div>
   </div>
 
-  <!-- Detail Modal -->
+  <!-- Detail Modal (position:fixed, outside #app) -->
   <div id="modal-overlay" class="modal-overlay" style="display:none">
-    <div class="modal" id="detail-modal">
+    <div class="modal-content" id="detail-modal">
       <button class="modal-close" id="modal-close">✕</button>
       <div id="modal-content"></div>
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- Toast (position:fixed, outside #app) -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
-  <script src="js/cloudkit-config.js"></script>
+  <script>
+    // In mock mode, skip CloudKit init entirely to avoid const re-declaration conflicts
+    if (new URLSearchParams(window.location.search).get('mock') !== 'true') {
+      document.write('<scr' + 'ipt src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"><\/scr' + 'ipt>');
+      document.write('<scr' + 'ipt src="js/cloudkit-config.js"><\/scr' + 'ipt>');
+    }
+  </script>
   <script src="js/auth.js"></script>
   <script src="js/climbs.js"></script>
   <script src="js/ui.js"></script>

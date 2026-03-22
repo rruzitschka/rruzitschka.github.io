@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SendLog Phase 3 — Design Brainstorm</title>
+<style>
+  :root {
+    --blue: #3b82f6;
+    --blue-dark: #1d4ed8;
+    --blue-light: #eff6ff;
+    --green: #22c55e;
+    --orange: #f97316;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --teal: #14b8a6;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-700: #334155;
+    --gray-900: #0f172a;
+    --white: #fff;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-100); color: var(--gray-900); }
+
+  /* ── Nav ── */
+  .top-nav { background: var(--gray-900); color: white; padding: 12px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+  .top-nav h1 { font-size: 1rem; font-weight: 700; }
+  .top-nav .badge { background: var(--blue); color: white; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .tab-bar { display: flex; gap: 4px; margin-left: auto; }
+  .tab-bar button { background: rgba(255,255,255,.1); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: .85rem; transition: background .15s; }
+  .tab-bar button:hover, .tab-bar button.active { background: var(--blue); }
+
+  /* ── Layout ── */
+  .page { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; }
+  h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { color: var(--gray-500); font-size: .9rem; margin-bottom: 28px; }
+  .section { margin-bottom: 36px; }
+  .section-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-400); margin-bottom: 12px; }
+
+  /* ── Cards ── */
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+  .card-header h3 { font-size: .95rem; font-weight: 600; }
+  .card-body { padding: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  /* ── Mock App Shell ── */
+  .mock-app { border: 2px solid var(--gray-200); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-md); background: white; }
+  .mock-header { background: #1e293b; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .mock-header .logo { color: white; font-weight: 700; font-size: .9rem; }
+  .mock-header .nav-links { display: flex; gap: 12px; margin: 0 auto; }
+  .mock-header .nav-links a { color: rgba(255,255,255,.65); font-size: .8rem; text-decoration: none; padding: 3px 8px; border-radius: 5px; }
+  .mock-header .nav-links a.active { color: white; background: rgba(255,255,255,.15); }
+  .mock-body { display: flex; min-height: 320px; }
+  .mock-sidebar { width: 180px; background: var(--gray-50); border-right: 1px solid var(--gray-200); padding: 12px 10px; flex-shrink: 0; font-size: .78rem; }
+  .mock-sidebar .sbl { font-size: .6rem; font-weight: 700; text-transform: uppercase; color: var(--gray-400); padding: 6px 8px 4px; letter-spacing: .08em; }
+  .mock-sidebar .nav-item { padding: 5px 8px; border-radius: 5px; color: var(--gray-700); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .mock-sidebar .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+  .mock-sidebar .cnt { background: var(--gray-200); font-size: .65rem; font-weight: 700; padding: 1px 5px; border-radius: 8px; color: var(--gray-500); }
+  .mock-sidebar .cnt.blue { background: var(--blue-light); color: var(--blue); }
+  .mock-main { flex: 1; padding: 14px 16px; overflow: hidden; }
+
+  /* ── Training mockup ── */
+  .period-picker { display: flex; gap: 4px; margin-bottom: 12px; }
+  .period-picker span { font-size: .75rem; padding: 4px 10px; border-radius: 5px; background: var(--gray-100); color: var(--gray-500); cursor: pointer; }
+  .period-picker span.active { background: var(--blue); color: white; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-mini { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 7px; padding: 8px 10px; }
+  .stat-mini .val { font-size: 1.1rem; font-weight: 700; color: var(--gray-900); }
+  .stat-mini .lbl { font-size: .65rem; color: var(--gray-400); text-transform: uppercase; margin-top: 1px; }
+  .session-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--gray-100); font-size: .78rem; }
+  .session-row:last-child { border-bottom: none; }
+  .type-icon { width: 28px; height: 28px; background: var(--blue-light); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; }
+  .session-info { flex: 1; }
+  .session-info .name { font-weight: 600; color: var(--gray-900); }
+  .session-info .date { font-size: .68rem; color: var(--gray-400); margin-top: 1px; }
+  .session-meta { text-align: right; }
+  .session-meta .dur { font-weight: 600; color: var(--gray-700); }
+  .session-meta .dots { font-size: .65rem; color: var(--blue); letter-spacing: 1px; margin-top: 2px; }
+
+  /* ── Bar chart ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 70px; margin-bottom: 12px; }
+  .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .bar { background: var(--blue); border-radius: 3px 3px 0 0; width: 100%; transition: height .3s; }
+  .bar-lbl { font-size: .6rem; color: var(--gray-400); }
+  .bar-val { font-size: .6rem; color: var(--gray-600); font-weight: 600; }
+
+  /* ── Training form ── */
+  .form-row { margin-bottom: 10px; }
+  .form-row label { display: block; font-size: .72rem; font-weight: 600; color: var(--gray-500); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .05em; }
+  .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 7px 10px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: .85rem; background: white; }
+  .form-row textarea { height: 60px; resize: none; }
+  .intensity-row { display: flex; gap: 6px; }
+  .intensity-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--gray-300); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700; color: var(--gray-400); }
+  .intensity-dot.on { border-color: var(--blue); background: var(--blue); color: white; }
+  .btn { padding: 8px 16px; border-radius: 7px; font-size: .85rem; font-weight: 600; border: none; cursor: pointer; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+  .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+  /* ── Scope cards ── */
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .scope-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+  .scope-card h4 { font-size: .9rem; font-weight: 700; margin-bottom: 4px; }
+  .scope-card .sub { font-size: .78rem; color: var(--gray-500); margin-bottom: 12px; }
+  .scope-card ul { list-style: none; }
+  .scope-card ul li { font-size: .8rem; padding: 4px 0; color: var(--gray-600); display: flex; align-items: flex-start; gap: 6px; }
+  .scope-card ul li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .scope-card ul li.out::before { content: '✗'; color: var(--red); }
+  .scope-card ul li.maybe::before { content: '?'; color: var(--orange); }
+  .tag { display: inline-block; font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-bottom: 10px; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-blue { background: var(--blue-light); color: var(--blue-dark); }
+  .tag-orange { background: #fff7ed; color: #9a3412; }
+
+  /* ── Question cards ── */
+  .q-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 12px; }
+  .q-card .q { font-weight: 600; font-size: .9rem; margin-bottom: 8px; }
+  .q-card .options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .q-card .opt { padding: 5px 12px; border-radius: 6px; background: var(--gray-100); border: 1px solid var(--gray-200); font-size: .8rem; color: var(--gray-700); cursor: pointer; }
+  .q-card .opt.selected { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); font-weight: 600; }
+
+  /* ── Data flow diagram ── */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+  .flow-box { background: white; border: 2px solid var(--gray-200); border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 120px; }
+  .flow-box.highlight { border-color: var(--blue); background: var(--blue-light); }
+  .flow-box .fb-title { font-size: .8rem; font-weight: 700; color: var(--gray-900); }
+  .flow-box .fb-sub { font-size: .65rem; color: var(--gray-500); margin-top: 2px; }
+  .flow-arrow { font-size: 1.4rem; color: var(--gray-400); padding: 0 6px; }
+
+  /* ── Field table ── */
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th { text-align: left; padding: 8px 12px; background: var(--gray-50); border-bottom: 2px solid var(--gray-200); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+  tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; font-size: .65rem; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+  .pill-green { background: #dcfce7; color: #166534; }
+  .pill-blue { background: var(--blue-light); color: var(--blue-dark); }
+  .pill-gray { background: var(--gray-100); color: var(--gray-500); }
+  .pill-orange { background: #fff7ed; color: #9a3412; }
+
+  /* ── Note box ── */
+  .note { background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: .82rem; color: #78350f; margin: 16px 0; }
+  .info { background: var(--blue-light); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: .82rem; color: var(--blue-dark); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <h1>SendLog</h1>
+  <span class="badge">Phase 3 Brainstorm</span>
+  <div class="tab-bar">
+    <button class="active" onclick="show('overview')">Overview</button>
+    <button onclick="show('training')">Training Page</button>
+    <button onclick="show('stats')">Stats Page</button>
+    <button onclick="show('questions')">Open Questions</button>
+    <button onclick="show('datamodel')">Data Model</button>
+  </div>
+</div>
+
+<!-- ════════════════ OVERVIEW ════════════════ -->
+<div class="page active" id="overview">
+  <h2>Phase 3 — What Are We Building?</h2>
+  <p class="subtitle">Phase 2 (read-only logbook) is done. Phase 3 adds Training + richer Stats to the web dashboard.</p>
+
+  <div class="section">
+    <div class="section-label">Scope options — pick what goes in Phase 3</div>
+    <div class="scope-grid">
+      <div class="scope-card">
+        <span class="tag tag-green">Option A · Lean</span>
+        <h4>Training: Read-Only</h4>
+        <p class="sub">Show training sessions from CloudKit, similar to the logbook tab.</p>
+        <ul>
+          <li>Training tab active (no toast)</li>
+          <li>Fetch <code>CD_TrainingSession</code> records</li>
+          <li>List view: type, date, duration, intensity</li>
+          <li>Stats: total sessions, total time, avg/week</li>
+          <li>Filter by type / period</li>
+          <li>Bar chart: sessions by type</li>
+          <li class="out">Add / edit / delete sessions</li>
+          <li class="out">Combined climb+training stats</li>
+        </ul>
+      </div>
+      <div class="scope-card">
+        <span class="tag tag-blue">Option B · Full</span>
+        <h4>Training: Read + Write</h4>
+        <p class="sub">Full parity with the iOS Training tab — view and log sessions from the web.</p>
+        <ul>
+          <li>Everything in Option A</li>
+          <li>Add new training session (form overlay)</li>
+          <li>Delete session (with confirmation)</li>
+          <li>Combined Stats tab: streak uses both climbs + training</li>
+          <li>Mock data for training sessions</li>
+          <li class="out">Edit existing sessions</li>
+          <li class="out">Photo display</li>
+        </ul>
+      </div>
+      <div class="scope-card">
+        <span class="tag tag-orange">Option C · Stats Focus</span>
+        <h4>Richer Stats Tab</h4>
+        <p class="sub">Dedicated Stats page with charts — like the iOS Stats tab.</p>
+        <ul>
+          <li>Separate Stats view in sidebar</li>
+          <li>Grade pyramid chart</li>
+          <li>Climbs per month timeline</li>
+          <li>Sends by area breakdown</li>
+          <li>Route type breakdown</li>
+          <li>Year-on-year comparison</li>
+          <li class="maybe">Requires Chart.js or similar</li>
+          <li class="out">Training sessions (separate feature)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Phase 2 recap — what's already live</div>
+    <div class="grid3">
+      <div class="card">
+        <div class="card-header"><h3>✅ Login Page</h3></div>
+        <div class="card-body" style="font-size:.82rem; color: var(--gray-600);">
+          Sign in with Apple button (official SVG logo, Apple HIG compliant). Redirects to dashboard on auth.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>✅ Logbook (My Logbook)</h3></div>
+        <div class="card-body" style="font-size:.82rem; color: var(--gray-600);">
+          Filterable table (area, year, style, type), search, sort, count badges, detail modal, stats bar.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>✅ Projects View</h3></div>
+        <div class="card-body" style="font-size:.82rem; color: var(--gray-600);">
+          Sidebar filter to show only isProject=true climbs, project status, high point, attempt count.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TRAINING PAGE ════════════════ -->
+<div class="page" id="training">
+  <h2>Training Page — Mockup</h2>
+  <p class="subtitle">Mirroring the iOS TrainingView: period picker, stats grid, bar chart by type, sessions list.</p>
+
+  <div class="section">
+    <div class="section-label">Option A — Read-only (no add/delete)</div>
+    <div class="mock-app">
+      <div class="mock-header">
+        <div class="logo">SendLog</div>
+        <div class="nav-links">
+          <a href="#">My Logbook</a>
+          <a href="#">Projects</a>
+          <a class="active" href="#">Training</a>
+        </div>
+        <div style="color:rgba(255,255,255,.65); font-size:.78rem; display:flex; align-items:center; gap:8px;">
+          <span>Alex</span>
+          <button style="font-size:.7rem; padding:3px 8px; border-radius:5px; border:1px solid rgba(255,255,255,.3); background:transparent; color:white; cursor:pointer;">Sign Out</button>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-sidebar">
+          <div class="sbl">View</div>
+          <div class="nav-item active">All Sessions <span class="cnt blue">12</span></div>
+          <div class="nav-item">By Type</div>
+          <div class="sbl" style="margin-top:8px;">Filters</div>
+          <div style="margin: 4px 0;">
+            <select style="width:100%; font-size:.72rem; border:1px solid #e2e8f0; border-radius:5px; padding:4px 6px; background:white;">
+              <option>All Periods</option>
+              <option>This Week</option>
+              <option>This Month</option>
+              <option>This Year</option>
+            </select>
+          </div>
+          <div style="margin: 4px 0;">
+            <select style="width:100%; font-size:.72rem; border:1px solid #e2e8f0; border-radius:5px; padding:4px 6px; background:white;">
+              <option>All Types</option>
+              <option>Hangboard</option>
+              <option>Gym Session</option>
+              <option>Campus Board</option>
+              <option>Running</option>
+            </select>
+          </div>
+        </div>
+        <div class="mock-main">
+          <div class="period-picker">
+            <span>Week</span><span>Month</span><span class="active">Year</span><span>All Time</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-mini"><div class="val">12</div><div class="lbl">Sessions</div></div>
+            <div class="stat-mini"><div class="val">18h 45m</div><div class="lbl">Total Time</div></div>
+            <div class="stat-mini"><div class="val">9</div><div class="lbl">Training Days</div></div>
+            <div class="stat-mini"><div class="val">1.2×</div><div class="lbl">Avg / Week</div></div>
+          </div>
+          <div style="font-size:.72rem; color:var(--gray-400); font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;">By Type</div>
+          <div class="bar-chart">
+            <div class="bar-wrap"><div class="bar-val">6</div><div class="bar" style="height:60px;"></div><div class="bar-lbl">Hangboard</div></div>
+            <div class="bar-wrap"><div class="bar-val">3</div><div class="bar" style="height:30px; background:#93c5fd;"></div><div class="bar-lbl">Gym</div></div>
+            <div class="bar-wrap"><div class="bar-val">2</div><div class="bar" style="height:20px; background:#bfdbfe;"></div><div class="bar-lbl">Campus</div></div>
+            <div class="bar-wrap"><div class="bar-val">1</div><div class="bar" style="height:10px; background:#dbeafe;"></div><div class="bar-lbl">Yoga</div></div>
+          </div>
+          <div style="font-size:.72rem; color:var(--gray-400); font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;">Sessions</div>
+          <div class="session-row">
+            <div class="type-icon">🏋️</div>
+            <div class="session-info"><div class="name">Hangboard</div><div class="date">Mar 20, 2026</div></div>
+            <div class="session-meta"><div class="dur">45 min</div><div class="dots">●●●●○</div></div>
+          </div>
+          <div class="session-row">
+            <div class="type-icon">🧗</div>
+            <div class="session-info"><div class="name">Gym Session</div><div class="date">Mar 18, 2026</div></div>
+            <div class="session-meta"><div class="dur">2 h</div><div class="dots">●●●○○</div></div>
+          </div>
+          <div class="session-row">
+            <div class="type-icon">💪</div>
+            <div class="session-info"><div class="name">Campus Board</div><div class="date">Mar 15, 2026</div></div>
+            <div class="session-meta"><div class="dur">30 min</div><div class="dots">●●●●●</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Option B addition — "Log Session" overlay (write support)</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header">
+          <h3>+ Log Session overlay</h3>
+          <span style="font-size:.75rem; color: var(--gray-400);">Triggered by button in header</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <label>Type</label>
+            <select><option>Hangboard</option><option>Campus Board</option><option>Gym Session</option><option>Yoga</option><option>Running</option><option>Strength</option></select>
+          </div>
+          <div class="form-row">
+            <label>Date</label>
+            <input type="date" value="2026-03-22">
+          </div>
+          <div class="form-row">
+            <label>Duration (minutes)</label>
+            <input type="number" value="45" min="15" max="300" step="15">
+          </div>
+          <div class="form-row">
+            <label>Intensity</label>
+            <div class="intensity-row">
+              <div class="intensity-dot on">1</div>
+              <div class="intensity-dot on">2</div>
+              <div class="intensity-dot on">3</div>
+              <div class="intensity-dot">4</div>
+              <div class="intensity-dot">5</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Notes (optional)</label>
+            <textarea placeholder="Add any notes about this session…"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary">Cancel</button>
+            <button class="btn btn-primary">Save Session</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="info" style="margin-top:0;">
+          <strong>Write path via CloudKit JS:</strong><br>
+          <code style="font-size:.8rem;">container.privateCloudDatabase.saveRecords([record])</code><br><br>
+          The same <code>CD_TrainingSession</code> record type that the iOS app creates. Fields: <code>CD_type</code>, <code>CD_date</code>, <code>CD_duration</code>, <code>CD_intensity</code>, <code>CD_notes</code>.
+        </div>
+        <div class="note">
+          <strong>Risk:</strong> Write operations require the API token to have <strong>Read/Write</strong> permissions (already noted in Phase 2 CloudKit Dashboard setup). No extra infra needed.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ STATS PAGE ════════════════ -->
+<div class="page" id="stats">
+  <h2>Stats Page — Option C Mockup</h2>
+  <p class="subtitle">Dedicated stats view — grade pyramid, monthly timeline, area breakdown. Requires a charting library (Chart.js ~60KB gzip).</p>
+
+  <div class="section">
+    <div class="section-label">Grade pyramid concept</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><h3>Sends by Grade (pyramid)</h3></div>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:3px; align-items:center;">
+            <div style="height:16px; background:var(--red); border-radius:3px; width:20px; display:flex; align-items:center; justify-content:center; color:white; font-size:.6rem; font-weight:700;">1</div>
+            <div style="height:16px; background:#ef4444; border-radius:3px; width:36px; display:flex; align-items:center; justify-content:center; color:white; font-size:.6rem; font-weight:700;">2</div>
+            <div style="height:16px; background:#f97316; border-radius:3px; width:60px; display:flex; align-items:center; justify-content:center; color:white; font-size:.6rem; font-weight:700;">3</div>
+            <div style="height:16px; background:#eab308; border-radius:3px; width:80px; display:flex; align-items:center; justify-content:center; color:white; font-size:.6rem; font-weight:700;">5</div>
+            <div style="height:16px; background:var(--green); border-radius:3px; width:120px; display:flex; align-items:center; justify-content:center; color:white; font-size:.6rem; font-weight:700;">8</div>
+            <div style="display:flex; justify-content:center; gap:4px; margin-top:6px; flex-wrap:wrap;">
+              <span style="font-size:.65rem; padding:2px 6px; background:var(--gray-100); border-radius:4px;">9a</span>
+              <span style="font-size:.65rem; padding:2px 6px; background:var(--gray-100); border-radius:4px;">8c+</span>
+              <span style="font-size:.65rem; padding:2px 6px; background:var(--gray-100); border-radius:4px;">8c</span>
+              <span style="font-size:.65rem; padding:2px 6px; background:var(--gray-100); border-radius:4px;">8b+</span>
+              <span style="font-size:.65rem; padding:2px 6px; background:var(--gray-100); border-radius:4px;">7c+</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Sends per month</h3></div>
+        <div class="card-body">
+          <div style="display:flex; align-items:flex-end; gap:5px; height:80px;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
+              <div style="font-size:.6rem; color:var(--gray-400);">1</div>
+              <div style="background:var(--blue); border-radius:3px 3px 0 0; width:100%; height:13px;"></div>
+              <div style="font-size:.6rem; color:var(--gray-400);">Jan</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
+              <div style="font-size:.6rem; color:var(--gray-400);">2</div>
+              <div style="background:var(--blue); border-radius:3px 3px 0 0; width:100%; height:26px;"></div>
+              <div style="font-size:.6rem; color:var(--gray-400);">Feb</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
+              <div style="font-size:.6rem; color:var(--gray-400);">3</div>
+              <div style="background:var(--blue); border-radius:3px 3px 0 0; width:100%; height:39px;"></div>
+              <div style="font-size:.6rem; color:var(--gray-400);">Mar</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
+              <div style="font-size:.6rem; color:var(--gray-400);">2</div>
+              <div style="background:#93c5fd; border-radius:3px 3px 0 0; width:100%; height:26px;"></div>
+              <div style="font-size:.6rem; color:var(--gray-400);">Apr</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;">
+              <div style="font-size:.6rem; color:var(--gray-400);">—</div>
+              <div style="background:var(--gray-200); border-radius:3px 3px 0 0; width:100%; height:4px;"></div>
+              <div style="font-size:.6rem; color:var(--gray-400);">May</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Implementation note</div>
+    <div class="note">
+      <strong>Chart.js vs vanilla:</strong> The iOS Stats tab uses Swift Charts (built-in). For the web, we can either use <strong>Chart.js</strong> (60KB, CDN) for polished charts, or hand-roll bar/pyramid charts in plain HTML/CSS (as shown above — simpler, zero deps). The plain CSS approach was already used for the bar chart concept on the Training page.
+    </div>
+    <div class="info">
+      A <strong>Stats nav item</strong> could be added to the sidebar under the existing View section. Clicking it would replace the table/training list with a full-width stats panel — similar to how the iOS Stats tab works.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ OPEN QUESTIONS ════════════════ -->
+<div class="page" id="questions">
+  <h2>Open Questions</h2>
+  <p class="subtitle">These need your input before writing the spec.</p>
+
+  <div class="q-card">
+    <div class="q">1. What's the scope for Phase 3?</div>
+    <div class="options">
+      <div class="opt">Training read-only (Option A)</div>
+      <div class="opt selected">Training read + write (Option B)</div>
+      <div class="opt">Stats charts (Option C)</div>
+      <div class="opt">B + C (Training write + Stats)</div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q">2. Training types — same as iOS app? (Hangboard, Campus Board, System Wall, Gym Session, Yoga, Running, Strength)</div>
+    <div class="options">
+      <div class="opt selected">Yes, exactly these 7 types</div>
+      <div class="opt">Add/remove some</div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q">3. Should "Stats" be a separate tab/view, or keep the existing 4-card stats bar on the logbook?</div>
+    <div class="options">
+      <div class="opt">Keep current stats bar only</div>
+      <div class="opt">Add a Stats view in sidebar (separate from logbook)</div>
+      <div class="opt selected">Both — keep bar, add a richer Stats view</div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q">4. Should the web dashboard allow adding/editing/deleting ClimbNotes (the logbook itself), or stay read-only?</div>
+    <div class="options">
+      <div class="opt selected">Read-only logbook (app is source of truth for climbs)</div>
+      <div class="opt">Allow adding new climbs from web</div>
+      <div class="opt">Full CRUD — add, edit, delete</div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q">5. Should Phase 3 include mock data for training sessions?</div>
+    <div class="options">
+      <div class="opt selected">Yes — add ~8 mock TrainingSession entries to mock.js</div>
+      <div class="opt">No — test with real CloudKit data only</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ DATA MODEL ════════════════ -->
+<div class="page" id="datamodel">
+  <h2>Data Model — Phase 3</h2>
+  <p class="subtitle">CloudKit record types and field mapping for new Phase 3 entities.</p>
+
+  <div class="section">
+    <div class="section-label">CD_TrainingSession fields</div>
+    <div class="card">
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead><tr><th>CloudKit Field</th><th>JS field name</th><th>Type</th><th>Notes</th><th>Phase</th></tr></thead>
+          <tbody>
+            <tr><td><code>recordName</code></td><td><code>recordName</code></td><td>String</td><td>UUID, auto-generated by CloudKit</td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_id</code></td><td><code>id</code></td><td>String (UUID)</td><td>iOS <code>session.id</code></td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_date</code></td><td><code>date</code></td><td>Date → JS Date</td><td>Session date/time</td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_type</code></td><td><code>type</code></td><td>String</td><td>Hangboard / Campus Board / Gym Session / Yoga / Running / Strength / System Wall</td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_duration</code></td><td><code>duration</code></td><td>Int64 → Number</td><td>Minutes</td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_intensity</code></td><td><code>intensity</code></td><td>Int64 → Number</td><td>1–5 scale</td><td><span class="pill pill-blue">3</span></td></tr>
+            <tr><td><code>CD_notes</code></td><td><code>notes</code></td><td>String?</td><td>Optional free text</td><td><span class="pill pill-blue">3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Data flow</div>
+    <div class="flow">
+      <div class="flow-box"><div class="fb-title">iOS App</div><div class="fb-sub">Core Data</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-title">NSPersistentCloudKitContainer</div><div class="fb-sub">auto-syncs</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight"><div class="fb-title">CloudKit Private DB</div><div class="fb-sub">CD_TrainingSession</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><div class="fb-title">CloudKit JS SDK</div><div class="fb-sub">fetch / save</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box highlight"><div class="fb-title">Web Dashboard</div><div class="fb-sub">Training tab</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Files to create / modify in Phase 3</div>
+    <div class="card">
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead><tr><th>File</th><th>Action</th><th>What changes</th></tr></thead>
+          <tbody>
+            <tr><td><code>app/js/training.js</code></td><td><span class="pill pill-green">Create</span></td><td>fetchTrainingSessions(), saveTrainingSession(), computeTrainingStats()</td></tr>
+            <tr><td><code>app/js/ui.js</code></td><td><span class="pill pill-orange">Modify</span></td><td>renderTrainingPage(), showTrainingLog(), bindTrainingHandlers()</td></tr>
+            <tr><td><code>app/js/mock.js</code></td><td><span class="pill pill-orange">Modify</span></td><td>Add MOCK_SESSIONS array (~8 entries), override fetchTrainingSessions()</td></tr>
+            <tr><td><code>app/index.html</code></td><td><span class="pill pill-orange">Modify</span></td><td>Training section in sidebar, training table/list area, log-session overlay HTML</td></tr>
+            <tr><td><code>app/css/app.css</code></td><td><span class="pill pill-orange">Modify</span></td><td>Training-specific styles: session rows, intensity dots, bar chart, log overlay</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

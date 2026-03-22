@@ -65,9 +65,10 @@ function renderClimbsTable(climbs) {
     tr.innerHTML = `
       <td><strong>${escapeHtml(climb.route || '—')}</strong></td>
       <td>${escapeHtml(climb.climbingArea || '—')}${climb.crag ? ` <small style="color:#64748b">/ ${escapeHtml(climb.crag)}</small>` : ''}</td>
-      <td><span class="grade-badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span></td>
+      <td><span class="type-badge">${escapeHtml(climb.routeType || '—')}</span></td>
+      <td><span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span></td>
       <td>${formatDate(climb.date)}</td>
-      <td><span class="send-badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span></td>
+      <td><span class="badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span></td>
       <td>${renderStars(climb.rating)}</td>
     `;
     tr.addEventListener('click', () => showDetailModal(climb));
@@ -90,8 +91,8 @@ function showDetailModal(climb) {
       ${escapeHtml(climb.climbingArea || '')}${climb.crag ? ` &rsaquo; ${escapeHtml(climb.crag)}` : ''}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;align-items:center">
-      <span class="grade-badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span>
-      <span class="send-badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span>
+      <span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span>
+      <span class="badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span>
       ${climb.routeType ? `<span style="font-size:0.85rem;color:#64748b">${escapeHtml(climb.routeType)}</span>` : ''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
@@ -169,15 +170,16 @@ function showLoading(visible) {
 // ---------- Populate filters ----------
 
 function populateFilters(climbs) {
-  const areaSelect = document.getElementById('filter-area');
-  const yearSelect = document.getElementById('filter-year');
+  const areaSelect     = document.getElementById('filter-area');
+  const yearSelect     = document.getElementById('filter-year');
+  const typeSelect     = document.getElementById('filter-routetype');
 
   const areas = [...new Set(climbs.map(c => c.climbingArea).filter(Boolean))].sort();
   const years = [...new Set(
     climbs.filter(c => c.date).map(c => c.date.getFullYear())
   )].sort((a, b) => b - a);
+  const types = [...new Set(climbs.map(c => c.routeType).filter(Boolean))].sort();
 
-  // Keep existing placeholder option, rebuild the rest
   areaSelect.innerHTML = '<option value="">All Areas</option>';
   for (const area of areas) {
     const opt = document.createElement('option');
@@ -192,6 +194,16 @@ function populateFilters(climbs) {
     opt.value = year;
     opt.textContent = year;
     yearSelect.appendChild(opt);
+  }
+
+  if (typeSelect) {
+    typeSelect.innerHTML = '<option value="">All Types</option>';
+    for (const type of types) {
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = type;
+      typeSelect.appendChild(opt);
+    }
   }
 }
 
@@ -211,8 +223,10 @@ function renderUserChip(userIdentity) {
 function updateCountBadges(filtered, all) {
   const badgeAll      = document.getElementById('badge-all');
   const badgeProjects = document.getElementById('badge-projects');
+  const badgeSent     = document.getElementById('badge-sent');
   if (badgeAll)      badgeAll.textContent      = filtered.length;
   if (badgeProjects) badgeProjects.textContent  = filtered.filter(c => c.isProject).length;
+  if (badgeSent)     badgeSent.textContent      = filtered.filter(c => !c.isProject).length;
 }
 
 // ---------- Filter + search handler wiring ----------
@@ -221,25 +235,29 @@ function bindFilterHandlers(allClimbs) {
   let activeView = 'all'; // 'all' | 'projects' | 'sent'
 
   function refresh() {
-    const area     = document.getElementById('filter-area').value;
-    const year     = document.getElementById('filter-year').value;
-    const sendType = document.getElementById('filter-sendtype').value;
-    const search   = document.getElementById('search-input').value;
-    const sort     = document.getElementById('sort-select').value;
+    const area      = document.getElementById('filter-area').value;
+    const year      = document.getElementById('filter-year').value;
+    const sendType  = document.getElementById('filter-sendtype').value;
+    const routeType = document.getElementById('filter-routetype')?.value ?? '';
+    const search    = document.getElementById('search-input').value;
+    const sort      = document.getElementById('sort-select').value;
 
-    let filtered = filterClimbs(allClimbs, { area, year, sendType, search, sort });
+    let filtered = filterClimbs(allClimbs, { area, year, sendType, routeType, search, sort });
+
+    // Update badges from search/filter result BEFORE applying the view filter
+    // so "All Climbs" count stays stable regardless of which view is active
+    updateCountBadges(filtered, allClimbs);
 
     // Apply sidebar view filter on top
     if (activeView === 'projects') filtered = filtered.filter(c => c.isProject === true);
     else if (activeView === 'sent') filtered = filtered.filter(c => c.isProject === false);
 
     renderClimbsTable(filtered);
-    updateCountBadges(filtered, allClimbs);
   }
 
-  ['filter-area', 'filter-year', 'filter-sendtype', 'sort-select'].forEach(id =>
-    document.getElementById(id).addEventListener('change', refresh)
-  );
+  ['filter-area', 'filter-year', 'filter-sendtype', 'filter-routetype', 'sort-select'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', refresh);
+  });
 
   let searchTimer;
   document.getElementById('search-input').addEventListener('input', () => {
@@ -253,14 +271,28 @@ function bindFilterHandlers(allClimbs) {
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
-    const viewMap = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
+    const viewMap   = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
+    const labelMap  = { all: 'All Climbs', projects: 'Projects', sent: 'Sent Climbs' };
+    const navMap    = { all: 'nav-logbook', projects: 'nav-projects' };
     document.getElementById(viewMap[view])?.classList.add('active');
+    // Sync header nav active state
+    ['nav-logbook', 'nav-projects'].forEach(id => {
+      document.getElementById(id)?.classList.remove('active');
+    });
+    if (navMap[view]) document.getElementById(navMap[view])?.classList.add('active');
+    const lbl = document.getElementById('view-label');
+    if (lbl) lbl.textContent = labelMap[view] ?? 'All Climbs';
     refresh();
   }
 
   document.getElementById('view-all')?.addEventListener('click', e => { e.preventDefault(); setActiveView('all'); });
   document.getElementById('view-projects')?.addEventListener('click', e => { e.preventDefault(); setActiveView('projects'); });
   document.getElementById('view-sent')?.addEventListener('click', e => { e.preventDefault(); setActiveView('sent'); });
+
+  // Header nav links — delegate to same view switching
+  document.getElementById('nav-logbook')?.addEventListener('click', e => { e.preventDefault(); setActiveView('all'); });
+  document.getElementById('nav-projects')?.addEventListener('click', e => { e.preventDefault(); setActiveView('projects'); });
+  document.getElementById('nav-training')?.addEventListener('click', e => { e.preventDefault(); showToast('Training coming in Phase 3 🏋️', 'info'); });
 
   // Initial badge update
   updateCountBadges(allClimbs, allClimbs);
