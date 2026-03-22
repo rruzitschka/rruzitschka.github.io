@@ -887,19 +887,6 @@ function renderTrainingPage(sessions, period) {
   document.getElementById('ts-days').textContent = stats.trainingDays;
   document.getElementById('ts-avg').textContent = stats.avgPerWeek.toFixed(1);
 
-  const barsEl = document.getElementById('training-bars');
-  const maxCount = Math.max(1, ...Object.values(stats.sessionsByType));
-  barsEl.innerHTML = Object.entries(stats.sessionsByType)
-    .sort((a, b) => b[1] - a[1])
-    .map(([type, count]) => {
-      const pct = Math.round((count / maxCount) * 100);
-      const emoji = (typeof TYPE_EMOJI !== 'undefined' ? TYPE_EMOJI[type] : '') || '🏋️';
-      return `<div class="training-bar-wrap">
-        <div class="training-bar" style="height:${pct}%"></div>
-        <div class="training-bar-label">${emoji} ${type.split(' ')[0]}</div>
-      </div>`;
-    }).join('');
-
   const listEl = document.getElementById('training-list');
   const filtered = sessions.filter(s => {
     if (period === 'allTime') return true;
