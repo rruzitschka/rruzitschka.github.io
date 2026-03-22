@@ -616,6 +616,7 @@ function bindTrainingOverlayHandlers() {
         notes:     document.getElementById('to-notes').value.trim() || null,
       });
       closeOverlay();
+      trainingLoaded = false;
       await loadTrainingData();
     } catch (err) {
       alert('Save failed: ' + (err.message ?? err));
@@ -632,6 +633,7 @@ function bindTrainingOverlayHandlers() {
     try {
       await deleteTrainingSession(recordName);
       document.getElementById('training-overlay').classList.add('hidden');
+      trainingLoaded = false;
       await loadTrainingData();
     } catch (err) {
       alert('Delete failed: ' + (err.message ?? err));
@@ -655,6 +657,8 @@ let trainingPeriod = 'allTime';
 let trainingLoaded = false;
 
 async function loadTrainingData() {
+  if (trainingLoaded) { renderTrainingPage(allSessions, trainingPeriod); return; }
+  trainingLoaded = true;
   allSessions = await fetchTrainingSessions();
   document.getElementById('badge-sessions').textContent = allSessions.length;
   renderTrainingPage(allSessions, trainingPeriod);
