@@ -53,7 +53,7 @@ window.initAuth = function(callback) {
   window.saveClimbNote = async function(climbData) {
     const isNew = !climbData.recordName;
     const rn = climbData.recordName ?? ('mock-cn-new-' + Date.now());
-    const saved = { ...climbData, recordName: rn, id: climbData.id ?? crypto.randomUUID() };
+    const saved = { ...climbData, recordName: rn, id: climbData.id ?? crypto.randomUUID(), isProject: climbData.sendType === 'Project' };
     if (isNew) {
       MOCK_CLIMBS.unshift(saved);
     } else {
