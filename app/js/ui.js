@@ -140,9 +140,18 @@ function showDetailModal(climb) {
     html += `<p style="font-size:0.88rem;color:#94a3b8">${climb.photoCount} photo${climb.photoCount > 1 ? 's' : ''} (view in app)</p>`;
   }
 
+  html += `<div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+    <button id="detail-edit-btn" class="btn btn-primary btn-sm">Edit Climb</button>
+  </div>`;
+
   content.innerHTML = html;
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  document.getElementById('detail-edit-btn').addEventListener('click', () => {
+    hideDetailModal();
+    showEditClimbOverlay(climb);
+  });
 }
 
 function hideDetailModal() {
@@ -556,7 +565,7 @@ function bindClimbOverlayHandlers() {
 
 function setIntensity(value) {
   document.querySelectorAll('.intensity-btn').forEach(btn => {
-    btn.classList.toggle('active', Number(btn.dataset.value) === value);
+    btn.classList.toggle('active', Number(btn.dataset.value) <= value);
   });
 }
 
