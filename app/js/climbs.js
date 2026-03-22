@@ -128,6 +128,7 @@ async function saveClimbNote(climbData) {
       CD_highPoint:     { value: climbData.highPoint || null },
       CD_projectStatus: { value: climbData.projectStatus || null },
       CD_projectNotes:  { value: climbData.projectNotes || null },
+      CD_lastAttemptDate: { value: climbData.lastAttemptDate ? climbData.lastAttemptDate.getTime() : null },
     }
   };
   if (climbData.recordName) record.recordName = climbData.recordName;

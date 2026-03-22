@@ -1724,3 +1724,84 @@ body {
   color: #64748b;
   font-weight: 600;
 }
+
+/* ---- Table header row (heading + action button) ---- */
+.table-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .75rem;
+  width: 100%;
+}
+
+/* Action button inside header — must not flex-grow */
+.btn-action {
+  flex: 0 0 auto;
+  padding: .4rem .9rem;
+  font-size: .82rem;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--primary-color);
+  color: var(--white);
+  border: none;
+}
+.btn-action:hover { background: #2563eb; }
+
+/* Purple variant for "Add Project" */
+.btn-project {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+.btn-project:hover { background: #6d28d9; }
+
+/* Green variant for "Mark as Sent" */
+.btn-success {
+  flex: 0 0 auto;
+  padding: .6rem 1rem;
+  font-size: .9rem;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  background: #22c55e;
+  color: var(--white);
+  border: none;
+  transition: all var(--transition-base);
+}
+.btn-success:hover { background: #16a34a; }
+
+/* ---- Style pill buttons (send overlay) ---- */
+.style-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.style-tab {
+  padding: .3rem .8rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-color);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #64748b;
+  background: var(--white);
+  transition: all .15s;
+  user-select: none;
+}
+.style-tab.active-rp { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+.style-tab.active-os { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+.style-tab.active-fl { border-color: #f59e0b; background: #fffbeb; color: #d97706; }
+.style-tab.active-pk { border-color: #ec4899; background: #fdf2f8; color: #be185d; }
+
+/* Badge label used in overlays for "Edit only" tags */
+.badge-edit-only {
+  font-size: .65rem;
+  font-weight: 700;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
