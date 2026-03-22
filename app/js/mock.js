@@ -6,28 +6,89 @@ const container = { signOut: () => Promise.resolve(), userRecordName: 'mock-user
 const database  = {};
 
 // =============================================================================
-// Section 2 — initAuth() override
-// Returns fake user, no redirect
+// Section 2 — initAuth() override with all window.* overrides
+// Returns fake user and overrides all CloudKit functions
 // =============================================================================
-async function initAuth() {
-  return {
+window.initAuth = function(callback) {
+  const user = {
     nameComponents: { givenName: 'Alex', familyName: 'Climber' },
     lookupInfo: { emailAddress: 'alex@example.com' }
   };
-}
+  
+  // Override fetchClimbs
+  window.fetchClimbs = async function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('empty') === '1') return [];
+    return [...MOCK_CLIMBS];
+  };
+
+  // Override fetchTrainingSessions
+  window.fetchTrainingSessions = async function() {
+    return [...MOCK_SESSIONS];
+  };
+
+  // Override saveTrainingSession
+  window.saveTrainingSession = async function(session) {
+    const isNew = !session.recordName;
+    const rn = session.recordName ?? ('mock-ts-new-' + Date.now());
+    const saved = { ...session, recordName: rn, id: session.id ?? crypto.randomUUID() };
+    if (isNew) {
+      MOCK_SESSIONS.unshift(saved);
+    } else {
+      const idx = MOCK_SESSIONS.findIndex(s => s.recordName === rn);
+      if (idx !== -1) MOCK_SESSIONS[idx] = saved;
+    }
+    console.log('[Mock] saved TrainingSession', rn);
+    return saved;
+  };
+
+  // Override deleteTrainingSession
+  window.deleteTrainingSession = async function(recordName) {
+    const idx = MOCK_SESSIONS.findIndex(s => s.recordName === recordName);
+    if (idx !== -1) MOCK_SESSIONS.splice(idx, 1);
+    console.log('[Mock] deleted TrainingSession', recordName);
+  };
+
+  // Override saveClimbNote
+  window.saveClimbNote = async function(climbData) {
+    const isNew = !climbData.recordName;
+    const rn = climbData.recordName ?? ('mock-cn-new-' + Date.now());
+    const saved = { ...climbData, recordName: rn, id: climbData.id ?? crypto.randomUUID() };
+    if (isNew) {
+      MOCK_CLIMBS.unshift(saved);
+    } else {
+      const idx = MOCK_CLIMBS.findIndex(c => c.recordName === rn);
+      if (idx !== -1) MOCK_CLIMBS[idx] = saved;
+    }
+    console.log('[Mock] saved ClimbNote', rn);
+    return saved;
+  };
+
+  // Override deleteClimbNote
+  window.deleteClimbNote = async function(recordName) {
+    const idx = MOCK_CLIMBS.findIndex(c => c.recordName === recordName);
+    if (idx !== -1) MOCK_CLIMBS.splice(idx, 1);
+    console.log('[Mock] deleted ClimbNote', recordName);
+  };
+
+  // Override saveAscent
+  window.saveAscent = async function(ascentData) {
+    const rn = ascentData.recordName ?? ('mock-asc-' + Date.now());
+    console.log('[Mock] saved Ascent', rn);
+    return { ...ascentData, recordName: rn };
+  };
+
+  // Override deleteAscent
+  window.deleteAscent = async function(recordName) {
+    console.log('[Mock] deleted Ascent', recordName);
+  };
+
+  if (callback) callback(user);
+  return Promise.resolve(user);
+};
 
 // =============================================================================
-// Section 3 — fetchClimbs() override
-// Returns mock data or empty array
-// =============================================================================
-async function fetchClimbs() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('empty') === '1') return [];
-  return MOCK_CLIMBS;
-}
-
-// =============================================================================
-// Section 4 — MOCK_CLIMBS dataset
+// Section 3 — MOCK_CLIMBS dataset
 // =============================================================================
 const MOCK_CLIMBS = [
   {
@@ -300,6 +361,20 @@ const MOCK_CLIMBS = [
     lastAttemptDate: null,
     projectNotes: null
   }
+];
+
+// =============================================================================
+// Section 4b — MOCK_SESSIONS dataset
+// =============================================================================
+const MOCK_SESSIONS = [
+  { recordName: 'mock-ts-1', id: 'ts-1', date: new Date('2026-03-20'), type: 'Hangboard',    duration: 45,  intensity: 4, notes: 'Max hangs protocol, 20mm edge.' },
+  { recordName: 'mock-ts-2', id: 'ts-2', date: new Date('2026-03-18'), type: 'Gym Session',  duration: 120, intensity: 3, notes: null },
+  { recordName: 'mock-ts-3', id: 'ts-3', date: new Date('2026-03-15'), type: 'Campus Board', duration: 30,  intensity: 5, notes: 'Limit bouldering after. Felt strong.' },
+  { recordName: 'mock-ts-4', id: 'ts-4', date: new Date('2026-03-10'), type: 'Hangboard',    duration: 45,  intensity: 3, notes: 'Repeaters, 7s on / 3s off.' },
+  { recordName: 'mock-ts-5', id: 'ts-5', date: new Date('2026-03-05'), type: 'Yoga',         duration: 60,  intensity: 2, notes: 'Recovery day.' },
+  { recordName: 'mock-ts-6', id: 'ts-6', date: new Date('2026-02-28'), type: 'Gym Session',  duration: 90,  intensity: 4, notes: null },
+  { recordName: 'mock-ts-7', id: 'ts-7', date: new Date('2026-02-20'), type: 'Hangboard',    duration: 45,  intensity: 4, notes: 'Added pinches this week.' },
+  { recordName: 'mock-ts-8', id: 'ts-8', date: new Date('2026-02-14'), type: 'Running',      duration: 40,  intensity: 3, notes: '6km easy pace.' },
 ];
 
 // =============================================================================
