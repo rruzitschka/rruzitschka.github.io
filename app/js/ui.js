@@ -327,15 +327,11 @@ function bindFilterHandlers(initialClimbs) {
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
-    const viewMap   = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
-    const labelMap  = { all: 'All Climbs', projects: 'Projects', sent: 'Sent Climbs' };
-    const navMap    = { all: 'nav-logbook', projects: 'nav-projects' };
+    // Deactivate training sidebar item
+    document.querySelector('[data-view="training"]')?.classList.remove('active');
+    const viewMap  = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
+    const labelMap = { all: 'All Climbs', projects: 'Projects', sent: 'Sent Climbs' };
     document.getElementById(viewMap[view])?.classList.add('active');
-    // Sync header nav active state
-    ['nav-logbook', 'nav-projects'].forEach(id => {
-      document.getElementById(id)?.classList.remove('active');
-    });
-    if (navMap[view]) document.getElementById(navMap[view])?.classList.add('active');
     const lbl = document.getElementById('view-label');
     if (lbl) lbl.textContent = labelMap[view] ?? 'All Climbs';
     // Context-aware action button
@@ -351,11 +347,6 @@ function bindFilterHandlers(initialClimbs) {
   document.getElementById('view-all')?.addEventListener('click', e => { e.preventDefault(); setActiveView('all'); });
   document.getElementById('view-projects')?.addEventListener('click', e => { e.preventDefault(); setActiveView('projects'); });
   document.getElementById('view-sent')?.addEventListener('click', e => { e.preventDefault(); setActiveView('sent'); });
-
-  // Header nav links — delegate to same view switching
-  document.getElementById('nav-logbook')?.addEventListener('click', e => { e.preventDefault(); setActiveView('all'); });
-  document.getElementById('nav-projects')?.addEventListener('click', e => { e.preventDefault(); setActiveView('projects'); });
-  document.getElementById('nav-training')?.addEventListener('click', e => { e.preventDefault(); showTrainingView(); });
 
   // Initial badge update
   updateCountBadges(_allClimbs, _allClimbs);
@@ -426,9 +417,11 @@ function showTrainingView() {
   document.getElementById('stats-bar').classList.add('hidden');
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.remove('hidden');
-  document.getElementById('nav-training')?.classList.add('active');
-  document.getElementById('nav-logbook')?.classList.remove('active');
-  document.getElementById('nav-projects')?.classList.remove('active');
+  // Sidebar active state: deactivate logbook items, activate training
+  ['view-all', 'view-projects', 'view-sent'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  document.querySelector('[data-view="training"]')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
   loadTrainingData();
