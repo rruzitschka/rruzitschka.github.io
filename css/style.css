@@ -138,6 +138,23 @@ nav a:hover {
     color: var(--accent-color);
 }
 
+nav a.nav-app-link {
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    margin-left: 0.5rem;
+}
+
+nav a.nav-app-link:hover {
+    background-color: #ea6f0a;
+    color: white;
+}
+
+nav a.nav-app-link::after {
+    display: none;
+}
+
 .header-img {
     width: 100%;
     max-height: none;
@@ -183,6 +200,25 @@ nav a:hover {
     color: var(--primary-color);
     font-size: 1.3rem;
     margin-bottom: 0.7rem;
+}
+
+.btn-web-app {
+    display: inline-block;
+    margin-top: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.btn-web-app:hover {
+    background-color: #ea6f0a;
+    color: white;
+    text-decoration: none;
 }
 
 .whats-new-list {
