@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendLog - Sign In</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+            padding: var(--spacing-xl);
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .login-logo {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            color: var(--dark-bg);
+        }
+
+        .login-logo .accent {
+            color: var(--accent-color);
+        }
+
+        .login-tagline {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-2xl);
+            font-style: italic;
+        }
+
+        #auth-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-lg);
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        #signin-btn {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: #000000;
+            color: var(--white);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+        }
+
+        #signin-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+        }
+
+        #signin-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .signin-icon {
+            font-size: 1.2rem;
+        }
+
+        .login-requirement {
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            color: #166534;
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .login-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .login-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color var(--transition-base);
+            margin: 0 var(--spacing-md);
+        }
+
+        .login-footer a:hover {
+            color: var(--accent-color);
+        }
+
+        .footer-link-separator {
+            color: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                Send<span class="accent">Log</span>
+            </div>
+            <p class="login-tagline">Your climbing logbook, everywhere.</p>
+
+            <div id="auth-error"></div>
+
+            <button id="signin-btn">
+                <span class="signin-icon">🍎</span>
+                <span>Sign in with Apple</span>
+            </button>
+
+            <div class="login-requirement">
+                📱 Requires SendLog iOS app with iCloud Sync enabled
+            </div>
+
+            <div class="login-footer">
+                <a href="../index.html">Learn more</a>
+                <span class="footer-link-separator">|</span>
+                <a href="../pages/policy.html">Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
+    <script src="js/cloudkit-config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // If already signed in, redirect to dashboard
+            try {
+                const userIdentity = await container.setUpAuth();
+                if (userIdentity) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch (err) {
+                console.error('Initial auth check failed:', err);
+            }
+
+            // Wire sign-in button
+            const btn = document.getElementById('signin-btn');
+            const errorDiv = document.getElementById('auth-error');
+
+            btn.addEventListener('click', async () => {
+                btn.textContent = 'Signing in…';
+                btn.disabled = true;
+
+                try {
+                    const identity = await container.setUpAuth();
+                    if (identity) {
+                        window.location.href = 'index.html';
+                    } else {
+                        errorDiv.textContent = 'Sign-in failed. Please try again.';
+                        errorDiv.style.display = 'block';
+                        btn.innerHTML = '<span class="signin-icon">🍎</span><span>Sign in with Apple</span>';
+                        btn.disabled = false;
+                    }
+                } catch (err) {
+                    console.error('Sign-in error:', err);
+                    errorDiv.textContent = 'Sign-in failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                    btn.innerHTML = '<span class="signin-icon">🍎</span><span>Sign in with Apple</span>';
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
