@@ -146,6 +146,11 @@
   <script src="js/climbs.js"></script>
   <script src="js/ui.js"></script>
   <script>
+    if (new URLSearchParams(window.location.search).get('mock') === 'true') {
+      document.write('<scr' + 'ipt src="js/mock.js"><\/scr' + 'ipt>');
+    }
+  </script>
+  <script>
     (async () => {
       const user = await initAuth();
       if (!user) return;
