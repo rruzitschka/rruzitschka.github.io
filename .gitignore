@@ -1,0 +1,6 @@
+# CloudKit token — never commit real credentials
+app/js/cloudkit-config.js
+
+# OS / editor
+.DS_Store
+.vscode/
