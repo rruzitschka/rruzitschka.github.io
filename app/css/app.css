@@ -1825,3 +1825,45 @@ body {
 .page-btn:hover:not(:disabled) { background: var(--light-bg); }
 .page-btn:disabled { opacity: .4; cursor: default; }
 .page-count { color: var(--text-secondary); }
+
+/* ── Login screen ───────────────────────────────────────── */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-main, #0f172a);
+}
+.login-card {
+  background: var(--bg-card, #1e293b);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.login-card h2 {
+  font-size: 1.6rem;
+  margin-bottom: .5rem;
+  color: var(--text-primary, #f1f5f9);
+}
+.login-card p {
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 1.5rem;
+  font-size: .95rem;
+}
+.btn-apple-signin {
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: .75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity .2s;
+}
+.btn-apple-signin:hover:not(:disabled) { opacity: .85; }
+.btn-apple-signin:disabled { opacity: .5; cursor: default; }
