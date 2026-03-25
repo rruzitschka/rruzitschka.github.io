@@ -5,6 +5,19 @@
 // recordName for ascents is encoded as "noteId/ascentId" so deleteAscent
 // can reconstruct the Firestore sub-collection path without a noteId parameter.
 
+// iOS stores sendType as lowercase; web UI expects Title Case
+const SEND_TYPE_NORMALIZE = {
+  'redpoint':  'Redpoint',
+  'onsight':   'On Sight',
+  'on sight':  'On Sight',
+  'flash':     'Flash',
+  'project':   'Project',
+  'pinkpoint': 'Pinkpoint',
+};
+function normalizeSendType(raw) {
+  return SEND_TYPE_NORMALIZE[raw?.toLowerCase()] ?? raw ?? 'Redpoint';
+}
+
 async function fetchClimbs() {
   const user = getCurrentUser();
   if (!user) return [];
@@ -30,10 +43,13 @@ async function fetchClimbs() {
               recordName: `${doc.id}/${a.id}`,  // composite: noteId/ascentId
               id:       ad.id ?? a.id,
               date:     ad.date?.toDate() ?? null,
-              sendType: ad.sendType ?? 'redpoint',
+              sendType: normalizeSendType(ad.sendType),
               notes:    ad.notes ?? null,
             };
           });
+        // Normalize sendType: iOS stores lowercase, web expects Title Case
+        const sendType = normalizeSendType(d.sendType);
+        const isProject = sendType === 'Project';
         return {
           recordName:    doc.id,
           id:            d.id ?? doc.id,
@@ -41,7 +57,8 @@ async function fetchClimbs() {
           climbingArea:  d.climbingArea ?? '',
           crag:          d.crag ?? '',
           difficulty:    d.difficulty ?? '',
-          sendType:      d.sendType ?? 'redpoint',
+          sendType,
+          isProject,
           routeType:     d.routeType ?? 'Sport',
           noteText:      d.noteText ?? '',
           rating:        d.rating ?? 0,
