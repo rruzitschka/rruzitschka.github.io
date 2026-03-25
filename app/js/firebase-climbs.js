@@ -143,14 +143,14 @@ function computeStats(climbs) {
   const now = new Date();
   const thisYear = now.getFullYear();
   const byType = {};
-  climbs.filter(c => c.sendType !== 'project').forEach(c => {
+  climbs.filter(c => !c.isProject).forEach(c => {
     byType[c.sendType] = (byType[c.sendType] || 0) + 1;
   });
   return {
-    total:    climbs.filter(c => c.sendType !== 'project').length,
+    total:    climbs.filter(c => !c.isProject).length,
     thisYear: climbs.filter(c => c.date && c.date.getFullYear() === thisYear).length,
     byType,
-    projects: climbs.filter(c => c.sendType === 'project').length,
+    projects: climbs.filter(c => c.isProject).length,
   };
 }
 

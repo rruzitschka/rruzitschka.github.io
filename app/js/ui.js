@@ -302,8 +302,8 @@ function bindFilterHandlers(initialClimbs) {
     updateCountBadges(filtered, _allClimbs);
 
     // Apply sidebar view filter on top
-    if (activeView === 'projects') filtered = filtered.filter(c => c.isProject === true);
-    else if (activeView === 'sent') filtered = filtered.filter(c => c.isProject === false);
+    if (activeView === 'projects') filtered = filtered.filter(c => !!c.isProject);
+    else if (activeView === 'sent') filtered = filtered.filter(c => !c.isProject);
 
     renderClimbsTable(filtered);
   }
