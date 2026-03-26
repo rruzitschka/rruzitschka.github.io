@@ -1,5 +1,7 @@
 # Send vs Project Overlays — Implementation Plan
 
+> **STATUS: COMPLETE** — Implemented 2026-03-22
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Split the single "Add Climb" overlay into separate "Log Send" and "Add Project" overlays with type-appropriate fields, fix button alignment, and add a "Mark as Sent" conversion flow.
