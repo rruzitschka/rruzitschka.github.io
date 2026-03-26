@@ -10,7 +10,10 @@ const SEND_TYPE_NORMALIZE = {
   'redpoint':  'Redpoint',
   'onsight':   'On Sight',
   'on sight':  'On Sight',
-  'flash':     'Flash',
+  'top rope':  'Top Rope',
+  'toprope':   'Top Rope',
+  'all free':  'All Free',
+  'allfree':   'All Free',
   'project':   'Project',
   'pinkpoint': 'Pinkpoint',
 };

@@ -69,7 +69,8 @@
             <option value="">All Styles</option>
             <option value="Redpoint">Redpoint</option>
             <option value="On Sight">On Sight</option>
-            <option value="Flash">Flash</option>
+            <option value="Top Rope">Top Rope</option>
+            <option value="All Free">All Free</option>
             <option value="Pinkpoint">Pinkpoint</option>
             <option value="Project">Project</option>
           </select>
@@ -234,7 +235,8 @@
           <div class="style-tabs" id="so-style-tabs">
             <div class="style-tab active-rp" data-style="Redpoint">Redpoint</div>
             <div class="style-tab" data-style="On Sight">On Sight</div>
-            <div class="style-tab" data-style="Flash">Flash</div>
+            <div class="style-tab" data-style="Top Rope">Top Rope</div>
+            <div class="style-tab" data-style="All Free">All Free</div>
             <div class="style-tab" data-style="Pinkpoint">Pinkpoint</div>
           </div>
           <input type="hidden" id="so-sendtype" value="Redpoint">
@@ -254,18 +256,26 @@
           <textarea id="so-notes" rows="2" placeholder="Any notes about this send…"></textarea>
         </div>
         <div class="form-section hidden" id="so-ascents-section">
-          <div class="form-section-title">Repeat Ascents <span class="badge-edit-only">Edit only</span></div>
+          <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between">
+            Repeat Ascents
+            <button class="btn btn-sm btn-secondary" id="so-ascent-toggle">+ Add</button>
+          </div>
           <div id="so-ascents-list"></div>
-          <div class="ascent-add-row">
-            <input type="date" id="so-ascent-date">
-            <select id="so-ascent-type">
-              <option>Redpoint</option>
-              <option>On Sight</option>
-              <option>Flash</option>
-              <option>Pinkpoint</option>
-            </select>
-            <input type="text" id="so-ascent-notes" placeholder="Notes">
-            <button class="btn btn-sm btn-secondary" id="so-ascent-add">+ Add</button>
+          <div class="ascent-add-row hidden" id="so-ascent-form">
+            <div style="display:flex;gap:.5rem">
+              <input type="date" id="so-ascent-date" style="flex:1">
+              <select id="so-ascent-type" style="flex:1">
+                <option>Redpoint</option>
+                <option>On Sight</option>
+                <option>Top Rope</option>
+                <option>All Free</option>
+                <option>Pinkpoint</option>
+              </select>
+            </div>
+            <input type="text" id="so-ascent-notes" placeholder="Notes (optional)" style="width:100%;box-sizing:border-box">
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn btn-sm btn-primary" id="so-ascent-add">Save Ascent</button>
+            </div>
           </div>
         </div>
       </div>
@@ -423,16 +433,16 @@
   </div>
 
   <script>
-    // In mock mode, skip Firebase init entirely to avoid const re-declaration conflicts
+    // In mock mode, skip Firebase SDK/config/auth to avoid errors with missing globals
     if (new URLSearchParams(window.location.search).get('mock') !== 'true') {
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="js/firebase-config.js"><\/scr' + 'ipt>');
+      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=af4562a"><\/scr' + 'ipt>');
     }
   </script>
-  <script src="js/firebase-auth.js?v=af4562a"></script>
   <script src="js/firebase-climbs.js?v=af4562a"></script>
   <script src="js/firebase-training.js?v=af4562a"></script>
   <script src="js/ui.js?v=af4562a"></script>
@@ -444,7 +454,7 @@
   <script>
     (async () => {
       const isMock = new URLSearchParams(window.location.search).get('mock') === 'true';
-      const user = isMock ? { uid: 'mock', email: 'demo@example.com' } : await initAuth();
+      const user = await initAuth();
       if (!user && !isMock) {
         document.getElementById('login-section').classList.remove('hidden');
         document.getElementById('app-container').classList.add('hidden');

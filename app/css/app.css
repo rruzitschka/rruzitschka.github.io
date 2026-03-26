@@ -27,11 +27,13 @@
     --grade-normal: #3b82f6;             /* Blue for normal grades */
     
     /* Send type colors */
-    --send-rp: #22c55e;                  /* Green - Redpoint */
-    --send-os: #f59e0b;                  /* Gold - On Sight */
-    --send-fl: #f97316;                  /* Orange - Flash */
+    --send-rp: #ef4444;                  /* Red - Redpoint */
+    --send-os: #22c55e;                  /* Green - On Sight */
+    --send-fl: #f97316;                  /* Orange - Flash (unused, kept for compat) */
     --send-proj: #9ca3af;                /* Grey - Project */
     --send-pp: #ec4899;                  /* Pink - Pinkpoint */
+    --send-tr: #64748b;                  /* Slate - Top Rope */
+    --send-af: #8b5cf6;                  /* Purple - All Free */
     
     /* Spacing */
     --spacing-xs: 0.25rem;
@@ -556,6 +558,14 @@ td {
 
 .send-pp {
     color: var(--send-pp);
+}
+
+.send-tr {
+    color: var(--send-tr);
+}
+
+.send-af {
+    color: var(--send-af);
 }
 
 .type-badge {
@@ -1412,6 +1422,20 @@ body {
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
+.edit-overlay-footer .btn {
+  flex: none;
+}
+.btn-ghost {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.btn-ghost:hover { background: #f1f5f9; }
 
 /* --- Form components --- */
 .form-group {
@@ -1529,17 +1553,23 @@ body {
 .ascent-row:last-child { border-bottom: none; }
 .ascent-date { color: #64748b; font-size: .8rem; min-width: 80px; }
 .ascent-type { flex: 1; }
+.ascent-notes { color: #94a3b8; font-size: .82rem; font-style: italic; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ascent-delete { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: .9rem; padding: 2px 4px; border-radius: 4px; }
 .ascent-delete:hover { color: var(--danger-color); background: #fee2e2; }
 
-.add-ascent-row {
-  display: grid;
-  grid-template-columns: 120px 1fr 1fr auto;
+.ascent-add-row {
+  display: flex;
+  flex-direction: column;
   gap: .5rem;
-  align-items: end;
   margin-top: .5rem;
-  padding-top: .5rem;
+  padding-top: .75rem;
   border-top: 1px dashed var(--border-color);
+}
+.btn-sm {
+  flex: none !important;
+  padding: 0.35rem 0.85rem !important;
+  font-size: .82rem !important;
+  border-radius: 6px !important;
 }
 
 /* --- Delete confirm dialog --- */

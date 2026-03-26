@@ -107,7 +107,11 @@ const MOCK_CLIMBS = [
     projectStatus: null,
     highPoint: null,
     lastAttemptDate: null,
-    projectNotes: null
+    projectNotes: null,
+    ascents: [
+      { recordName: 'mock-1/asc-1', id: 'asc-1', date: new Date('2026-09-10'), sendType: 'Redpoint', notes: 'Even better second time' },
+      { recordName: 'mock-1/asc-2', id: 'asc-2', date: new Date('2026-10-03'), sendType: 'Redpoint', notes: null },
+    ]
   },
   {
     recordName: 'mock-2',

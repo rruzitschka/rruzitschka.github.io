@@ -11,7 +11,8 @@ const ITEMS_PER_PAGE = 20;
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
   'On Sight':  'send-os',
-  'Flash':     'send-fl',
+  'Top Rope':  'send-tr',
+  'All Free':  'send-af',
   'Project':   'send-proj',
   'Pinkpoint': 'send-pp'
 };
@@ -165,6 +166,26 @@ function showDetailModal(climb) {
           ${climb.attemptCount  ? `<tr><td style="padding:0.3rem 0;color:#64748b">Attempts</td><td>${climb.attemptCount}</td></tr>` : ''}
         </table>
         ${climb.projectNotes ? `<div style="margin-top:0.5rem;font-size:0.9rem;color:#475569;white-space:pre-wrap">${escapeHtml(climb.projectNotes)}</div>` : ''}
+      </div>
+    `;
+  }
+
+  const detailAscents = climb.ascents ?? [];
+  if (detailAscents.length > 0) {
+    html += `
+      <div style="margin-bottom:1.25rem">
+        <div style="font-weight:600;margin-bottom:0.5rem">Repeat Ascents</div>
+        <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+          ${detailAscents.map((a, i) => {
+            const d = a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+            const border = i < detailAscents.length - 1 ? 'border-bottom:1px solid #f1f5f9;' : '';
+            return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;${border}">
+              <span style="color:#64748b;min-width:90px;font-size:0.82rem">${d}</span>
+              <span style="flex:1">${escapeHtml(a.sendType ?? 'Redpoint')}</span>
+              ${a.notes ? `<span style="color:#64748b;font-size:0.85rem;font-style:italic">${escapeHtml(a.notes)}</span>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
       </div>
     `;
   }
@@ -483,7 +504,8 @@ function setStylePill(value) {
   const styleMap = {
     'Redpoint':  'active-rp',
     'On Sight':  'active-os',
-    'Flash':     'active-fl',
+    'Top Rope':  'active-tr',
+    'All Free':  'active-af',
     'Pinkpoint': 'active-pk',
   };
   document.querySelectorAll('#so-style-tabs .style-tab').forEach(tab => {
@@ -510,6 +532,8 @@ function showAddSendOverlay(prefill = {}) {
   setStarRating(0);
   setStylePill('Redpoint');
   document.getElementById('so-ascents-section').classList.add('hidden');
+  document.getElementById('so-ascent-form').classList.add('hidden');
+  document.getElementById('so-ascent-toggle').textContent = '+ Add';
   document.getElementById('send-overlay-delete').classList.add('hidden');
   document.getElementById('so-route-error').classList.add('hidden');
   document.getElementById('so-route').classList.remove('error');
@@ -651,6 +675,12 @@ function bindSendOverlayHandlers() {
     }
   });
 
+  document.getElementById('so-ascent-toggle').addEventListener('click', function () {
+    const form = document.getElementById('so-ascent-form');
+    const isHidden = form.classList.toggle('hidden');
+    this.textContent = isHidden ? '+ Add' : '✕';
+  });
+
   document.getElementById('so-ascent-add').addEventListener('click', async function () {
     const climbRecordName = document.getElementById('so-record-name').value;
     if (!climbRecordName) return;
@@ -667,6 +697,8 @@ function bindSendOverlayHandlers() {
       });
       document.getElementById('so-ascent-date').value = '';
       document.getElementById('so-ascent-notes').value = '';
+      document.getElementById('so-ascent-form').classList.add('hidden');
+      document.getElementById('so-ascent-toggle').textContent = '+ Add';
       const climb = _allClimbs.find(c => c.recordName === climbRecordName);
       if (climb) renderAscentsList(climb);
       await loadData();
@@ -927,16 +959,15 @@ function bindPeriodTabs() {
 function renderAscentsList(climb) {
   const container = document.getElementById('so-ascents-list');
   const ascents = climb.ascents ?? [];
-  container.innerHTML = ascents.length
-    ? ascents.map(a => {
-        const d = a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-        return `<div class="ascent-row">
-          <span class="ascent-date">${d}</span>
-          <span class="ascent-type">${a.sendType ?? 'Redpoint'}</span>
-          <button class="ascent-delete" data-record="${a.recordName}" title="Delete ascent">✕</button>
-        </div>`;
-      }).join('')
-    : '<p style="color:#94a3b8;font-size:.8rem">No repeat ascents logged.</p>';
+  container.innerHTML = ascents.map(a => {
+    const d = a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+    return `<div class="ascent-row">
+      <span class="ascent-date">${d}</span>
+      <span class="ascent-type">${escapeHtml(a.sendType ?? 'Redpoint')}</span>
+      ${a.notes ? `<span class="ascent-notes">${escapeHtml(a.notes)}</span>` : '<span class="ascent-notes"></span>'}
+      <button class="ascent-delete" data-record="${a.recordName}" title="Delete ascent">✕</button>
+    </div>`;
+  }).join('');
 
   container.querySelectorAll('.ascent-delete').forEach(btn => {
     btn.addEventListener('click', async () => {
