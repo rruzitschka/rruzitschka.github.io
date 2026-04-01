@@ -110,14 +110,29 @@
             <p>Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats with full backward compatibility.</p>
         </div>
         <div class="feature-card">
+            <h3>☁️ Cloud Sync</h3>
+            <p>Optionally back up and sync your climbs, ascents, and photos across devices using Firebase. Enable Cloud Sync in Settings — the app works fully offline by default. Sign in with Apple to keep your data private and secure.</p>
+        </div>
+        <div class="feature-card">
             <h3>🌐 Web Dashboard</h3>
-            <p>Access your climbing logbook from any browser. Enable iCloud Sync in the app, then use the web dashboard to log and manage your climbs, add training sessions, and monitor your progress from your desktop or tablet.</p>
+            <p>Access your climbing logbook from any browser. Enable Cloud Sync in the app, then use the web dashboard to view your climbs and training sessions from your desktop or tablet.</p>
             <a href="app/login.html" class="btn-web-app">Open Web App →</a>
         </div>
     </div>
 
     <h2 id="whats-new">What's New</h2>
-    
+
+    <h3>Version 3.7 (April 2026)</h3>
+    <div class="whats-new-list">
+        <ul>
+            <li><strong>Cloud Sync:</strong> Optional Firebase-powered backup and cross-device sync for climbs, ascents, and photos. Sign in with Apple — app stays fully offline by default</li>
+            <li><strong>Grade Expansion:</strong> French 5b+ and 5c+ added as intermediate grades; UIAA mappings corrected from 5a onwards to match international standards</li>
+            <li><strong>Duplicate Send:</strong> New ⧉ button in the send detail view — opens a pre-filled form with the same area, crag, grade, and type so logging similar routes is instant</li>
+            <li><strong>Account Deletion:</strong> Delete your cloud account directly from Settings — local data is preserved and the app continues in offline mode</li>
+            <li><strong>Legal &amp; Compliance:</strong> Terms of Service and Privacy Policy acceptance gate before first sign-in; accessible at any time from Settings</li>
+        </ul>
+    </div>
+
     <h3>Version 3.6 (March 2026)</h3>
     <div class="whats-new-list">
         <ul>
@@ -158,7 +173,19 @@
         </div>
         <div class="faq">
             <strong>Q: Is my data secure?</strong>
-            <p>A: Yes, your data is stored locally and securely on your device. It is only shared externally when explicitly exported or shared by you.</p>
+            <p>A: Yes. By default, your data is stored locally on your device and never leaves it. If you choose to enable Cloud Sync, your data is stored in Firebase (Google Cloud) and protected by Sign in with Apple — no password is ever created or stored.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: How does Cloud Sync work?</strong>
+            <p>A: Cloud Sync is entirely optional. Turn it on in Settings → Cloud Sync and sign in with Apple. Your climbs, ascents, and photos are then backed up and accessible across all your devices. The app continues to work fully offline at all times.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Can I delete my cloud account?</strong>
+            <p>A: Yes. Go to Settings → Delete My Account. All server-side data is permanently deleted, while your local climbing history on the device is preserved. The app switches back to offline-only mode automatically.</p>
+        </div>
+        <div class="faq">
+            <strong>Q: Can I export my data?</strong>
+            <p>A: Yes. From the Settings screen you can export all your climbs and ascents as a CSV file inside a ZIP archive. This works whether or not Cloud Sync is enabled and gives you a portable backup you can open in any spreadsheet app.</p>
         </div>
         <div class="faq">
             <strong>Q: Can I track climbing projects separately from completed routes?</strong>
@@ -174,7 +201,7 @@
         </div>
         <div class="faq">
             <strong>Q: Does SendLog require internet connectivity?</strong>
-            <p>A: No, SendLog functions entirely offline, ensuring you always have access to your climbing logs and statistics even in remote locations.</p>
+            <p>A: No. SendLog works entirely offline — all your climbing logs and statistics are always available even in remote locations. Internet is only used if you choose to enable the optional Cloud Sync feature.</p>
         </div>
         <div class="faq">
             <strong>Q: Is historical data from older versions supported?</strong>
@@ -194,7 +221,7 @@
 </section>
 
 <footer>
-    &copy; 2025 SendLog App
+    &copy; 2026 SendLog App
 </footer>
 
 <script>
