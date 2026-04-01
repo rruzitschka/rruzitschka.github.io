@@ -71,6 +71,16 @@ window.initAuth = function(callback) {
     console.log('[Mock] deleted ClimbNote', recordName);
   };
 
+  // Override fetchPhotos
+  window.fetchPhotos = async function(noteId) {
+    if (noteId === 'mock-1') {
+      return [
+        { id: 'mock-photo-1', storageURL: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&q=80', fileName: 'biographie.jpg', createdAt: new Date('2026-08-15') }
+      ];
+    }
+    return [];
+  };
+
   // Override saveAscent
   window.saveAscent = async function(ascentData) {
     const rn = ascentData.recordName ?? ('mock-asc-' + Date.now());

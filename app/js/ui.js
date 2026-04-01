@@ -17,14 +17,20 @@ const SEND_CLASSES = {
   'Pinkpoint': 'send-pp'
 };
 
-const HARD_GRADES = [
-  '8b+','8c','8c+','9a','9a+','9b','9b+','9c',
-  '5.14a','5.14b','5.14c','5.14d',
-  '5.15a','5.15b','5.15c','5.15d'
-];
-
+// "Hard" threshold: top ~25% of each grade system
+// French ≥ 8b+, UIAA ≥ 11+, YDS ≥ 5.14a
 function gradeBadgeClass(difficulty) {
-  return HARD_GRADES.includes(difficulty) ? 'grade-hard' : 'grade-normal';
+  if (!difficulty) return 'grade-normal';
+  const fr = GRADES?.French ?? [];
+  const uiaa = GRADES?.UIAA ?? [];
+  const yds = GRADES?.YDS ?? [];
+  const frIdx  = fr.indexOf(difficulty);
+  const uiaaIdx = uiaa.indexOf(difficulty);
+  const ydsIdx  = yds.indexOf(difficulty);
+  if (frIdx   !== -1) return frIdx   >= fr.indexOf('8b+')   ? 'grade-hard' : 'grade-normal';
+  if (uiaaIdx !== -1) return uiaaIdx >= uiaa.indexOf('11+') ? 'grade-hard' : 'grade-normal';
+  if (ydsIdx  !== -1) return ydsIdx  >= yds.indexOf('5.14a')? 'grade-hard' : 'grade-normal';
+  return 'grade-normal';
 }
 
 function formatDate(date) {
@@ -125,14 +131,18 @@ function showDetailModal(climb) {
   const sendClass  = SEND_CLASSES[climb.sendType] ?? 'send-proj';
 
   let html = `
-    <h2 style="margin-bottom:0.5rem">${escapeHtml(climb.route || '—')}</h2>
-    <div style="color:#64748b;margin-bottom:1.25rem;font-size:0.95rem">
-      ${escapeHtml(climb.climbingArea || '')}${climb.crag ? ` &rsaquo; ${escapeHtml(climb.crag)}` : ''}
+    <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.3rem;flex-wrap:wrap">
+      <h2 style="margin:0;line-height:1.3">
+        ${escapeHtml(climb.route || '—')}
+        <span style="font-weight:400;color:inherit">${escapeHtml(climb.difficulty || '—')}</span>
+      </h2>
+      ${climb.routeType ? `<span style="font-size:0.9rem;color:#64748b;font-weight:500">${escapeHtml(climb.routeType)}</span>` : ''}
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;align-items:center">
-      <span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <span style="color:#64748b;font-size:0.95rem">
+        ${escapeHtml(climb.climbingArea || '')}${climb.crag ? ` &rsaquo; ${escapeHtml(climb.crag)}` : ''}
+      </span>
       <span class="badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span>
-      ${climb.routeType ? `<span style="font-size:0.85rem;color:#64748b">${escapeHtml(climb.routeType)}</span>` : ''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
       <tr>
@@ -190,9 +200,8 @@ function showDetailModal(climb) {
     `;
   }
 
-  if (climb.photoCount && climb.photoCount > 0) {
-    html += `<p style="font-size:0.88rem;color:#94a3b8">${climb.photoCount} photo${climb.photoCount > 1 ? 's' : ''} (view in app)</p>`;
-  }
+  // Photos section: async-loaded from Firestore sub-collection
+  html += `<div id="modal-photos-container" style="margin-bottom:1rem"></div>`;
 
   html += `<div style="display:flex;justify-content:flex-end;margin-top:.5rem">
     <button id="detail-edit-btn" class="btn btn-primary btn-sm">Edit Climb</button>
@@ -201,6 +210,25 @@ function showDetailModal(climb) {
   content.innerHTML = html;
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  // Async photo load
+  if (climb.recordName && typeof fetchPhotos === 'function') {
+    fetchPhotos(climb.recordName).then(photos => {
+      const container = document.getElementById('modal-photos-container');
+      if (!container || photos.length === 0) return;
+      container.innerHTML = `
+        <div style="font-weight:600;margin-bottom:0.5rem">Photos</div>
+        <div style="display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.25rem">
+          ${photos.map(p => `
+            <a href="${escapeHtml(p.storageURL)}" target="_blank" rel="noopener" style="flex-shrink:0">
+              <img src="${escapeHtml(p.storageURL)}" alt="Route photo"
+                style="height:120px;width:auto;max-width:160px;object-fit:cover;border-radius:8px;display:block">
+            </a>
+          `).join('')}
+        </div>
+      `;
+    });
+  }
 
   document.getElementById('detail-edit-btn').addEventListener('click', () => {
     hideDetailModal();
@@ -281,12 +309,10 @@ function populateFilters(climbs) {
 
 // ---------- User chip ----------
 
-function renderUserChip(userIdentity) {
+function renderUserChip(user) {
   const chip = document.getElementById('user-chip');
   if (!chip) return;
-  const name = userIdentity?.nameComponents?.givenName
-    ?? userIdentity?.lookupInfo?.emailAddress
-    ?? 'Climber';
+  const name = user?.displayName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Climber';
   chip.textContent = name;
 }
 
@@ -390,6 +416,14 @@ document.addEventListener('DOMContentLoaded', () => {
     showTrainingView();
   });
 
+  document.getElementById('view-account')?.addEventListener('click', e => {
+    e.preventDefault();
+    showAccountView();
+  });
+
+  document.getElementById('account-export-btn')?.addEventListener('click', exportCSV);
+  document.getElementById('delete-account-btn')?.addEventListener('click', handleDeleteAccount);
+
   bindSendOverlayHandlers();
   bindProjectOverlayHandlers();
   bindTrainingOverlayHandlers();
@@ -406,6 +440,55 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ---------- Export CSV ----------
+
+function exportCSV() {
+  const header = 'Date,Route,Area,Crag,Grade,Rating,Note,SendType,RouteType,ProjectStatus,AttemptCount,HighPoint,LastAttemptDate,ProjectNotes,AscentType,AscentID,AscentNotes,AscentDate\n';
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-CA') : ''; // YYYY-MM-DD
+  let rows = '';
+  for (const c of _allClimbs) {
+    const base = [
+      esc(fmtDate(c.date)), esc(c.route), esc(c.climbingArea), esc(c.crag),
+      esc(c.difficulty), esc(c.rating ?? 0), esc(c.noteText), esc(c.sendType),
+      esc(c.routeType), esc(c.projectStatus), esc(c.attemptCount ?? 0),
+      esc(c.highPoint), esc(fmtDate(c.lastAttemptDate)), esc(c.projectNotes),
+    ].join(',');
+    rows += base + ',' + [esc('FirstSend'), esc(c.id ?? c.recordName), esc(''), esc(fmtDate(c.date))].join(',') + '\n';
+    for (const a of c.ascents ?? []) {
+      rows += base + ',' + [esc('Repeat'), esc(a.id ?? a.recordName), esc(a.notes), esc(fmtDate(a.date))].join(',') + '\n';
+    }
+  }
+  const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sendlog-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Delete account ----------
+
+async function handleDeleteAccount() {
+  if (typeof deleteAccount !== 'function') {
+    showToast('Account deletion is not available in this mode.', 'info');
+    return;
+  }
+  const confirmed = await showConfirmDialog(
+    'Delete Account',
+    'Your cloud data (climbs, ascents, photos) will be permanently deleted from the server. Your local session will end. This cannot be undone.'
+  );
+  if (!confirmed) return;
+  try {
+    await deleteAccount();
+    window.location.href = '../login.html';
+  } catch (err) {
+    console.error('Delete account failed:', err);
+    showToast('Failed to delete account. Please try again.', 'error');
+  }
 }
 
 // ---------- loadData ----------
@@ -438,8 +521,9 @@ function showTrainingView() {
   document.getElementById('stats-bar').classList.add('hidden');
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.remove('hidden');
-  // Sidebar active state: deactivate logbook items, activate training
-  ['view-all', 'view-projects', 'view-sent'].forEach(id => {
+  document.getElementById('account-view')?.classList.add('hidden');
+  // Sidebar active state
+  ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {
     document.getElementById(id)?.classList.remove('active');
   });
   document.querySelector('[data-view="training"]')?.classList.add('active');
@@ -452,6 +536,40 @@ function showLogbookView() {
   document.getElementById('stats-bar').classList.remove('hidden');
   document.querySelector('.table-container').classList.remove('hidden');
   document.getElementById('training-view').classList.add('hidden');
+  document.getElementById('account-view')?.classList.add('hidden');
+}
+
+function showAccountView() {
+  document.getElementById('stats-bar').classList.add('hidden');
+  document.querySelector('.table-container').classList.add('hidden');
+  document.getElementById('training-view').classList.add('hidden');
+  document.getElementById('account-view').classList.remove('hidden');
+  // Clear sidebar active state (account is in header, not sidebar)
+  ['view-all', 'view-projects', 'view-sent'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  document.querySelector('[data-view="training"]')?.classList.remove('active');
+  document.getElementById('btn-log-send')?.classList.add('hidden');
+  document.getElementById('btn-add-project')?.classList.add('hidden');
+
+  // Populate user info
+  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  const nameEl  = document.getElementById('account-name');
+  const emailEl = document.getElementById('account-email');
+  if (nameEl)  nameEl.textContent  = user?.displayName ?? 'Climber';
+  if (emailEl) emailEl.textContent = user?.email ?? '';
+
+  // Populate grade system preference (one-time binding on first open)
+  const gradeSystemEl = document.getElementById('account-grade-system');
+  if (gradeSystemEl && !gradeSystemEl.dataset.bound) {
+    gradeSystemEl.value = getPreferredGradeSystem();
+    gradeSystemEl.addEventListener('change', () => {
+      setPreferredGradeSystem(gradeSystemEl.value);
+    });
+    gradeSystemEl.dataset.bound = '1';
+  } else if (gradeSystemEl) {
+    gradeSystemEl.value = getPreferredGradeSystem();
+  }
 }
 
 // ---------- Confirm dialog ----------
@@ -525,7 +643,7 @@ function showAddSendOverlay(prefill = {}) {
   document.getElementById('so-route').value = prefill.route ?? '';
   document.getElementById('so-area').value = prefill.climbingArea ?? '';
   document.getElementById('so-crag').value = prefill.crag ?? '';
-  document.getElementById('so-difficulty').value = prefill.difficulty ?? '';
+  initGradePicker(document.getElementById('so-difficulty'), prefill.difficulty ?? null);
   document.getElementById('so-routetype').value = prefill.routeType ?? 'Sport';
   document.getElementById('so-date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('so-notes').value = '';
@@ -548,7 +666,7 @@ function showEditSendOverlay(climb) {
   document.getElementById('so-route').value = climb.route ?? '';
   document.getElementById('so-area').value = climb.climbingArea ?? '';
   document.getElementById('so-crag').value = climb.crag ?? '';
-  document.getElementById('so-difficulty').value = climb.difficulty ?? '';
+  initGradePicker(document.getElementById('so-difficulty'), climb.difficulty ?? null);
   document.getElementById('so-routetype').value = climb.routeType ?? 'Sport';
   document.getElementById('so-date').value = climb.date ? climb.date.toISOString().slice(0, 10) : '';
   document.getElementById('so-notes').value = climb.noteText ?? '';
@@ -566,7 +684,7 @@ function showAddProjectOverlay() {
   document.getElementById('po-route').value = '';
   document.getElementById('po-area').value = '';
   document.getElementById('po-crag').value = '';
-  document.getElementById('po-difficulty').value = '';
+  initGradePicker(document.getElementById('po-difficulty'), null);
   document.getElementById('po-routetype').value = 'Sport';
   document.getElementById('po-attempts').value = '0';
   document.getElementById('po-last-attempt-date').value = '';
@@ -587,7 +705,7 @@ function showEditProjectOverlay(climb) {
   document.getElementById('po-route').value = climb.route ?? '';
   document.getElementById('po-area').value = climb.climbingArea ?? '';
   document.getElementById('po-crag').value = climb.crag ?? '';
-  document.getElementById('po-difficulty').value = climb.difficulty ?? '';
+  initGradePicker(document.getElementById('po-difficulty'), climb.difficulty ?? null);
   document.getElementById('po-routetype').value = climb.routeType ?? 'Sport';
   document.getElementById('po-attempts').value = climb.attemptCount ?? 0;
   document.getElementById('po-last-attempt-date').value =
@@ -634,7 +752,7 @@ function bindSendOverlayHandlers() {
         route:        routeVal,
         climbingArea: document.getElementById('so-area').value.trim() || null,
         crag:         document.getElementById('so-crag').value.trim() || null,
-        difficulty:   document.getElementById('so-difficulty').value.trim() || null,
+        difficulty:   document.getElementById('so-difficulty').value || null,
         date:         document.getElementById('so-date').value ? new Date(document.getElementById('so-date').value) : null,
         sendType:     document.getElementById('so-sendtype').value,
         routeType:    document.getElementById('so-routetype').value,
@@ -742,7 +860,7 @@ function bindProjectOverlayHandlers() {
         route:            routeVal,
         climbingArea:     document.getElementById('po-area').value.trim() || null,
         crag:             document.getElementById('po-crag').value.trim() || null,
-        difficulty:       document.getElementById('po-difficulty').value.trim() || null,
+        difficulty:       document.getElementById('po-difficulty').value || null,
         sendType:         'Project',
         routeType:        document.getElementById('po-routetype').value,
         attemptCount:     Number(document.getElementById('po-attempts').value) || 0,

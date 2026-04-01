@@ -1256,6 +1256,23 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.btn-account {
+    background: transparent;
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.btn-account:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
 /* ============================================================================
    SIDEBAR EXTRAS
    ============================================================================ */
@@ -1897,3 +1914,136 @@ body {
 }
 .btn-apple-signin:hover:not(:disabled) { opacity: .85; }
 .btn-apple-signin:disabled { opacity: .5; cursor: default; }
+
+/* ============================================================================
+   ACCOUNT PAGE
+   ============================================================================ */
+
+.account-page {
+    max-width: 620px;
+    padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.account-page-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-primary, #1e293b);
+}
+
+.account-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.account-section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: var(--spacing-sm);
+}
+
+.account-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.account-name {
+    font-weight: 600;
+    color: var(--text-primary, #1e293b);
+}
+
+.account-email {
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.account-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.account-card-text {
+    flex: 1;
+}
+
+.account-card-text strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary, #1e293b);
+}
+
+.account-card-text p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.account-card-links {
+    display: block;
+}
+
+.account-legal-link {
+    display: block;
+    color: var(--primary-color, #2563eb);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.account-legal-link:hover {
+    text-decoration: underline;
+}
+
+.account-card-pref {
+    align-items: center;
+}
+
+.pref-select {
+    min-width: 110px;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    background: #fff;
+    color: var(--text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.account-card-danger {
+    border-color: #fca5a5;
+    background: #fff5f5;
+}
+
+.account-card-danger .account-card-text strong {
+    color: #dc2626;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    padding: 0.45rem 1rem;
+    border-radius: var(--border-radius);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition-base);
+    flex-shrink: 0;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}

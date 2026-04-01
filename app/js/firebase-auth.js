@@ -29,3 +29,22 @@ async function signOut() {
 function getCurrentUser() {
   return auth.currentUser;
 }
+
+async function deleteAccount() {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No signed-in user');
+  try {
+    await user.delete();
+  } catch (err) {
+    if (err.code === 'auth/requires-recent-login') {
+      // Re-authenticate with Apple then retry
+      const provider = new firebase.auth.OAuthProvider('apple.com');
+      provider.addScope('email');
+      provider.addScope('name');
+      await auth.signInWithPopup(provider);
+      await auth.currentUser.delete();
+    } else {
+      throw err;
+    }
+  }
+}

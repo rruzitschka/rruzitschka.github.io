@@ -29,6 +29,7 @@
       <div class="app-header-logo">SendLog</div>
       <div class="app-header-user">
         <span id="user-chip" class="app-user-chip"></span>
+        <button id="view-account" class="btn-account">My Account</button>
         <button id="signout-btn" class="btn-signout">Sign Out</button>
       </div>
     </header>
@@ -172,6 +173,66 @@
             <div class="training-list" id="training-list"></div>
           </div>
 
+          <div id="account-view" class="hidden">
+            <div class="account-page">
+              <h3 class="account-page-title">My Account</h3>
+
+              <div class="account-section">
+                <div class="account-section-label">Signed in as</div>
+                <div class="account-user-info">
+                  <span id="account-name" class="account-name"></span>
+                  <span id="account-email" class="account-email"></span>
+                </div>
+              </div>
+
+              <div class="account-section">
+                <div class="account-section-label">Preferences</div>
+                <div class="account-card account-card-pref">
+                  <div class="account-card-text">
+                    <strong>Grade System</strong>
+                    <p>Sets the default grading scale used when logging sends and projects.</p>
+                  </div>
+                  <select id="account-grade-system" class="pref-select">
+                    <option value="French">French</option>
+                    <option value="UIAA">UIAA</option>
+                    <option value="YDS">YDS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="account-section">
+                <div class="account-section-label">Data</div>
+                <div class="account-card">
+                  <div class="account-card-text">
+                    <strong>Export My Data</strong>
+                    <p>Download all your climbs and ascents as a CSV file you can open in any spreadsheet app.</p>
+                  </div>
+                  <button id="account-export-btn" class="btn btn-secondary">Export CSV</button>
+                </div>
+              </div>
+
+              <div class="account-section">
+                <div class="account-section-label">Legal</div>
+                <div class="account-card account-card-links">
+                  <a href="../pages/policy.html" target="_blank" rel="noopener" class="account-legal-link">
+                    Terms of Service &amp; Privacy Policy ↗
+                  </a>
+                </div>
+              </div>
+
+              <div class="account-section">
+                <div class="account-section-label">Danger Zone</div>
+                <div class="account-card account-card-danger">
+                  <div class="account-card-text">
+                    <strong>Delete My Account</strong>
+                    <p>Permanently deletes all your cloud data (climbs, ascents, photos). Your session ends. Local data on your iOS device is preserved.</p>
+                  </div>
+                  <button id="delete-account-btn" class="btn btn-danger">Delete Account</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
@@ -215,7 +276,7 @@
         <div class="form-row-2">
           <div class="form-group">
             <label for="so-difficulty">Grade</label>
-            <input type="text" id="so-difficulty" placeholder="e.g. 9a">
+            <select id="so-difficulty"></select>
           </div>
           <div class="form-group">
             <label for="so-routetype">Type</label>
@@ -315,7 +376,7 @@
         <div class="form-row-2">
           <div class="form-group">
             <label for="po-difficulty">Grade</label>
-            <input type="text" id="po-difficulty" placeholder="e.g. 9a+">
+            <select id="po-difficulty"></select>
           </div>
           <div class="form-group">
             <label for="po-routetype">Type</label>
@@ -440,12 +501,13 @@
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="js/firebase-config.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=af4562a"><\/scr' + 'ipt>');
+      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.7.0"><\/scr' + 'ipt>');
     }
   </script>
-  <script src="js/firebase-climbs.js?v=af4562a"></script>
-  <script src="js/firebase-training.js?v=af4562a"></script>
-  <script src="js/ui.js?v=af4562a"></script>
+  <script src="js/grades.js?v=3.7.0"></script>
+  <script src="js/firebase-climbs.js?v=3.7.0"></script>
+  <script src="js/firebase-training.js?v=3.7.0"></script>
+  <script src="js/ui.js?v=3.7.0"></script>
   <script>
     if (new URLSearchParams(window.location.search).get('mock') === 'true') {
       document.write('<scr' + 'ipt src="js/mock.js"><\/scr' + 'ipt>');

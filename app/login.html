@@ -145,7 +145,7 @@
             </button>
 
             <div class="login-requirement">
-                📱 Requires SendLog iOS app with iCloud Sync enabled
+                📱 Requires SendLog iOS app with Cloud Sync enabled
             </div>
 
             <div class="login-footer">
@@ -156,25 +156,23 @@
         </div>
     </div>
 
-    <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
-    <script src="js/cloudkit-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-auth.js?v=3.7.0"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // If already signed in, redirect to dashboard
-            try {
-                const userIdentity = await container.setUpAuth();
-                if (userIdentity) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch (err) {
-                console.error('Initial auth check failed:', err);
+            // If already signed in, go straight to the dashboard
+            const user = await initAuth();
+            if (user) {
+                window.location.href = 'index.html';
+                return;
             }
 
-            // Wire sign-in button
             const btn = document.getElementById('signin-btn');
             const errorDiv = document.getElementById('auth-error');
-
             const btnOriginalHTML = btn.innerHTML;
 
             function resetBtn() {
@@ -183,19 +181,12 @@
             }
 
             btn.addEventListener('click', async () => {
-                btn.textContent = 'Signing in…';
+                btn.querySelector('span').textContent = 'Signing in…';
                 btn.disabled = true;
                 errorDiv.style.display = 'none';
-
                 try {
-                    const identity = await container.setUpAuth();
-                    if (identity) {
-                        window.location.href = 'index.html';
-                    } else {
-                        errorDiv.textContent = 'Sign-in failed. Please try again.';
-                        errorDiv.style.display = 'block';
-                        resetBtn();
-                    }
+                    await signInWithApple();
+                    window.location.href = 'index.html';
                 } catch (err) {
                     console.error('Sign-in error:', err);
                     errorDiv.textContent = 'Sign-in failed. Please try again.';

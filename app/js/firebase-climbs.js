@@ -157,6 +157,24 @@ function computeStats(climbs) {
   };
 }
 
+async function fetchPhotos(noteId) {
+  const user = getCurrentUser();
+  if (!user) return [];
+  try {
+    const snap = await db
+      .collection(`users/${user.uid}/climbNotes/${noteId}/photos`)
+      .orderBy('createdAt', 'asc')
+      .get();
+    return snap.docs
+      .filter(d => !d.data().deletedAt)
+      .map(d => ({ id: d.id, storageURL: d.data().storageURL, fileName: d.data().fileName }))
+      .filter(p => p.storageURL);
+  } catch (err) {
+    console.warn('fetchPhotos error:', err);
+    return [];
+  }
+}
+
 function filterClimbs(climbs, { area, year, sendType, routeType, search, sort } = {}) {
   let result = [...climbs];
   if (area)      result = result.filter(c => c.climbingArea === area);
