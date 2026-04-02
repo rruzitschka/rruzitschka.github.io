@@ -33,6 +33,10 @@ function getCurrentUser() {
 async function deleteAccount() {
   const user = auth.currentUser;
   if (!user) throw new Error('No signed-in user');
+
+  // Delete all Firestore data before removing the auth user
+  await deleteUserFirestoreData(user.uid);
+
   try {
     await user.delete();
   } catch (err) {
@@ -47,4 +51,32 @@ async function deleteAccount() {
       throw err;
     }
   }
+}
+
+async function deleteUserFirestoreData(uid) {
+  // Delete all climbNotes and their subcollections (ascents, photos)
+  const climbNotesSnap = await db.collection(`users/${uid}/climbNotes`).get();
+  for (const noteDoc of climbNotesSnap.docs) {
+    const notePath = `users/${uid}/climbNotes/${noteDoc.id}`;
+    const [ascentsSnap, photosSnap] = await Promise.all([
+      db.collection(`${notePath}/ascents`).get(),
+      db.collection(`${notePath}/photos`).get()
+    ]);
+    const batch = db.batch();
+    ascentsSnap.docs.forEach(d => batch.delete(d.ref));
+    photosSnap.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(noteDoc.ref);
+    await batch.commit();
+  }
+
+  // Delete all training sessions
+  const sessionsSnap = await db.collection(`users/${uid}/trainingSessions`).get();
+  if (!sessionsSnap.empty) {
+    const batch = db.batch();
+    sessionsSnap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+
+  // Delete the user document itself
+  await db.doc(`users/${uid}`).delete().catch(() => {});
 }

@@ -1046,11 +1046,11 @@ function renderTrainingPage(sessions, period) {
     const dots = [1, 2, 3, 4, 5].map(i =>
       `<div class="intensity-dot${i <= (s.intensity ?? 0) ? ' filled' : ''}"></div>`
     ).join('');
-    return `<div class="session-row" data-record="${s.recordName}">
+    return `<div class="session-row" data-record="${escapeHtml(s.recordName)}">
       <div class="type-icon">${emoji}</div>
       <div class="session-info">
-        <div class="session-type">${s.type}</div>
-        <div class="session-meta">${dateStr}${s.notes ? ' · ' + s.notes.slice(0, 40) + (s.notes.length > 40 ? '…' : '') : ''}</div>
+        <div class="session-type">${escapeHtml(s.type)}</div>
+        <div class="session-meta">${dateStr}${s.notes ? ' · ' + escapeHtml(s.notes.slice(0, 40)) + (s.notes.length > 40 ? '…' : '') : ''}</div>
       </div>
       <div class="session-right">
         <div class="intensity-dots">${dots}</div>
@@ -1083,7 +1083,7 @@ function renderAscentsList(climb) {
       <span class="ascent-date">${d}</span>
       <span class="ascent-type">${escapeHtml(a.sendType ?? 'Redpoint')}</span>
       ${a.notes ? `<span class="ascent-notes">${escapeHtml(a.notes)}</span>` : '<span class="ascent-notes"></span>'}
-      <button class="ascent-delete" data-record="${a.recordName}" title="Delete ascent">✕</button>
+      <button class="ascent-delete" data-record="${escapeHtml(a.recordName)}" title="Delete ascent">✕</button>
     </div>`;
   }).join('');
 
