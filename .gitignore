@@ -1,8 +1,8 @@
 # CloudKit token — never commit real credentials
 app/js/cloudkit-config.js
 
-# Firebase config — never commit real credentials
-app/js/firebase-config.js
+# Firebase config — public client config, safe to commit (security enforced by Firestore rules)
+# app/js/firebase-config.js
 
 # OS / editor
 .DS_Store
