@@ -163,7 +163,7 @@ async function fetchPhotos(noteId) {
   try {
     const snap = await db
       .collection(`users/${user.uid}/climbNotes/${noteId}/photos`)
-      .orderBy('createdAt', 'asc')
+      .orderBy('updatedAt', 'asc')
       .get();
     return snap.docs
       .filter(d => !d.data().deletedAt)
