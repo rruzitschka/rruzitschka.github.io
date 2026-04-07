@@ -6,6 +6,7 @@ A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-base
 
 - **Vanilla HTML/CSS/JavaScript** — no framework dependencies
 - **Firebase JS SDK 10.x** (compat CDN) — Firestore, Auth, Storage
+- **Chart.js 4.4.2** (CDN) — grade distribution and route type bar charts
 - **Sign In with Apple** via Firebase Auth
 
 ## Architecture
@@ -20,12 +21,40 @@ app/
     ├── firebase-config.js  Firebase project config + SDK init
     ├── firebase-auth.js    initAuth(), signInWithApple(), signOut()
     ├── firebase-climbs.js  fetchClimbs(), saveClimbNote(), saveAscent(), computeStats(), filterClimbs()
-    ├── firebase-training.js fetchTrainingSessions(), saveTrainingSession()
-    ├── ui.js               All DOM rendering, overlays, event handlers
+    ├── firebase-training.js fetchTrainingSessions(), saveTrainingSession(), computeTrainingStats()
+    ├── grades.js           GRADES arrays, detectGradeSystem() — shared grade logic
+    ├── stats.js            Client-side stats: summary, grade distribution, route types, heatmap, streaks, training
+    ├── ui.js               All DOM rendering, overlays, event handlers, view routing
     └── mock.js             Mock mode — overrides all Firebase calls with local data
 ```
 
-## Firestore Data Model
+## Views
+
+| View | Description |
+|------|-------------|
+| **Logbook** | Full send log with grade badges, ascent type chips, and route detail overlay |
+| **Projects** | Routes marked as Project with progress notes |
+| **Training** | Training session log with duration and type; summary stats (total sessions, hours, avg/week) |
+| **Statistics** | Client-side analytics dashboard (see below) |
+| **Account** | Sign-in status, sign out |
+
+### Statistics View
+
+Computed entirely client-side from already-loaded climb and training data. No extra Firestore reads.
+
+**Period filter:** All Time · This Year · This Month · This Week
+
+| Section | Detail |
+|---------|--------|
+| Summary cards | Total climbs, unique routes, climbing days, avg rating, top area, hardest send |
+| Grade Distribution | Bar chart (Chart.js) of sends by grade, hardest send inline label |
+| Route Types | Bar chart — Boulder / Sport / Multi-Pitch breakdown |
+| Activity Heatmap | 6-month CSS Grid heatmap, colour-coded by daily climb count |
+| Streaks | Current streak and longest streak (calendar days with ≥1 climb) |
+| Training Summary | Total sessions, total hours, avg sessions/week |
+| Training by Type | Bar chart of sessions grouped by type |
+
+
 
 Shared with iOS app. All paths are under `users/{uid}/`:
 
