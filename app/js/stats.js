@@ -214,8 +214,7 @@ function renderStatsPage(climbs, sessions) {
   // Top grade card
   const topGradeEl = document.getElementById('sp-top-grade');
   if (topGradeEl) topGradeEl.innerHTML = summary.topGrade
-    ? `<div class="sp-top-grade-value">${summary.topGrade}</div>
-       <div class="sp-top-grade-route">${escapeHtml(summary.topGradeRoute ?? '')}</div>`
+    ? `<div class="sp-top-grade-inline"><span class="sp-top-grade-label">Hardest Send:</span> <span class="sp-top-grade-route">${escapeHtml(summary.topGradeRoute ?? '')}</span><span class="sp-top-grade-sep">,</span> <span class="sp-top-grade-value">${summary.topGrade}</span></div>`
     : `<div class="sp-top-grade-empty">No sends in this period</div>`;
 
   renderGradeChart(filtered);
@@ -258,7 +257,9 @@ function renderGradeChart(filteredClimbs) {
       labels: data.map(d => d.grade),
       datasets: [{
         data: data.map(d => d.count),
-        backgroundColor: 'rgba(37,99,235,0.75)',
+        backgroundColor: 'rgba(15,23,42,0.75)',
+        borderColor: 'rgba(15,23,42,0.75)',
+        borderWidth: 1,
         borderRadius: 4,
       }]
     },
@@ -266,17 +267,22 @@ function renderGradeChart(filteredClimbs) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        x: { ticks: { font: { size: 11 } } }
+        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
       }
     }
   });
 }
 
 const TYPE_COLORS = {
-  'Boulder':     'rgba(234,88,12,0.75)',
-  'Sport':       'rgba(37,99,235,0.75)',
-  'Multi-Pitch': 'rgba(124,58,237,0.75)',
+  'Boulder':     'rgba(15,23,42,0.75)',
+  'Sport':       'rgba(15,23,42,0.75)',
+  'Multi-Pitch': 'rgba(15,23,42,0.75)',
+};
+const TYPE_BORDER_COLORS = {
+  'Boulder':     'rgba(15,23,42,0.75)',
+  'Sport':       'rgba(15,23,42,0.75)',
+  'Multi-Pitch': 'rgba(15,23,42,0.75)',
 };
 
 function renderTypeChart(filteredClimbs) {
@@ -291,7 +297,9 @@ function renderTypeChart(filteredClimbs) {
       labels: data.map(d => d.type),
       datasets: [{
         data: data.map(d => d.count),
-        backgroundColor: data.map(d => TYPE_COLORS[d.type] ?? 'rgba(100,116,139,0.75)'),
+        backgroundColor: data.map(d => TYPE_COLORS[d.type] ?? 'rgba(15,23,42,0.75)'),
+        borderColor: data.map(d => TYPE_BORDER_COLORS[d.type] ?? 'rgba(15,23,42,0.75)'),
+        borderWidth: 1,
         borderRadius: 4,
       }]
     },
@@ -299,8 +307,8 @@ function renderTypeChart(filteredClimbs) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        x: { ticks: { font: { size: 12 } } }
+        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font: { size: 12 } }, grid: { display: false } }
       }
     }
   });
@@ -385,7 +393,9 @@ function renderTrainingSection(filteredSessions) {
       labels: types.map(([type]) => type),
       datasets: [{
         data: types.map(([, count]) => count),
-        backgroundColor: 'rgba(16,185,129,0.75)',
+        backgroundColor: 'rgba(15,23,42,0.75)',
+        borderColor: 'rgba(15,23,42,0.75)',
+        borderWidth: 1,
         borderRadius: 4,
       }]
     },
@@ -393,8 +403,8 @@ function renderTrainingSection(filteredSessions) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        x: { ticks: { font: { size: 11 } } }
+        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
       }
     }
   });

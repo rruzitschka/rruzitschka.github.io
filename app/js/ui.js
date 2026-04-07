@@ -376,8 +376,9 @@ function bindFilterHandlers(initialClimbs) {
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
-    // Deactivate training sidebar item
+    // Deactivate training and stats sidebar items
     document.querySelector('[data-view="training"]')?.classList.remove('active');
+    document.getElementById('view-stats')?.classList.remove('active');
     const viewMap  = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
     const labelMap = { all: 'All Climbs', projects: 'Projects', sent: 'Sent Climbs' };
     document.getElementById(viewMap[view])?.classList.add('active');
@@ -535,6 +536,7 @@ function showTrainingView() {
   ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {
     document.getElementById(id)?.classList.remove('active');
   });
+  document.getElementById('view-stats')?.classList.remove('active');
   document.querySelector('[data-view="training"]')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
@@ -560,6 +562,7 @@ function showAccountView() {
     document.getElementById(id)?.classList.remove('active');
   });
   document.querySelector('[data-view="training"]')?.classList.remove('active');
+  document.getElementById('view-stats')?.classList.remove('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
 
@@ -583,7 +586,7 @@ function showAccountView() {
   }
 }
 
-function showStatsView() {
+async function showStatsView() {
   document.getElementById('stats-bar').classList.add('hidden');
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.add('hidden');
@@ -597,8 +600,18 @@ function showStatsView() {
   document.getElementById('view-stats')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
-  // Render stats (lazy: uses already-loaded allClimbs / allSessions)
-  renderStatsPage(window.allClimbs ?? [], window.allSessions ?? []);
+  // Fetch sessions directly if not yet loaded (avoids calling renderTrainingPage as a side-effect)
+  if (!trainingLoaded) {
+    try {
+      allSessions = await fetchTrainingSessions();
+      window.allSessions = allSessions;
+      trainingLoaded = true;
+      document.getElementById('badge-sessions').textContent = allSessions.length;
+    } catch(e) {
+      console.warn('Stats: could not load training sessions', e);
+    }
+  }
+  renderStatsPage(window.allClimbs ?? [], allSessions);
   bindStatsPeriodTabs();
 }
 

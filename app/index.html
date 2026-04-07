@@ -191,22 +191,23 @@
             <div class="stats-section">
               <div class="stats-cards-row" id="sp-summary-cards"></div>
             </div>
-            <!-- Grades -->
-            <div class="stats-section">
-              <div class="stats-section-title">Grade Distribution</div>
-              <div class="stats-chart-card">
-                <div class="stats-top-grade" id="sp-top-grade"></div>
-                <div class="stats-chart-container">
-                  <canvas id="sp-grade-chart"></canvas>
+            <!-- Grades + Route Types side by side -->
+            <div class="stats-charts-row">
+              <div class="stats-section stats-section--flex">
+                <div class="stats-section-title">Grade Distribution</div>
+                <div class="stats-chart-card">
+                  <div class="stats-top-grade" id="sp-top-grade"></div>
+                  <div class="stats-chart-container">
+                    <canvas id="sp-grade-chart"></canvas>
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- Route Types -->
-            <div class="stats-section">
-              <div class="stats-section-title">Route Types</div>
-              <div class="stats-chart-card">
-                <div class="stats-chart-container stats-chart-container--small">
-                  <canvas id="sp-type-chart"></canvas>
+              <div class="stats-section stats-section--flex">
+                <div class="stats-section-title">Route Types</div>
+                <div class="stats-chart-card">
+                  <div class="stats-chart-container stats-chart-container--small">
+                    <canvas id="sp-type-chart"></canvas>
+                  </div>
                 </div>
               </div>
             </div>
