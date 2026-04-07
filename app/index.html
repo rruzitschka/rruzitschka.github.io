@@ -56,6 +56,10 @@
           <a href="#" class="sidebar-nav-item" data-view="training">
             All Sessions <span class="count-badge" id="badge-sessions">0</span>
           </a>
+          <div class="sidebar-section-label">Stats</div>
+          <a href="#" class="sidebar-nav-item" id="view-stats">
+            Statistics
+          </a>
         </nav>
 
         <div class="sidebar-filters">
@@ -171,6 +175,73 @@
               <div class="stat-card"><div class="stat-value" id="ts-avg">0</div><div class="stat-label">Avg / Week</div></div>
             </div>
             <div class="training-list" id="training-list"></div>
+          </div>
+
+          <div id="stats-view" class="hidden">
+            <div class="stats-page-header">
+              <h3>Statistics</h3>
+            </div>
+            <div class="period-tabs" id="stats-period-tabs">
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+              <button data-period="allTime" class="active">All Time</button>
+            </div>
+            <!-- Summary cards -->
+            <div class="stats-section">
+              <div class="stats-cards-row" id="sp-summary-cards"></div>
+            </div>
+            <!-- Grades -->
+            <div class="stats-section">
+              <div class="stats-section-title">Grade Distribution</div>
+              <div class="stats-chart-card">
+                <div class="stats-top-grade" id="sp-top-grade"></div>
+                <div class="stats-chart-container">
+                  <canvas id="sp-grade-chart"></canvas>
+                </div>
+              </div>
+            </div>
+            <!-- Route Types -->
+            <div class="stats-section">
+              <div class="stats-section-title">Route Types</div>
+              <div class="stats-chart-card">
+                <div class="stats-chart-container stats-chart-container--small">
+                  <canvas id="sp-type-chart"></canvas>
+                </div>
+              </div>
+            </div>
+            <!-- Heatmap -->
+            <div class="stats-section">
+              <div class="stats-section-title">Activity (Last 6 Months)</div>
+              <div class="stats-chart-card">
+                <div id="sp-heatmap"></div>
+                <div class="heatmap-legend">
+                  <span>Less</span>
+                  <div class="heatmap-legend-cells">
+                    <div class="heatmap-cell level-0"></div>
+                    <div class="heatmap-cell level-1"></div>
+                    <div class="heatmap-cell level-2"></div>
+                    <div class="heatmap-cell level-3"></div>
+                  </div>
+                  <span>More</span>
+                </div>
+              </div>
+            </div>
+            <!-- Streaks -->
+            <div class="stats-section">
+              <div class="stats-section-title">Streaks</div>
+              <div class="stats-cards-row" id="sp-streak-cards"></div>
+            </div>
+            <!-- Training -->
+            <div class="stats-section">
+              <div class="stats-section-title">Training</div>
+              <div class="stats-cards-row" id="sp-training-cards"></div>
+              <div class="stats-chart-card" style="margin-top:0.75rem">
+                <div class="stats-chart-container stats-chart-container--small">
+                  <canvas id="sp-training-chart"></canvas>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div id="account-view" class="hidden">
@@ -504,10 +575,12 @@
       document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.7.0"><\/scr' + 'ipt>');
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="js/grades.js?v=3.7.0"></script>
   <script src="js/firebase-climbs.js?v=3.7.0"></script>
   <script src="js/firebase-training.js?v=3.7.0"></script>
   <script src="js/ui.js?v=3.7.0"></script>
+  <script src="js/stats.js?v=3.7.0"></script>
   <script>
     if (new URLSearchParams(window.location.search).get('mock') === 'true') {
       document.write('<scr' + 'ipt src="js/mock.js"><\/scr' + 'ipt>');
