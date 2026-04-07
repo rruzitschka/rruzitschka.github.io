@@ -7,3 +7,4 @@ app/js/cloudkit-config.js
 # OS / editor
 .DS_Store
 .vscode/
+.worktrees/
