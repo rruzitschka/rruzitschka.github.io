@@ -331,6 +331,7 @@ function updateCountBadges(filtered, all) {
 
 function bindFilterHandlers(initialClimbs) {
   _allClimbs = initialClimbs;
+  window.allClimbs = initialClimbs;
   let activeView = 'all'; // 'all' | 'projects' | 'sent'
 
   function refresh() {
@@ -371,6 +372,7 @@ function bindFilterHandlers(initialClimbs) {
   function setActiveView(view) {
     activeView = view;
     showLogbookView();
+    document.getElementById('stats-view')?.classList.add('hidden');
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
@@ -414,6 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('[data-view="training"]')?.addEventListener('click', e => {
     e.preventDefault();
     showTrainingView();
+  });
+
+  document.getElementById('view-stats')?.addEventListener('click', e => {
+    e.preventDefault();
+    showStatsView();
   });
 
   document.getElementById('view-account')?.addEventListener('click', e => {
@@ -499,6 +506,7 @@ async function loadData() {
     const climbs = await fetchClimbs();
     showLoading(false);
     _allClimbs = climbs;
+    window.allClimbs = climbs;
     const stats = computeStats(climbs);
     renderStatsBar(stats);
     populateFilters(climbs);
@@ -522,6 +530,7 @@ function showTrainingView() {
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.remove('hidden');
   document.getElementById('account-view')?.classList.add('hidden');
+  document.getElementById('stats-view')?.classList.add('hidden');
   // Sidebar active state
   ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {
     document.getElementById(id)?.classList.remove('active');
@@ -537,12 +546,14 @@ function showLogbookView() {
   document.querySelector('.table-container').classList.remove('hidden');
   document.getElementById('training-view').classList.add('hidden');
   document.getElementById('account-view')?.classList.add('hidden');
+  document.getElementById('stats-view')?.classList.add('hidden');
 }
 
 function showAccountView() {
   document.getElementById('stats-bar').classList.add('hidden');
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.add('hidden');
+  document.getElementById('stats-view')?.classList.add('hidden');
   document.getElementById('account-view').classList.remove('hidden');
   // Clear sidebar active state (account is in header, not sidebar)
   ['view-all', 'view-projects', 'view-sent'].forEach(id => {
@@ -570,6 +581,25 @@ function showAccountView() {
   } else if (gradeSystemEl) {
     gradeSystemEl.value = getPreferredGradeSystem();
   }
+}
+
+function showStatsView() {
+  document.getElementById('stats-bar').classList.add('hidden');
+  document.querySelector('.table-container').classList.add('hidden');
+  document.getElementById('training-view').classList.add('hidden');
+  document.getElementById('account-view')?.classList.add('hidden');
+  document.getElementById('stats-view').classList.remove('hidden');
+  // Sidebar active state
+  ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  document.querySelector('[data-view="training"]')?.classList.remove('active');
+  document.getElementById('view-stats')?.classList.add('active');
+  document.getElementById('btn-log-send')?.classList.add('hidden');
+  document.getElementById('btn-add-project')?.classList.add('hidden');
+  // Render stats (lazy: uses already-loaded allClimbs / allSessions)
+  renderStatsPage(window.allClimbs ?? [], window.allSessions ?? []);
+  bindStatsPeriodTabs();
 }
 
 // ---------- Confirm dialog ----------
@@ -1018,6 +1048,7 @@ async function loadTrainingData() {
   if (trainingLoaded) { renderTrainingPage(allSessions, trainingPeriod); return; }
   trainingLoaded = true;
   allSessions = await fetchTrainingSessions();
+  window.allSessions = allSessions;
   document.getElementById('badge-sessions').textContent = allSessions.length;
   renderTrainingPage(allSessions, trainingPeriod);
 }
