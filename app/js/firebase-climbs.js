@@ -149,11 +149,28 @@ function computeStats(climbs) {
   climbs.filter(c => !c.isProject).forEach(c => {
     byType[c.sendType] = (byType[c.sendType] || 0) + 1;
   });
+
+  // Find hardest grade sent this year (excluding projects)
+  const thisYearSends = climbs.filter(c =>
+    !c.isProject && c.date && c.date.getFullYear() === thisYear && c.difficulty
+  );
+  let hardestThisYear = null;
+  let hardestIndex = -1;
+  for (const c of thisYearSends) {
+    const system = detectGradeSystem(c.difficulty);
+    const idx = GRADES[system]?.indexOf(c.difficulty) ?? -1;
+    if (idx > hardestIndex) {
+      hardestIndex = idx;
+      hardestThisYear = c.difficulty;
+    }
+  }
+
   return {
     total:    climbs.filter(c => !c.isProject).length,
     thisYear: climbs.filter(c => c.date && c.date.getFullYear() === thisYear).length,
     byType,
     projects: climbs.filter(c => c.isProject).length,
+    hardestThisYear,
   };
 }
 
