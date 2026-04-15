@@ -331,11 +331,11 @@
       <div class="edit-overlay-body">
         <input type="hidden" id="so-record-name">
         <div class="form-group">
-          <label for="so-route">Route Name <span style="color:red">*</span></label>
-          <button type="button" id="find-route-btn-send" class="btn btn-secondary"
-            style="width:100%;margin-bottom:8px;">
-            🔍 Find Route in Database
-          </button>
+          <label for="so-route" style="display:flex;justify-content:space-between;align-items:center;">
+            Route Name <span style="color:red">*</span>
+            <button type="button" id="find-route-btn-send" title="Find Route in Database"
+              style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted,#64748b);padding:0;line-height:1;">🔍</button>
+          </label>
           <input type="text" id="so-route" placeholder="e.g. Biographie">
           <div class="form-error hidden" id="so-route-error">Route name is required.</div>
         </div>
@@ -435,11 +435,11 @@
       <div class="edit-overlay-body">
         <input type="hidden" id="po-record-name">
         <div class="form-group">
-          <label for="po-route">Route Name <span style="color:red">*</span></label>
-          <button type="button" id="find-route-btn-project" class="btn btn-secondary"
-            style="width:100%;margin-bottom:8px;">
-            🔍 Find Route in Database
-          </button>
+          <label for="po-route" style="display:flex;justify-content:space-between;align-items:center;">
+            Route Name <span style="color:red">*</span>
+            <button type="button" id="find-route-btn-project" title="Find Route in Database"
+              style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted,#64748b);padding:0;line-height:1;">🔍</button>
+          </label>
           <input type="text" id="po-route" placeholder="e.g. La Dura Dura">
           <div class="form-error hidden" id="po-route-error">Route name is required.</div>
         </div>

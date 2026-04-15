@@ -854,7 +854,7 @@ function showAddSendOverlay(prefill = {}) {
     _centralRouteCrag = prefill.crag || '';
     _centralRouteArea = prefill.climbingArea || '';
     const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = `✓ ${prefill.route}`; btn.style.color = 'var(--success-color, green)'; }
+    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${prefill.route}`; btn.style.color = 'var(--success-color, green)'; }
   }
 
   overlay.classList.remove('hidden');
@@ -883,7 +883,7 @@ function showEditSendOverlay(climb) {
     _centralRouteCrag = climb.crag || '';
     _centralRouteArea = climb.climbingArea || '';
     const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
   }
 }
 
@@ -932,7 +932,7 @@ function showEditProjectOverlay(climb) {
     _centralRouteCrag = climb.crag || '';
     _centralRouteArea = climb.climbingArea || '';
     const btn = document.getElementById('find-route-btn-project');
-    if (btn) { btn.textContent = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
   }
 }
 
@@ -945,7 +945,7 @@ function bindSendOverlayHandlers() {
     _centralRouteArea = '';
     _pendingNewCentralRoute = null;
     const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+    if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
   }
   document.getElementById('send-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('send-overlay-cancel').addEventListener('click', closeOverlay);
@@ -966,7 +966,7 @@ function bindSendOverlayHandlers() {
       _centralRouteArea = route.climbingArea || '';
       if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
       const btn = document.getElementById('find-route-btn-send');
-      if (btn) { btn.textContent = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+      if (btn) { btn.textContent = '✓'; btn.title = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
     });
   });
 
@@ -980,7 +980,7 @@ function bindSendOverlayHandlers() {
       )) {
         _centralRouteID = null;
         const btn = document.getElementById('find-route-btn-send');
-        if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+        if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
       }
     });
   });
@@ -1127,7 +1127,7 @@ function bindProjectOverlayHandlers() {
     _centralRouteArea = '';
     _pendingNewCentralRoute = null;
     const btn = document.getElementById('find-route-btn-project');
-    if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+    if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
   }
   document.getElementById('project-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('project-overlay-cancel').addEventListener('click', closeOverlay);
@@ -1148,7 +1148,7 @@ function bindProjectOverlayHandlers() {
       _centralRouteArea = route.climbingArea || '';
       if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
       const btn = document.getElementById('find-route-btn-project');
-      if (btn) { btn.textContent = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+      if (btn) { btn.textContent = '✓'; btn.title = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
     });
   });
 
@@ -1162,7 +1162,7 @@ function bindProjectOverlayHandlers() {
       )) {
         _centralRouteID = null;
         const btn = document.getElementById('find-route-btn-project');
-        if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+        if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
       }
     });
   });
