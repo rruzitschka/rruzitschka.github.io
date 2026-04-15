@@ -696,14 +696,14 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
 
   const overlay = document.createElement('div');
   overlay.id = 'route-search-overlay';
-  overlay.className = 'modal-backdrop';
+  overlay.className = 'modal-overlay active';
   overlay.innerHTML = `
-    <div class="modal-card" style="max-width:500px;max-height:80vh;display:flex;flex-direction:column;">
-      <div class="modal-header">
+    <div class="modal-content" style="max-width:500px;max-height:80vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+      <div class="modal-header" style="padding:1rem 1.25rem;border-bottom:1px solid var(--border-color);flex-shrink:0;">
         <h3 class="modal-title">Find Route</h3>
         <button class="modal-close" id="route-search-close">&times;</button>
       </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
         <input type="text" id="route-search-name" placeholder="Route name…"
                class="form-input" autocomplete="off" />
         <input type="text" id="route-search-crag" placeholder="Crag (optional filter)"
@@ -712,7 +712,7 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
       <div id="route-search-results" style="overflow-y:auto;flex:1;padding:0 12px 12px;">
         <p class="text-muted" style="font-size:13px;">Type at least 2 characters to search.</p>
       </div>
-      <div style="padding:12px;border-top:1px solid var(--border-color);">
+      <div style="padding:12px;border-top:1px solid var(--border-color);flex-shrink:0;">
         <button id="route-search-create" class="btn btn-secondary" style="width:100%;display:none;">
           + Create new route
         </button>
