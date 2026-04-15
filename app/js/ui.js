@@ -8,6 +8,13 @@ let _currentPage = 1;
 let _filteredClimbs = [];
 const ITEMS_PER_PAGE = 20;
 
+// Central route soft link state (cleared when overlay closes without selection)
+let _centralRouteID = null;
+let _centralRouteName = '';
+let _centralRouteCrag = '';
+let _centralRouteArea = '';
+let _pendingNewCentralRoute = null;
+
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
   'On Sight':  'send-os',
@@ -677,6 +684,146 @@ function setStylePill(value) {
   if (hidden) hidden.value = value;
 }
 
+// ---------- Route search overlay ----------
+
+/**
+ * Build and inject a route search overlay into the DOM.
+ * @param {string} displaySystem - User's grade system ('French'|'YDS'|'UIAA')
+ * @param {function} onSelect - called with (route, isNew) when user picks/creates a route
+ */
+function buildRouteSearchOverlay(displaySystem, onSelect) {
+  document.getElementById('route-search-overlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'route-search-overlay';
+  overlay.className = 'modal-backdrop';
+  overlay.innerHTML = `
+    <div class="modal-card" style="max-width:500px;max-height:80vh;display:flex;flex-direction:column;">
+      <div class="modal-header">
+        <h3 class="modal-title">Find Route</h3>
+        <button class="modal-close" id="route-search-close">&times;</button>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <input type="text" id="route-search-name" placeholder="Route name…"
+               class="form-input" autocomplete="off" />
+        <input type="text" id="route-search-crag" placeholder="Crag (optional filter)"
+               class="form-input" autocomplete="off" />
+      </div>
+      <div id="route-search-results" style="overflow-y:auto;flex:1;padding:0 12px 12px;">
+        <p class="text-muted" style="font-size:13px;">Type at least 2 characters to search.</p>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--border-color);">
+        <button id="route-search-create" class="btn btn-secondary" style="width:100%;display:none;">
+          + Create new route
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  let searchTimer = null;
+
+  function doSearch() {
+    const name = document.getElementById('route-search-name').value.trim();
+    const crag = document.getElementById('route-search-crag').value.trim();
+    const createBtn = document.getElementById('route-search-create');
+    const resultsEl = document.getElementById('route-search-results');
+
+    createBtn.style.display = name.length >= 2 ? 'block' : 'none';
+    createBtn.textContent = `+ Create "${name}"`;
+
+    if (name.length < 2) {
+      resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">Type at least 2 characters to search.</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">Searching…</p>';
+
+    searchRoutes(name, crag || null, displaySystem, 20).then(routes => {
+      if (!routes.length) {
+        resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">No routes found. Use the button below to create a new one.</p>';
+        return;
+      }
+      resultsEl.innerHTML = routes.map(r => `
+        <div class="route-search-result" data-id="${r.id}" style="
+          padding:10px 8px;border-bottom:1px solid var(--border-color);cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>${escapeHtml(r.name)}</strong>
+            <span style="color:var(--accent-color);font-weight:600;">${escapeHtml(r.displayGrade)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);">
+            ${escapeHtml(r.crag)}${r.climbingArea ? ' · ' + escapeHtml(r.climbingArea) : ''} · ${escapeHtml(r.routeType)}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+            ✓ ${r.sendCount} sends · ${r.projectCount} projecting
+          </div>
+        </div>
+      `).join('');
+
+      resultsEl.querySelectorAll('.route-search-result').forEach(el => {
+        el.addEventListener('click', () => {
+          const route = routes.find(r => r.id === el.dataset.id);
+          if (route) {
+            onSelect(route, false);
+            overlay.remove();
+          }
+        });
+      });
+    }).catch(err => {
+      console.error('Route search error:', err);
+      resultsEl.innerHTML = '<p style="color:red;font-size:13px;">Search failed. Check your connection.</p>';
+    });
+  }
+
+  ['route-search-name', 'route-search-crag'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(doSearch, 300);
+    });
+  });
+
+  document.getElementById('route-search-create').addEventListener('click', () => {
+    const name = document.getElementById('route-search-name').value.trim();
+    const crag = document.getElementById('route-search-crag').value.trim();
+
+    const resultsEl = document.getElementById('route-search-results');
+    const existingItems = resultsEl.querySelectorAll('.route-search-result');
+    const hasDupes = [...existingItems].some(el => {
+      const nameEl = el.querySelector('strong');
+      return nameEl && nameEl.textContent.toLowerCase() === name.toLowerCase();
+    });
+
+    const proceed = () => {
+      const newRoute = {
+        id: null,
+        name,
+        climbingArea: '',
+        crag,
+        grade: '',
+        displayGrade: '',
+        routeType: 'Sport',
+        isNew: true,
+      };
+      onSelect(newRoute, true);
+      overlay.remove();
+    };
+
+    if (hasDupes) {
+      if (confirm(`Similar routes exist at this crag. Create "${name}" as a new entry anyway?`)) {
+        proceed();
+      }
+    } else {
+      proceed();
+    }
+  });
+
+  document.getElementById('route-search-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  setTimeout(() => document.getElementById('route-search-name')?.focus(), 50);
+}
+
 // ---------- Send overlay ----------
 
 function showAddSendOverlay(prefill = {}) {
@@ -699,6 +846,17 @@ function showAddSendOverlay(prefill = {}) {
   document.getElementById('so-route-error').classList.add('hidden');
   document.getElementById('so-route').classList.remove('error');
   overlay.dataset.projectRecordName = prefill.projectRecordName ?? '';
+
+  // Restore soft link if coming from a linked project (mark-as-sent flow)
+  if (prefill.centralRouteID) {
+    _centralRouteID   = prefill.centralRouteID;
+    _centralRouteName = prefill.route || '';
+    _centralRouteCrag = prefill.crag || '';
+    _centralRouteArea = prefill.climbingArea || '';
+    const btn = document.getElementById('find-route-btn-send');
+    if (btn) { btn.textContent = `✓ ${prefill.route}`; btn.style.color = 'var(--success-color, green)'; }
+  }
+
   overlay.classList.remove('hidden');
 }
 
@@ -718,6 +876,15 @@ function showEditSendOverlay(climb) {
   document.getElementById('so-ascents-section').classList.remove('hidden');
   document.getElementById('send-overlay-delete').classList.remove('hidden');
   renderAscentsList(climb);
+
+  if (climb.centralRouteID) {
+    _centralRouteID   = climb.centralRouteID;
+    _centralRouteName = climb.route || '';
+    _centralRouteCrag = climb.crag || '';
+    _centralRouteArea = climb.climbingArea || '';
+    const btn = document.getElementById('find-route-btn-send');
+    if (btn) { btn.textContent = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+  }
 }
 
 function showAddProjectOverlay() {
@@ -758,16 +925,64 @@ function showEditProjectOverlay(climb) {
   document.getElementById('po-notes').value = climb.noteText ?? '';
   document.getElementById('po-mark-sent-section').classList.remove('hidden');
   document.getElementById('project-overlay-delete').classList.remove('hidden');
+
+  if (climb.centralRouteID) {
+    _centralRouteID   = climb.centralRouteID;
+    _centralRouteName = climb.route || '';
+    _centralRouteCrag = climb.crag || '';
+    _centralRouteArea = climb.climbingArea || '';
+    const btn = document.getElementById('find-route-btn-project');
+    if (btn) { btn.textContent = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+  }
 }
 
 function bindSendOverlayHandlers() {
   function closeOverlay() {
     document.getElementById('send-overlay').classList.add('hidden');
+    _centralRouteID = null;
+    _centralRouteName = '';
+    _centralRouteCrag = '';
+    _centralRouteArea = '';
+    _pendingNewCentralRoute = null;
+    const btn = document.getElementById('find-route-btn-send');
+    if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
   }
   document.getElementById('send-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('send-overlay-cancel').addEventListener('click', closeOverlay);
   document.getElementById('send-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeOverlay();
+  });
+
+  document.getElementById('find-route-btn-send').addEventListener('click', () => {
+    buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
+      document.getElementById('so-route').value = route.name || '';
+      document.getElementById('so-area').value  = route.climbingArea || '';
+      document.getElementById('so-crag').value  = route.crag || '';
+      if (route.displayGrade) initGradePicker(document.getElementById('so-difficulty'), route.displayGrade);
+      if (route.routeType) document.getElementById('so-routetype').value = route.routeType;
+      _centralRouteID   = route.id;
+      _centralRouteName = route.name || '';
+      _centralRouteCrag = route.crag || '';
+      _centralRouteArea = route.climbingArea || '';
+      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
+      const btn = document.getElementById('find-route-btn-send');
+      if (btn) { btn.textContent = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+    });
+  });
+
+  ['so-route', 'so-crag', 'so-area'].forEach(fieldId => {
+    document.getElementById(fieldId)?.addEventListener('input', () => {
+      if (_centralRouteID && shouldClearSoftLink(
+        { name: _centralRouteName, crag: _centralRouteCrag, area: _centralRouteArea },
+        { name: document.getElementById('so-route').value,
+          crag: document.getElementById('so-crag').value,
+          area: document.getElementById('so-area').value }
+      )) {
+        _centralRouteID = null;
+        const btn = document.getElementById('find-route-btn-send');
+        if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+      }
+    });
   });
 
   document.querySelectorAll('#so-style-tabs .style-tab').forEach(tab => {
@@ -789,19 +1004,50 @@ function bindSendOverlayHandlers() {
     try {
       const recordName = document.getElementById('so-record-name').value || undefined;
       const projectRecordName = document.getElementById('send-overlay').dataset.projectRecordName;
+
+      // Create central route if this is a new entry from the search overlay
+      let centralID = _centralRouteID;
+      if (_pendingNewCentralRoute) {
+        try {
+          centralID = await createCentralRoute({
+            name:         routeVal,
+            climbingArea: document.getElementById('so-area').value.trim() || '',
+            crag:         document.getElementById('so-crag').value.trim() || '',
+            grade:        document.getElementById('so-difficulty').value || '',
+            gradeSystem:  getPreferredGradeSystem(),
+            routeType:    document.getElementById('so-routetype').value,
+          });
+          _centralRouteID = centralID;
+        } catch (err) {
+          console.warn('Failed to create central route:', err);
+          // Don't block save if central route creation fails
+        }
+        _pendingNewCentralRoute = null;
+      }
+
       await saveClimbNote({
         recordName,
-        id:           recordName ? undefined : crypto.randomUUID(),
-        route:        routeVal,
-        climbingArea: document.getElementById('so-area').value.trim() || null,
-        crag:         document.getElementById('so-crag').value.trim() || null,
-        difficulty:   document.getElementById('so-difficulty').value || null,
-        date:         document.getElementById('so-date').value ? new Date(document.getElementById('so-date').value) : null,
-        sendType:     document.getElementById('so-sendtype').value,
-        routeType:    document.getElementById('so-routetype').value,
-        rating:       currentStarRating,
-        noteText:     document.getElementById('so-notes').value.trim() || null,
+        id:             recordName ? undefined : crypto.randomUUID(),
+        route:          routeVal,
+        climbingArea:   document.getElementById('so-area').value.trim() || null,
+        crag:           document.getElementById('so-crag').value.trim() || null,
+        difficulty:     document.getElementById('so-difficulty').value || null,
+        date:           document.getElementById('so-date').value ? new Date(document.getElementById('so-date').value) : null,
+        sendType:       document.getElementById('so-sendtype').value,
+        routeType:      document.getElementById('so-routetype').value,
+        rating:         currentStarRating,
+        noteText:       document.getElementById('so-notes').value.trim() || null,
+        centralRouteID: centralID ?? null,
       });
+
+      if (centralID) {
+        if (projectRecordName) {
+          // Coming from mark-as-sent: decrement projectCount + increment sendCount atomically
+          completedProject(centralID);
+        } else {
+          incrementSendCount(centralID);
+        }
+      }
 
       if (projectRecordName) {
         try {
@@ -875,11 +1121,50 @@ function bindSendOverlayHandlers() {
 function bindProjectOverlayHandlers() {
   function closeOverlay() {
     document.getElementById('project-overlay').classList.add('hidden');
+    _centralRouteID = null;
+    _centralRouteName = '';
+    _centralRouteCrag = '';
+    _centralRouteArea = '';
+    _pendingNewCentralRoute = null;
+    const btn = document.getElementById('find-route-btn-project');
+    if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
   }
   document.getElementById('project-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('project-overlay-cancel').addEventListener('click', closeOverlay);
   document.getElementById('project-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeOverlay();
+  });
+
+  document.getElementById('find-route-btn-project').addEventListener('click', () => {
+    buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
+      document.getElementById('po-route').value = route.name || '';
+      document.getElementById('po-area').value  = route.climbingArea || '';
+      document.getElementById('po-crag').value  = route.crag || '';
+      if (route.displayGrade) initGradePicker(document.getElementById('po-difficulty'), route.displayGrade);
+      if (route.routeType) document.getElementById('po-routetype').value = route.routeType;
+      _centralRouteID   = route.id;
+      _centralRouteName = route.name || '';
+      _centralRouteCrag = route.crag || '';
+      _centralRouteArea = route.climbingArea || '';
+      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
+      const btn = document.getElementById('find-route-btn-project');
+      if (btn) { btn.textContent = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+    });
+  });
+
+  ['po-route', 'po-crag', 'po-area'].forEach(fieldId => {
+    document.getElementById(fieldId)?.addEventListener('input', () => {
+      if (_centralRouteID && shouldClearSoftLink(
+        { name: _centralRouteName, crag: _centralRouteCrag, area: _centralRouteArea },
+        { name: document.getElementById('po-route').value,
+          crag: document.getElementById('po-crag').value,
+          area: document.getElementById('po-area').value }
+      )) {
+        _centralRouteID = null;
+        const btn = document.getElementById('find-route-btn-project');
+        if (btn) { btn.textContent = '🔍 Find Route in Database'; btn.style.color = ''; }
+      }
+    });
   });
 
   document.getElementById('project-overlay-save').addEventListener('click', async function () {
@@ -897,6 +1182,26 @@ function bindProjectOverlayHandlers() {
     try {
       const recordName = document.getElementById('po-record-name').value || undefined;
       const lastAttemptVal = document.getElementById('po-last-attempt-date').value;
+
+      // Create central route if this is a new entry from the search overlay
+      let centralID = _centralRouteID;
+      if (_pendingNewCentralRoute) {
+        try {
+          centralID = await createCentralRoute({
+            name:         routeVal,
+            climbingArea: document.getElementById('po-area').value.trim() || '',
+            crag:         document.getElementById('po-crag').value.trim() || '',
+            grade:        document.getElementById('po-difficulty').value || '',
+            gradeSystem:  getPreferredGradeSystem(),
+            routeType:    document.getElementById('po-routetype').value,
+          });
+          _centralRouteID = centralID;
+        } catch (err) {
+          console.warn('Failed to create central route:', err);
+        }
+        _pendingNewCentralRoute = null;
+      }
+
       await saveClimbNote({
         recordName,
         id:               recordName ? undefined : crypto.randomUUID(),
@@ -911,7 +1216,19 @@ function bindProjectOverlayHandlers() {
         highPoint:        document.getElementById('po-highpoint').value.trim() || null,
         projectStatus:    document.getElementById('po-status').value,
         noteText:         document.getElementById('po-notes').value.trim() || null,
+        centralRouteID:   centralID ?? null,
       });
+
+      if (centralID) {
+        const isNew = !recordName;
+        const projectStatus = document.getElementById('po-status').value;
+        if (isNew) {
+          incrementProjectCount(centralID);
+        } else if (projectStatus === 'Abandoned') {
+          decrementProjectCount(centralID);
+        }
+      }
+
       closeOverlay();
       await loadData();
     } catch (err) {
@@ -938,6 +1255,7 @@ function bindProjectOverlayHandlers() {
 
   document.getElementById('po-mark-sent').addEventListener('click', function () {
     const projectRecordName = document.getElementById('po-record-name').value;
+    const savedCentralRouteID = _centralRouteID;  // capture before closeOverlay() resets it
     const prefill = {
       route:            document.getElementById('po-route').value,
       climbingArea:     document.getElementById('po-area').value,
@@ -945,6 +1263,7 @@ function bindProjectOverlayHandlers() {
       difficulty:       document.getElementById('po-difficulty').value,
       routeType:        document.getElementById('po-routetype').value,
       projectRecordName,
+      centralRouteID:   savedCentralRouteID,  // carry through to send overlay
     };
     closeOverlay();
     showAddSendOverlay(prefill);

@@ -71,6 +71,7 @@ async function fetchClimbs() {
           projectStatus: d.projectStatus ?? null,
           projectNotes:  d.projectNotes ?? null,
           highPoint:     d.highPoint ?? null,
+          centralRouteID: d.centralRouteID ?? null,
           ascents,
         };
       })
@@ -100,6 +101,7 @@ async function saveClimbNote(note) {
   if (note.projectStatus)   doc.projectStatus = note.projectStatus;
   if (note.projectNotes)    doc.projectNotes = note.projectNotes;
   if (note.highPoint)       doc.highPoint = note.highPoint;
+  if (note.centralRouteID)  doc.centralRouteID = note.centralRouteID;
   await db.doc(`users/${user.uid}/climbNotes/${id}`).set(doc, { merge: true });
   return id;
 }
