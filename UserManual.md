@@ -5,6 +5,7 @@
 2. [Main Features](#main-features)
 3. [Getting Started](#getting-started)
 4. [Logging Climbs](#logging-climbs)
+   - [Finding Routes in the Central Database](#finding-routes-in-the-central-database)
 5. [Project Tracking](#project-tracking)
 6. [Route Types](#route-types)
 7. [Statistics and Progress Analysis](#statistics-and-progress-analysis)
@@ -59,6 +60,31 @@ SendLog (ClimbingNotes) is an iOS app designed specifically for climbers to log,
    - **Notes**: Any additional information you want to remember
 3. Tap "Save" to add the climb to your log
 4. Use the "X" button in the top-right corner to cancel and close the overlay
+
+### Finding Routes in the Central Database
+
+SendLog includes a community-shared route database that lets you look up existing routes and pre-fill your log form automatically.
+
+**Searching for a route:**
+1. In the new send form, tap the 🔍 icon button next to the **Route** field to open the route search overlay
+2. Type the route name in the search bar — results update as you type
+3. Optionally type a crag name in the **Crag** filter field to narrow the results
+4. Each result shows:
+   - **Route name** and **crag/area**
+   - **Grade**
+   - How many SendLog users have sent or are projecting the route
+   - A 👤 icon if you originally created that route entry
+5. Tap a result to close the overlay and pre-fill **Route**, **Crag**, **Area**, and **Grade** automatically
+6. A ✓ icon replaces the 🔍 icon to confirm the route is linked to the database
+
+**If the route doesn't exist yet:**
+- Scroll to the bottom of the results and tap **Create new route** to add it to the shared database as you save your log
+
+**Unlinking a route:**
+- If you edit the **Route**, **Crag**, or **Area** fields after linking, the link is automatically removed and the icon reverts to 🔍 — your send will no longer count towards that route's shared statistics
+
+**Editing an existing log:**
+- If a send or project already has a linked route, the edit overlay shows the ✓ icon (with 👤 if you own the route entry)
 
 ### Viewing and Editing Logs
 
@@ -120,8 +146,9 @@ SendLog now supports comprehensive repeat ascent tracking for routes you've clim
 1. Navigate to the Projects tab
 2. Tap the "+" button to add a new project in the modern overlay interface
 3. Fill in the route details using the same consistent form layout as SendLog creation
-4. The route will automatically be marked with "active" status
-5. Use the "X" button to cancel or "Save" to create the project
+4. Tap the 🔍 icon next to the **Route** field to search the Central Route Database and pre-fill route details — works the same way as when logging a send (see [Finding Routes in the Central Database](#finding-routes-in-the-central-database))
+5. The route will automatically be marked with "active" status
+6. Use the "X" button to cancel or "Save" to create the project
 
 ### Logging Attempts
 
