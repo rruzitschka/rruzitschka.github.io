@@ -18,6 +18,13 @@
       <h2>SendLog</h2>
       <p>Sign in to access your climbing notes</p>
       <button id="signin-apple-btn" class="btn-apple-signin">Sign in with Apple</button>
+      <div id="devauth-form" style="display:none;margin-top:16px;display:none;flex-direction:column;gap:8px;">
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:4px 0;">
+        <p style="font-size:11px;color:#94a3b8;text-align:center;margin:0;">🧪 Dev auth</p>
+        <input id="devauth-email" type="email" placeholder="Email" class="form-input" style="font-size:14px;" />
+        <input id="devauth-password" type="password" placeholder="Password" class="form-input" style="font-size:14px;" />
+        <button id="devauth-btn" class="btn btn-secondary" style="width:100%;">Sign in with Email</button>
+      </div>
     </div>
   </div>
 
@@ -598,28 +605,59 @@
   </script>
   <script>
     (async () => {
+      function signInWithEmailPassword(email, password) {
+        return auth.signInWithEmailAndPassword(email, password);
+      }
+
       const isMock = new URLSearchParams(window.location.search).get('mock') === 'true';
+      const isDevAuth = new URLSearchParams(window.location.search).get('devauth') === 'true';
       const user = await initAuth();
       if (!user && !isMock) {
         document.getElementById('login-section').classList.remove('hidden');
         document.getElementById('app-container').classList.add('hidden');
+
+        // Show email/password form only in dev auth mode
+        if (isDevAuth) {
+          document.getElementById('devauth-form').style.display = 'flex';
+        }
+
+        async function onSignedIn(u) {
+          renderUserChip(u);
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('app-container').classList.remove('hidden');
+          document.getElementById('signout-btn').addEventListener('click', signOut);
+          await loadData();
+        }
+
         document.getElementById('signin-apple-btn').addEventListener('click', async () => {
           const btn = document.getElementById('signin-apple-btn');
           btn.disabled = true;
           btn.textContent = 'Signing in…';
           try {
             const u = await signInWithApple();
-            renderUserChip(u);
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            document.getElementById('signout-btn').addEventListener('click', signOut);
-            await loadData();
+            await onSignedIn(u);
           } catch (e) {
             btn.disabled = false;
             btn.textContent = 'Sign in with Apple';
             alert('Sign in failed: ' + (e.message ?? e));
           }
         });
+
+        document.getElementById('devauth-btn')?.addEventListener('click', async () => {
+          const btn = document.getElementById('devauth-btn');
+          const email = document.getElementById('devauth-email').value.trim();
+          const password = document.getElementById('devauth-password').value;
+          if (!email || !password) { alert('Enter email and password'); return; }
+          btn.disabled = true; btn.textContent = 'Signing in…';
+          try {
+            const result = await signInWithEmailPassword(email, password);
+            await onSignedIn(result.user);
+          } catch (e) {
+            btn.disabled = false; btn.textContent = 'Sign in with Email';
+            alert('Sign in failed: ' + (e.message ?? e));
+          }
+        });
+
         return;
       }
       if (!isMock) renderUserChip(user);
