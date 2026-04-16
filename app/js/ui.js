@@ -13,6 +13,7 @@ let _centralRouteID = null;
 let _centralRouteName = '';
 let _centralRouteCrag = '';
 let _centralRouteArea = '';
+let _centralRouteCreatedBy = null;
 let _pendingNewCentralRoute = null;
 
 const SEND_CLASSES = {
@@ -686,6 +687,25 @@ function setStylePill(value) {
 
 // ---------- Route search overlay ----------
 
+/** Update a find-route button to linked state, with 👤 if the current user owns the route. */
+function setFindRouteLinked(btnId, routeName, createdBy) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const isOwned = createdBy && createdBy === auth.currentUser?.uid;
+  btn.textContent = isOwned ? '✓ 👤' : '✓';
+  btn.title = isOwned ? `✓ ${routeName} (you created this route)` : `✓ ${routeName}`;
+  btn.style.color = 'var(--success-color, green)';
+}
+
+/** Reset a find-route button to unlinked state. */
+function setFindRouteUnlinked(btnId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.textContent = '🔍';
+  btn.title = 'Find Route in Database';
+  btn.style.color = '';
+}
+
 /**
  * Build and inject a route search overlay into the DOM.
  * @param {string} displaySystem - User's grade system ('French'|'YDS'|'UIAA')
@@ -850,12 +870,12 @@ function showAddSendOverlay(prefill = {}) {
 
   // Restore soft link if coming from a linked project (mark-as-sent flow)
   if (prefill.centralRouteID) {
-    _centralRouteID   = prefill.centralRouteID;
-    _centralRouteName = prefill.route || '';
-    _centralRouteCrag = prefill.crag || '';
-    _centralRouteArea = prefill.climbingArea || '';
-    const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${prefill.route}`; btn.style.color = 'var(--success-color, green)'; }
+    _centralRouteID        = prefill.centralRouteID;
+    _centralRouteName      = prefill.route || '';
+    _centralRouteCrag      = prefill.crag || '';
+    _centralRouteArea      = prefill.climbingArea || '';
+    _centralRouteCreatedBy = prefill.centralRouteCreatedBy ?? null;
+    setFindRouteLinked('find-route-btn-send', prefill.route, _centralRouteCreatedBy);
   }
 
   overlay.classList.remove('hidden');
@@ -879,12 +899,20 @@ function showEditSendOverlay(climb) {
   renderAscentsList(climb);
 
   if (climb.centralRouteID) {
-    _centralRouteID   = climb.centralRouteID;
-    _centralRouteName = climb.route || '';
-    _centralRouteCrag = climb.crag || '';
-    _centralRouteArea = climb.climbingArea || '';
-    const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+    _centralRouteID        = climb.centralRouteID;
+    _centralRouteName      = climb.route || '';
+    _centralRouteCrag      = climb.crag || '';
+    _centralRouteArea      = climb.climbingArea || '';
+    _centralRouteCreatedBy = null;
+    setFindRouteLinked('find-route-btn-send', climb.route, null);
+    // Fetch createdBy asynchronously to update ownership icon
+    db.collection('routes').doc(climb.centralRouteID).get()
+      .then(doc => {
+        if (doc.exists) {
+          _centralRouteCreatedBy = doc.data().createdBy ?? null;
+          setFindRouteLinked('find-route-btn-send', climb.route, _centralRouteCreatedBy);
+        }
+      }).catch(() => {});
   }
 }
 
@@ -928,12 +956,19 @@ function showEditProjectOverlay(climb) {
   document.getElementById('project-overlay-delete').classList.remove('hidden');
 
   if (climb.centralRouteID) {
-    _centralRouteID   = climb.centralRouteID;
-    _centralRouteName = climb.route || '';
-    _centralRouteCrag = climb.crag || '';
-    _centralRouteArea = climb.climbingArea || '';
-    const btn = document.getElementById('find-route-btn-project');
-    if (btn) { btn.textContent = '✓'; btn.title = `✓ ${climb.route}`; btn.style.color = 'var(--success-color, green)'; }
+    _centralRouteID        = climb.centralRouteID;
+    _centralRouteName      = climb.route || '';
+    _centralRouteCrag      = climb.crag || '';
+    _centralRouteArea      = climb.climbingArea || '';
+    _centralRouteCreatedBy = null;
+    setFindRouteLinked('find-route-btn-project', climb.route, null);
+    db.collection('routes').doc(climb.centralRouteID).get()
+      .then(doc => {
+        if (doc.exists) {
+          _centralRouteCreatedBy = doc.data().createdBy ?? null;
+          setFindRouteLinked('find-route-btn-project', climb.route, _centralRouteCreatedBy);
+        }
+      }).catch(() => {});
   }
 }
 
@@ -944,9 +979,10 @@ function bindSendOverlayHandlers() {
     _centralRouteName = '';
     _centralRouteCrag = '';
     _centralRouteArea = '';
+    _centralRouteCreatedBy = null;
     _pendingNewCentralRoute = null;
     const btn = document.getElementById('find-route-btn-send');
-    if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
+    setFindRouteUnlinked(btn.id);
   }
   document.getElementById('send-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('send-overlay-cancel').addEventListener('click', closeOverlay);
@@ -961,13 +997,13 @@ function bindSendOverlayHandlers() {
       document.getElementById('so-crag').value  = route.crag || '';
       if (route.displayGrade) initGradePicker(document.getElementById('so-difficulty'), route.displayGrade);
       if (route.routeType) document.getElementById('so-routetype').value = route.routeType;
-      _centralRouteID   = route.id;
-      _centralRouteName = route.name || '';
-      _centralRouteCrag = route.crag || '';
-      _centralRouteArea = route.climbingArea || '';
-      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
-      const btn = document.getElementById('find-route-btn-send');
-      if (btn) { btn.textContent = '✓'; btn.title = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+      _centralRouteID        = route.id;
+      _centralRouteName      = route.name || '';
+      _centralRouteCrag      = route.crag || '';
+      _centralRouteArea      = route.climbingArea || '';
+      _centralRouteCreatedBy = route.createdBy ?? null;
+      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; _centralRouteCreatedBy = null; }
+      setFindRouteLinked('find-route-btn-send', route.name, _centralRouteCreatedBy);
     });
   });
 
@@ -980,8 +1016,7 @@ function bindSendOverlayHandlers() {
           area: document.getElementById('so-area').value }
       )) {
         _centralRouteID = null;
-        const btn = document.getElementById('find-route-btn-send');
-        if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
+        setFindRouteUnlinked('find-route-btn-send');
       }
     });
   });
@@ -1126,9 +1161,10 @@ function bindProjectOverlayHandlers() {
     _centralRouteName = '';
     _centralRouteCrag = '';
     _centralRouteArea = '';
+    _centralRouteCreatedBy = null;
     _pendingNewCentralRoute = null;
     const btn = document.getElementById('find-route-btn-project');
-    if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
+    setFindRouteUnlinked(btn.id);
   }
   document.getElementById('project-overlay-close').addEventListener('click', closeOverlay);
   document.getElementById('project-overlay-cancel').addEventListener('click', closeOverlay);
@@ -1143,13 +1179,13 @@ function bindProjectOverlayHandlers() {
       document.getElementById('po-crag').value  = route.crag || '';
       if (route.displayGrade) initGradePicker(document.getElementById('po-difficulty'), route.displayGrade);
       if (route.routeType) document.getElementById('po-routetype').value = route.routeType;
-      _centralRouteID   = route.id;
-      _centralRouteName = route.name || '';
-      _centralRouteCrag = route.crag || '';
-      _centralRouteArea = route.climbingArea || '';
-      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; }
-      const btn = document.getElementById('find-route-btn-project');
-      if (btn) { btn.textContent = '✓'; btn.title = `✓ ${route.name}`; btn.style.color = 'var(--success-color, green)'; }
+      _centralRouteID        = route.id;
+      _centralRouteName      = route.name || '';
+      _centralRouteCrag      = route.crag || '';
+      _centralRouteArea      = route.climbingArea || '';
+      _centralRouteCreatedBy = route.createdBy ?? null;
+      if (isNew) { _pendingNewCentralRoute = route; _centralRouteID = null; _centralRouteCreatedBy = null; }
+      setFindRouteLinked('find-route-btn-project', route.name, _centralRouteCreatedBy);
     });
   });
 
@@ -1162,8 +1198,7 @@ function bindProjectOverlayHandlers() {
           area: document.getElementById('po-area').value }
       )) {
         _centralRouteID = null;
-        const btn = document.getElementById('find-route-btn-project');
-        if (btn) { btn.textContent = '🔍'; btn.title = 'Find Route in Database'; btn.style.color = ''; }
+        setFindRouteUnlinked('find-route-btn-project');
       }
     });
   });
@@ -1256,15 +1291,17 @@ function bindProjectOverlayHandlers() {
 
   document.getElementById('po-mark-sent').addEventListener('click', function () {
     const projectRecordName = document.getElementById('po-record-name').value;
-    const savedCentralRouteID = _centralRouteID;  // capture before closeOverlay() resets it
+    const savedCentralRouteID      = _centralRouteID;        // capture before closeOverlay() resets it
+    const savedCentralRouteCreatedBy = _centralRouteCreatedBy;
     const prefill = {
-      route:            document.getElementById('po-route').value,
-      climbingArea:     document.getElementById('po-area').value,
-      crag:             document.getElementById('po-crag').value,
-      difficulty:       document.getElementById('po-difficulty').value,
-      routeType:        document.getElementById('po-routetype').value,
+      route:                   document.getElementById('po-route').value,
+      climbingArea:            document.getElementById('po-area').value,
+      crag:                    document.getElementById('po-crag').value,
+      difficulty:              document.getElementById('po-difficulty').value,
+      routeType:               document.getElementById('po-routetype').value,
       projectRecordName,
-      centralRouteID:   savedCentralRouteID,  // carry through to send overlay
+      centralRouteID:          savedCentralRouteID,
+      centralRouteCreatedBy:   savedCentralRouteCreatedBy,
     };
     closeOverlay();
     showAddSendOverlay(prefill);
