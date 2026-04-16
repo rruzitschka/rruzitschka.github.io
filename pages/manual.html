@@ -161,7 +161,11 @@
                 <li><a href="#introduction">Introduction</a></li>
                 <li><a href="#main-features">Main Features</a></li>
                 <li><a href="#getting-started">Getting Started</a></li>
-                <li><a href="#logging-climbs">Logging Climbs</a></li>
+                <li><a href="#logging-climbs">Logging Climbs</a>
+                    <ul>
+                        <li><a href="#finding-routes-in-the-central-database">Finding Routes in the Central Database</a></li>
+                    </ul>
+                </li>
                 <li><a href="#project-tracking">Project Tracking</a></li>
                 <li><a href="#route-types">Route Types</a></li>
                 <li><a href="#statistics-and-progress-analysis">Statistics and Progress Analysis</a></li>
@@ -266,6 +270,28 @@
             <li>Tap <strong>Save</strong> to add the climb</li>
         </ol>
 
+        <h3 id="finding-routes-in-the-central-database">Finding Routes in the Central Database</h3>
+        <p>SendLog includes a community-shared route database that lets you look up existing routes and pre-fill your log form automatically.</p>
+        <p><strong>Searching for a route:</strong></p>
+        <ol>
+            <li>In the new send form, tap the 🔍 icon button next to the <strong>Route</strong> field to open the route search overlay</li>
+            <li>Type the route name in the search bar — results update as you type</li>
+            <li>Optionally type a crag name in the <strong>Crag</strong> filter field to narrow the results</li>
+            <li>Each result shows:
+                <ul>
+                    <li>Route name and crag/area</li>
+                    <li>Grade</li>
+                    <li>How many SendLog users have sent or are projecting the route</li>
+                    <li>A 👤 icon if you originally created that route entry</li>
+                </ul>
+            </li>
+            <li>Tap a result to close the overlay and pre-fill <strong>Route</strong>, <strong>Crag</strong>, <strong>Area</strong>, and <strong>Grade</strong> automatically</li>
+            <li>A ✓ icon replaces the 🔍 icon to confirm the route is linked to the database</li>
+        </ol>
+        <p><strong>If the route doesn't exist yet:</strong> scroll to the bottom of the results and tap <strong>Create new route</strong> to add it to the shared database as you save your log.</p>
+        <p><strong>Unlinking a route:</strong> if you edit the Route, Crag, or Area fields after linking, the link is automatically removed and the icon reverts to 🔍 — your send will no longer count towards that route's shared statistics.</p>
+        <p><strong>Editing an existing log:</strong> if a send or project already has a linked route, the edit overlay shows the ✓ icon (with 👤 if you own the route entry).</p>
+
         <h3>Viewing and Editing Logs</h3>
         <ol>
             <li>All sends appear chronologically in the SendLogs tab</li>
@@ -334,6 +360,7 @@
             <li>Navigate to the <strong>Projects</strong> tab</li>
             <li>Tap the "+" button to open the new-project overlay</li>
             <li>Fill in route details (same form layout as a regular send)</li>
+            <li>Tap the 🔍 icon next to the <strong>Route</strong> field to search the Central Route Database and pre-fill route details — works the same way as when <a href="#finding-routes-in-the-central-database">logging a send</a></li>
             <li>The project is automatically set to <em>Active</em> status</li>
             <li>Tap <strong>Save</strong> to create the project, or <strong>X</strong> to cancel</li>
         </ol>
