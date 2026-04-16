@@ -745,11 +745,12 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
         resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">No routes found. Use the button below to create a new one.</p>';
         return;
       }
+      const currentUID = auth.currentUser?.uid ?? null;
       resultsEl.innerHTML = routes.map(r => `
         <div class="route-search-result" data-id="${r.id}" style="
           padding:10px 8px;border-bottom:1px solid var(--border-color);cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${escapeHtml(r.name)}</strong>
+            <strong>${escapeHtml(r.name)}${r.createdBy === currentUID ? ' <span title="You created this route" style="font-size:11px;">👤</span>' : ''}</strong>
             <span style="color:var(--accent-color);font-weight:600;">${escapeHtml(r.displayGrade)}</span>
           </div>
           <div style="font-size:12px;color:var(--text-muted);">

@@ -99,6 +99,7 @@ async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'Fren
       projectCount:  d.projectCount ?? 0,
       attemptCount:  d.attemptCount ?? 0,
       isOrphaned:    d.isOrphaned ?? false,
+      createdBy:     d.createdBy ?? null,
     };
   });
 }
