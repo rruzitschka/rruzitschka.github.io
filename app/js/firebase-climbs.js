@@ -82,7 +82,7 @@ async function fetchClimbs() {
 async function saveClimbNote(note) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not signed in');
-  const id = note.id ?? note.recordName ?? crypto.randomUUID();
+  const id = (note.id ?? note.recordName ?? crypto.randomUUID()).toUpperCase();
   const doc = {
     id,
     route:        note.route ?? '',

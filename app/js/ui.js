@@ -1063,7 +1063,7 @@ function bindSendOverlayHandlers() {
 
       await saveClimbNote({
         recordName,
-        id:             recordName ? undefined : crypto.randomUUID(),
+        id:             recordName ? undefined : crypto.randomUUID().toUpperCase(),
         route:          routeVal,
         climbingArea:   document.getElementById('so-area').value.trim() || null,
         crag:           document.getElementById('so-crag').value.trim() || null,
@@ -1240,7 +1240,7 @@ function bindProjectOverlayHandlers() {
 
       await saveClimbNote({
         recordName,
-        id:               recordName ? undefined : crypto.randomUUID(),
+        id:               recordName ? undefined : crypto.randomUUID().toUpperCase(),
         route:            routeVal,
         climbingArea:     document.getElementById('po-area').value.trim() || null,
         crag:             document.getElementById('po-crag').value.trim() || null,
