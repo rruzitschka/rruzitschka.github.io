@@ -589,16 +589,16 @@
     // In mock mode, skip Firebase config/auth initialization (SDK is loaded but not initialized)
     if (new URLSearchParams(window.location.search).get('mock') !== 'true') {
       document.write('<scr' + 'ipt src="js/firebase-config.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.7.0"><\/scr' + 'ipt>');
+      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.9.0"><\/scr' + 'ipt>');
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="js/grades.js?v=3.7.0"></script>
-  <script src="js/firebase-climbs.js?v=3.7.0"></script>
-  <script src="js/firebase-routes.js?v=3.7.0"></script>
-  <script src="js/firebase-training.js?v=3.7.0"></script>
-  <script src="js/ui.js?v=3.7.0"></script>
-  <script src="js/stats.js?v=3.7.0"></script>
+  <script src="js/grades.js?v=3.9.0"></script>
+  <script src="js/firebase-climbs.js?v=3.9.0"></script>
+  <script src="js/firebase-routes.js?v=3.9.0"></script>
+  <script src="js/firebase-training.js?v=3.9.0"></script>
+  <script src="js/ui.js?v=3.9.0"></script>
+  <script src="js/stats.js?v=3.9.0"></script>
   <script>
     if (new URLSearchParams(window.location.search).get('mock') === 'true') {
       document.write('<scr' + 'ipt src="js/mock.js"><\/scr' + 'ipt>');
