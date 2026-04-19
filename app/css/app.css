@@ -187,6 +187,7 @@ input:focus, select:focus, textarea:focus {
 .app-header-logo img {
     height: 28px;
     width: auto;
+    border-radius: 6px;
 }
 
 .app-nav-links {
