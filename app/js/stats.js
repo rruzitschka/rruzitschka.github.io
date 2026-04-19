@@ -19,7 +19,11 @@ function spFilterByPeriod(climbs, period) {
   } else {
     return climbs; // allTime
   }
-  return climbs.filter(c => c.date && new Date(c.date) >= since);
+  // Include a route if its first send OR any repeat ascent falls in the period
+  return climbs.filter(c => {
+    if (c.date && new Date(c.date) >= since) return true;
+    return (c.ascents ?? []).some(a => a.date && new Date(a.date) >= since);
+  });
 }
 
 function spFilterSessionsByPeriod(sessions, period) {
@@ -74,10 +78,37 @@ function spCalcSummary(filteredClimbs) {
 
 // ==================== Grade distribution ====================
 
-function spCalcGradeDistribution(filteredClimbs) {
+/** Returns the period start Date, or null for allTime. */
+function spSinceDate(period) {
+  const now = new Date();
+  if (period === 'week') {
+    const day = now.getDay() || 7;
+    const d = new Date(now);
+    d.setDate(now.getDate() - day + 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1);
+  if (period === 'year')  return new Date(now.getFullYear(), 0, 1);
+  return null; // allTime — no lower bound
+}
+
+function spCalcGradeDistribution(filteredClimbs, period) {
+  const since = spSinceDate(period);
   const sends = filteredClimbs.filter(c => !c.isProject && c.difficulty);
   const counts = {};
-  sends.forEach(c => { counts[c.difficulty] = (counts[c.difficulty] ?? 0) + 1; });
+  sends.forEach(c => {
+    // Count first send (it's in filteredClimbs so its date is already in period)
+    if (c.date && (!since || new Date(c.date) >= since)) {
+      counts[c.difficulty] = (counts[c.difficulty] ?? 0) + 1;
+    }
+    // Count each repeat ascent that falls in the period
+    (c.ascents ?? []).forEach(a => {
+      if (a.date && (!since || new Date(a.date) >= since)) {
+        counts[c.difficulty] = (counts[c.difficulty] ?? 0) + 1;
+      }
+    });
+  });
   // Sort by grade index across all systems
   return Object.entries(counts)
     .map(([grade, count]) => {
@@ -90,12 +121,22 @@ function spCalcGradeDistribution(filteredClimbs) {
 
 // ==================== Route types ====================
 
-function spCalcRouteTypes(filteredClimbs) {
+function spCalcRouteTypes(filteredClimbs, period) {
+  const since = spSinceDate(period);
   const sends = filteredClimbs.filter(c => !c.isProject);
   const counts = {};
   sends.forEach(c => {
     const t = c.routeType || 'Sport';
-    counts[t] = (counts[t] ?? 0) + 1;
+    // Count first send
+    if (c.date && (!since || new Date(c.date) >= since)) {
+      counts[t] = (counts[t] ?? 0) + 1;
+    }
+    // Count each repeat ascent that falls in the period
+    (c.ascents ?? []).forEach(a => {
+      if (a.date && (!since || new Date(a.date) >= since)) {
+        counts[t] = (counts[t] ?? 0) + 1;
+      }
+    });
   });
   return Object.entries(counts).map(([type, count]) => ({ type, count }))
     .sort((a, b) => b.count - a.count);
@@ -217,8 +258,8 @@ function renderStatsPage(climbs, sessions) {
     ? `<div class="sp-top-grade-inline"><span class="sp-top-grade-label">Hardest Send:</span> <span class="sp-top-grade-route">${escapeHtml(summary.topGradeRoute ?? '')}</span><span class="sp-top-grade-sep">,</span> <span class="sp-top-grade-value">${summary.topGrade}</span></div>`
     : `<div class="sp-top-grade-empty">No sends in this period</div>`;
 
-  renderGradeChart(filtered);
-  renderTypeChart(filtered);
+  renderGradeChart(filtered, statsPeriod);
+  renderTypeChart(filtered, statsPeriod);
   renderHeatmap(climbs);   // always all-time for heatmap
   renderStreakCards(climbs, sessions);
   renderTrainingSection(filteredSessions);
@@ -245,10 +286,10 @@ function bindStatsPeriodTabs() {
 let gradeChartInstance = null;
 let typeChartInstance  = null;
 
-function renderGradeChart(filteredClimbs) {
+function renderGradeChart(filteredClimbs, period) {
   const canvas = document.getElementById('sp-grade-chart');
   if (!canvas) return;
-  const data = spCalcGradeDistribution(filteredClimbs);
+  const data = spCalcGradeDistribution(filteredClimbs, period);
   const ctx = canvas.getContext('2d');
   if (gradeChartInstance) gradeChartInstance.destroy();
   gradeChartInstance = new Chart(ctx, {
@@ -285,10 +326,10 @@ const TYPE_BORDER_COLORS = {
   'Multi-Pitch': 'rgba(15,23,42,0.75)',
 };
 
-function renderTypeChart(filteredClimbs) {
+function renderTypeChart(filteredClimbs, period) {
   const canvas = document.getElementById('sp-type-chart');
   if (!canvas) return;
-  const data = spCalcRouteTypes(filteredClimbs);
+  const data = spCalcRouteTypes(filteredClimbs, period);
   const ctx = canvas.getContext('2d');
   if (typeChartInstance) typeChartInstance.destroy();
   typeChartInstance = new Chart(ctx, {

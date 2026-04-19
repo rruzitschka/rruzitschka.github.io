@@ -580,13 +580,14 @@
     </div>
   </div>
 
+  <!-- Firebase SDK — always loaded (CDN scripts must not use document.write) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script>
-    // In mock mode, skip Firebase SDK/config/auth to avoid errors with missing globals
+    // In mock mode, skip Firebase config/auth initialization (SDK is loaded but not initialized)
     if (new URLSearchParams(window.location.search).get('mock') !== 'true') {
-      document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="js/firebase-config.js"><\/scr' + 'ipt>');
       document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.7.0"><\/scr' + 'ipt>');
     }
