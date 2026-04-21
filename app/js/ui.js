@@ -1318,6 +1318,61 @@ function setIntensity(value) {
   });
 }
 
+function showTrainingDetailModal(session) {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+
+  const dateStr = session.date
+    ? session.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+    : '—';
+  const durationStr = session.duration ? `${session.duration} min` : '—';
+  const intensityDots = [1, 2, 3, 4, 5].map(i =>
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${i <= (session.intensity ?? 3) ? '#0f172a' : '#e2e8f0'};margin-right:3px"></span>`
+  ).join('');
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.25rem;flex-wrap:wrap">
+      <h2 style="margin:0;line-height:1.3">${escapeHtml(session.type ?? 'Training')}</h2>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
+      <tr>
+        <td style="padding:0.35rem 0;color:#64748b;width:40%">Date</td>
+        <td style="padding:0.35rem 0">${dateStr}</td>
+      </tr>
+      <tr>
+        <td style="padding:0.35rem 0;color:#64748b">Duration</td>
+        <td style="padding:0.35rem 0">${durationStr}</td>
+      </tr>
+      <tr>
+        <td style="padding:0.35rem 0;color:#64748b">Intensity</td>
+        <td style="padding:0.35rem 0">${intensityDots}</td>
+      </tr>
+    </table>
+  `;
+
+  if (session.notes) {
+    html += `
+      <div style="margin-bottom:1.25rem">
+        <div style="font-weight:600;margin-bottom:0.35rem">Notes</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;white-space:pre-wrap;font-size:0.93rem">${escapeHtml(session.notes)}</div>
+      </div>
+    `;
+  }
+
+  html += `<div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+    <button id="training-detail-edit-btn" class="btn btn-primary btn-sm">Edit Session</button>
+  </div>`;
+
+  content.innerHTML = html;
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById('training-detail-edit-btn').addEventListener('click', () => {
+    hideDetailModal();
+    showEditTrainingOverlay(session);
+  });
+}
+
 function showAddTrainingOverlay() {
   const overlay = document.getElementById('training-overlay');
   document.getElementById('training-overlay-title').textContent = 'Log Session';
@@ -1404,7 +1459,7 @@ function bindTrainingOverlayHandlers() {
     const row = e.target.closest('.session-row');
     if (!row) return;
     const session = allSessions.find(s => s.recordName === row.dataset.record);
-    if (session) showEditTrainingOverlay(session);
+    if (session) showTrainingDetailModal(session);
   });
 }
 
