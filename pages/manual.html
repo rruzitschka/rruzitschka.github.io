@@ -153,7 +153,7 @@
 <div class="user-manual">
     <div class="section">
         <h1 id="top">SendLog — Climbing Notes User Manual</h1>
-        <p class="version-info" style="text-align: center; margin-bottom: 1.5rem; font-weight: 500; color: var(--accent-color);">Version 3.8.0</p>
+        <p class="version-info" style="text-align: center; margin-bottom: 1.5rem; font-weight: 500; color: var(--accent-color);">Version 3.9.0</p>
 
         <div class="toc">
             <h2>Table of Contents</h2>
@@ -478,9 +478,9 @@
 
     <!-- 8. Goals -->
     <div class="section" id="goals">
-        <h2>8. Goals <span class="new-badge">NEW in 3.6</span></h2>
+        <h2>8. Goals <span class="new-badge">Updated in 3.9</span></h2>
 
-        <p>The Goals feature lets you set personal targets and track your progress directly on the Statistics tab. Goals are stored locally on your device and update in real time as you log climbs and training sessions.</p>
+        <p>The Goals feature lets you set personal targets and track your progress directly on the Statistics tab. Goals sync across devices when Cloud Sync is enabled.</p>
 
         <h3>Accessing Goals</h3>
         <ol>
@@ -492,7 +492,7 @@
         <h3>Goal Types</h3>
         <ul>
             <li><strong>Climbing Days / Period</strong> — Set a target number of climbing days per week or per month. Progress is shown as a bar with a current/target count (e.g. "3/5").</li>
-            <li><strong>Target Grade by Date</strong> — Choose a grade to send and optionally set a deadline. The goal shows as "In progress" until you log a send at or above the target grade, then switches to "Achieved".</li>
+            <li><strong>Target Grade by Date</strong> — Choose a grade to send and optionally set a deadline. The goal shows as in progress until you log a send (projects don't count) at or above the target grade, then switches to "Achieved". Achieved grade goals are kept permanently as a history of milestones.</li>
             <li><strong>Training Sessions / Week</strong> — Set a weekly training session target. Progress counts all training log entries in the current week.</li>
         </ul>
 
@@ -501,11 +501,14 @@
             <li>Tap <strong>Edit Goals</strong> on the Stats tab</li>
             <li>Tap the <strong>+</strong> button in the top-right corner</li>
             <li>Select a goal type and configure the target</li>
-            <li>Tap <strong>Add</strong> to save</li>
+            <li>Tap <strong>Add Goal</strong> to save</li>
         </ol>
 
-        <h3>Deleting a Goal</h3>
-        <p>In the Goals editor, swipe left on any goal row and tap <strong>Delete</strong>.</p>
+        <h3>Editing and Deleting a Goal</h3>
+        <p>Tap any goal in the Goals editor to open it. Active goals can be updated and saved. To delete a goal, tap <strong>Delete Goal</strong> at the bottom of the edit form. Achieved grade goals show a read-only achievement view with a <strong>Delete Achievement</strong> button.</p>
+
+        <h3>Goal Achievement</h3>
+        <p>A confetti animation plays the first time a goal is reached. Grade goals are only achieved by actual sends — a route you have as a project does not count. Achieved goals are shown in a separate section and kept as a permanent record even if you set new goals.</p>
 
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
@@ -646,6 +649,7 @@
             <li><strong>Add &amp; edit sends</strong> — Log new climbs and edit existing entries including ascent history</li>
             <li><strong>Projects</strong> — View, add and edit your active projects; mark a project as sent directly from the web</li>
             <li><strong>Training log</strong> — View, add and edit training sessions (hangboard, gym, campus board, etc.)</li>
+            <li><strong>Statistics</strong> — Grade distribution chart, route type chart, activity heatmap, and streak tracking</li>
             <li><strong>Photos</strong> — View photos attached to climbs (photo upload is iOS only)</li>
             <li><strong>Export CSV</strong> — Download your full logbook as a CSV file from the <strong>My Account</strong> page</li>
             <li><strong>Account management</strong> — Change your grade system preference, delete your account</li>
@@ -655,7 +659,6 @@
         <p>The Web App covers the core logbook features but does not yet include everything available on iOS:</p>
         <ul>
             <li><strong>No photo upload</strong> — Photos can only be added from the iOS app; the web app displays them read-only</li>
-            <li><strong>No statistics view</strong> — Grade distribution charts, calendar heatmap, and streak tracking are iOS only</li>
             <li><strong>No voice notes</strong> — Speech-to-text note entry is not available in the browser</li>
             <li><strong>No share cards</strong> — Generating visual achievement cards for social media is iOS only</li>
             <li><strong>No offline support</strong> — The web app requires an active internet connection</li>
@@ -745,6 +748,13 @@
     <!-- 14. App Performance -->
     <div class="section" id="app-performance">
         <h2>15. App Performance</h2>
+
+        <h3>v3.9.0 Improvements</h3>
+        <ul>
+            <li><strong>Goals — full feature</strong>: Edit and delete goals; achieved grade goals kept as permanent history; confetti celebration on achievement; grade goals only count actual sends (not projects)</li>
+            <li><strong>Goals Cloud Sync</strong>: Goals now sync across devices via Firestore</li>
+            <li><strong>Grade comparison fix</strong>: All grade systems now correctly distinguish the lowest grade from an unset grade</li>
+        </ul>
 
         <h3>v3.8.0 Improvements</h3>
         <ul>
