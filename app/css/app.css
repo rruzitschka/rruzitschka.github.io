@@ -2049,6 +2049,29 @@ body {
     background: #b91c1c;
 }
 
+/* --- API Key scopes --- */
+.api-key-scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.scope-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-primary, #1e293b);
+  cursor: pointer;
+}
+
+.scope-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color, #2563eb);
+}
+
 /* ==============================
    Stats Page
    ============================== */

@@ -290,6 +290,20 @@
                 </div>
               </div>
 
+              <div class="account-section" id="api-keys-section">
+                <div class="account-section-label">API Keys</div>
+                <div id="api-keys-list">
+                  <p id="api-keys-loading" style="color:#94a3b8;font-size:14px;margin:0">Loading…</p>
+                </div>
+                <div class="account-card" style="margin-top:0.5rem">
+                  <div class="account-card-text">
+                    <strong>Generate New Key</strong>
+                    <p>Create an API key to give a third-party app read access to your data.</p>
+                  </div>
+                  <button id="api-key-generate-btn" class="btn btn-secondary">+ Generate</button>
+                </div>
+              </div>
+
               <div class="account-section">
                 <div class="account-section-label">Legal</div>
                 <div class="account-card account-card-links">
@@ -568,6 +582,56 @@
       </div>
     </div>
   </div>
+  <!-- Generate API Key overlay -->
+  <div id="api-key-overlay" class="edit-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="api-key-overlay-title">
+    <div class="edit-overlay-content">
+      <div class="edit-overlay-header">
+        <h2 id="api-key-overlay-title">Generate API Key</h2>
+        <button class="btn-close" id="api-key-overlay-close" aria-label="Close">✕</button>
+      </div>
+      <div class="edit-overlay-body">
+        <div class="form-group">
+          <label for="api-key-label">Label <span style="color:red">*</span></label>
+          <input type="text" id="api-key-label" placeholder="e.g. My Home Dashboard" autocomplete="off">
+          <div class="form-error hidden" id="api-key-label-error">Label is required.</div>
+        </div>
+        <div class="form-group">
+          <label>Scopes</label>
+          <div class="api-key-scopes">
+            <label class="scope-checkbox"><input type="checkbox" name="api-key-scope" value="climbs:read" checked> climbs:read</label>
+            <label class="scope-checkbox"><input type="checkbox" name="api-key-scope" value="training:read" checked> training:read</label>
+            <label class="scope-checkbox"><input type="checkbox" name="api-key-scope" value="goals:read" checked> goals:read</label>
+          </div>
+        </div>
+      </div>
+      <div class="edit-overlay-footer">
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary" id="api-key-overlay-cancel">Cancel</button>
+        <button class="btn btn-primary" id="api-key-overlay-save">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key created — one-time display overlay -->
+  <div id="api-key-created-overlay" class="edit-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="api-key-created-title">
+    <div class="edit-overlay-content" style="max-width:480px">
+      <div class="edit-overlay-header">
+        <h2 id="api-key-created-title">API Key Created</h2>
+      </div>
+      <div class="edit-overlay-body">
+        <p style="color:#dc2626;font-weight:600;margin:0 0 0.75rem">⚠️ Copy this key now — it will not be shown again.</p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;word-break:break-all;font-family:monospace;font-size:13px;margin-bottom:0.75rem">
+          <span id="api-key-created-value"></span>
+        </div>
+        <button class="btn btn-secondary" id="api-key-copy-btn" style="width:100%">Copy to Clipboard</button>
+      </div>
+      <div class="edit-overlay-footer">
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" id="api-key-created-done">Done</button>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /#app-container -->
   <div id="confirm-dialog" class="edit-overlay hidden" role="alertdialog" aria-modal="true">
     <div class="confirm-content">
@@ -597,6 +661,7 @@
   <script src="js/firebase-climbs.js?v=3.9.0"></script>
   <script src="js/firebase-routes.js?v=3.9.0"></script>
   <script src="js/firebase-training.js?v=3.9.0"></script>
+  <script src="js/firebase-api-keys.js?v=1.0.0"></script>
   <script src="js/ui.js?v=3.9.0"></script>
   <script src="js/stats.js?v=3.9.0"></script>
   <script>
