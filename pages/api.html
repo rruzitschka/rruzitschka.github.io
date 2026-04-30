@@ -406,14 +406,6 @@
             <li><a href="#pagination">Pagination</a></li>
             <li><a href="#errors">Errors</a></li>
             <li>
-                <a href="#key-management">Key Management</a>
-                <ul>
-                    <li><a href="#post-keys">POST /v1/keys — Create key</a></li>
-                    <li><a href="#get-keys">GET /v1/keys — List keys</a></li>
-                    <li><a href="#delete-key">DELETE /v1/keys/:id — Revoke key</a></li>
-                </ul>
-            </li>
-            <li>
                 <a href="#data-endpoints">Data Endpoints</a>
                 <ul>
                     <li><a href="#get-climbs">GET /v1/climbs — List climbs</a></li>
@@ -432,14 +424,9 @@
         <h2>1. Authentication</h2>
         <p>Two schemes are used depending on the endpoint.</p>
 
-        <h3>Data endpoints — <code>X-API-Key</code></h3>
-        <p>All <code>/v1/climbs</code>, <code>/v1/training</code>, and <code>/v1/goals</code> requests must include the user's API key:</p>
+        <p>All requests must include the user's API key in the <code>X-API-Key</code> header:</p>
         <pre><code>X-API-Key: cnl_your_key_here</code></pre>
         <p>Users generate keys in the SendLog Web App under <strong>My Account → API Keys</strong>.</p>
-
-        <h3>Key management endpoints — Firebase ID token</h3>
-        <p><code>POST /v1/keys</code>, <code>GET /v1/keys</code>, and <code>DELETE /v1/keys/:id</code> authenticate with the user's live Firebase session. The SendLog Web App handles this automatically — third-party apps do not call these endpoints.</p>
-        <pre><code>Authorization: Bearer &lt;firebase_id_token&gt;</code></pre>
 
         <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
     </div>
@@ -512,130 +499,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
     </div>
 
-    <!-- ── 5. Key management ─────────────────────────────────────────── -->
-    <div class="section" id="key-management">
-        <h2>5. Key Management</h2>
-        <p>These endpoints are called by the <a href="../app/login.html">SendLog Web App</a> when a user creates or revokes a key. They require a Firebase ID token, not an API key.</p>
-
-        <!-- POST /v1/keys -->
-        <div class="endpoint" id="post-keys">
-            <div class="endpoint-header">
-                <span class="badge badge-post">POST</span>
-                <h3>/v1/keys</h3>
-                <span class="badge badge-auth">Firebase ID token</span>
-            </div>
-            <div class="endpoint-body">
-                <p>Create a new API key for the authenticated user.</p>
-
-                <h3>Request body</h3>
-                <table class="param-table">
-                    <thead>
-                        <tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>label</code></td>
-                            <td>string</td>
-                            <td><span class="optional">optional</span></td>
-                            <td><code>"API Key"</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>scopes</code></td>
-                            <td>string[]</td>
-                            <td><span class="optional">optional</span></td>
-                            <td>all three scopes</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Available scopes</h3>
-                <table class="param-table">
-                    <thead>
-                        <tr><th>Scope</th><th>Grants access to</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><span class="badge badge-scope">climbs:read</span></td><td><code>GET /v1/climbs</code>, <code>GET /v1/climbs/:id</code></td></tr>
-                        <tr><td><span class="badge badge-scope">training:read</span></td><td><code>GET /v1/training</code></td></tr>
-                        <tr><td><span class="badge badge-scope">goals:read</span></td><td><code>GET /v1/goals</code></td></tr>
-                    </tbody>
-                </table>
-
-                <h3>Example</h3>
-                <pre><code>curl -X POST https://api-hoxktcdqvq-uc.a.run.app/v1/keys \
-  -H "Authorization: Bearer &lt;firebase_id_token&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"label":"Home Dashboard","scopes":["climbs:read","training:read"]}'</code></pre>
-
-                <h3>Response <code>201 Created</code></h3>
-                <pre><code>{
-  "id": "a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5",
-  "key": "cnl_aBcDeFgHiJkLmNoPqRsTuVwXyZ01234567890123456789",
-  "label": "Home Dashboard",
-  "scopes": ["climbs:read", "training:read"]
-}</code></pre>
-
-                <div class="callout callout-warning">
-                    <span class="callout-icon">⚠️</span>
-                    <span>The <code>key</code> value is returned <strong>only once</strong>. Store it immediately — it cannot be retrieved again. Subsequent list responses include metadata but never the raw key string.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- GET /v1/keys -->
-        <div class="endpoint" id="get-keys">
-            <div class="endpoint-header">
-                <span class="badge badge-get">GET</span>
-                <h3>/v1/keys</h3>
-                <span class="badge badge-auth">Firebase ID token</span>
-            </div>
-            <div class="endpoint-body">
-                <p>List all API keys for the authenticated user. Raw key strings are never included.</p>
-
-                <h3>Example</h3>
-                <pre><code>curl https://api-hoxktcdqvq-uc.a.run.app/v1/keys \
-  -H "Authorization: Bearer &lt;firebase_id_token&gt;"</code></pre>
-
-                <h3>Response <code>200 OK</code></h3>
-                <pre><code>{
-  "data": [
-    {
-      "id": "a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5",
-      "label": "Home Dashboard",
-      "scopes": ["climbs:read", "training:read"],
-      "createdAt": "2026-04-30T10:00:00.000Z",
-      "lastUsedAt": "2026-04-30T14:23:11.000Z"
-    }
-  ]
-}</code></pre>
-            </div>
-        </div>
-
-        <!-- DELETE /v1/keys/:id -->
-        <div class="endpoint" id="delete-key">
-            <div class="endpoint-header">
-                <span class="badge badge-delete">DELETE</span>
-                <h3>/v1/keys/:id</h3>
-                <span class="badge badge-auth">Firebase ID token</span>
-            </div>
-            <div class="endpoint-body">
-                <p>Revoke a key. Takes effect immediately — any request using the revoked key returns <code>401</code>.</p>
-
-                <h3>Example</h3>
-                <pre><code>curl -X DELETE \
-  https://api-hoxktcdqvq-uc.a.run.app/v1/keys/a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5 \
-  -H "Authorization: Bearer &lt;firebase_id_token&gt;"</code></pre>
-
-                <h3>Response <code>204 No Content</code></h3>
-                <p>Empty body.</p>
-            </div>
-        </div>
-
-        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
-    </div>
-
-    <!-- ── 6. Data endpoints ─────────────────────────────────────────── -->
+    <!-- ── 5. Data endpoints ─────────────────────────────────────────── -->
     <div class="section" id="data-endpoints">
-        <h2>6. Data Endpoints</h2>
+        <h2>5. Data Endpoints</h2>
         <p>All data endpoints authenticate with <code>X-API-Key</code> and return data belonging to the user who generated the key.</p>
 
         <!-- GET /v1/climbs -->
@@ -897,9 +763,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
     </div>
 
-    <!-- ── 7. Incremental sync ───────────────────────────────────────── -->
+    <!-- ── 6. Incremental sync ───────────────────────────────────────── -->
     <div class="section" id="incremental-sync">
-        <h2>7. Incremental Sync</h2>
+        <h2>6. Incremental Sync</h2>
         <p>All list endpoints support a <code>since</code> parameter for efficient incremental sync. Pass the <code>updatedAt</code> of the most recently seen record to fetch only records changed after that point. When using <code>since</code>, results are ordered by <code>updatedAt</code> ascending and the parameter is mutually exclusive with <code>from</code>/<code>to</code>.</p>
         <pre><code># 1. Initial full fetch — store the max updatedAt from the response
 curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?limit=100" \
@@ -917,9 +783,9 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?since=2026-04-30T12:00:00.00
         <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
     </div>
 
-    <!-- ── 8. Examples ──────────────────────────────────────────────── -->
+    <!-- ── 7. Examples ──────────────────────────────────────────────── -->
     <div class="section" id="examples">
-        <h2>8. Examples</h2>
+        <h2>7. Examples</h2>
 
         <h3>Fetch all your sends from this year (curl)</h3>
         <pre><code>API_KEY="cnl_your_key_here"
