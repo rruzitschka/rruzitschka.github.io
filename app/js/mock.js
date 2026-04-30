@@ -93,6 +93,34 @@ window.initAuth = function(callback) {
     console.log('[Mock] deleted Ascent', recordName);
   };
 
+  // Override apiKeysList
+  window.apiKeysList = async function() {
+    return MOCK_API_KEYS.map(k => ({ ...k }));
+  };
+
+  // Override apiKeysCreate
+  window.apiKeysCreate = async function({ label, scopes }) {
+    const id = 'mock-key-' + Date.now();
+    const rawKey = 'cnl_mock' + Math.random().toString(36).slice(2, 18).padEnd(16, '0');
+    const newKey = {
+      id,
+      label,
+      scopes,
+      createdAt: new Date().toISOString(),
+      lastUsedAt: null,
+    };
+    MOCK_API_KEYS.unshift(newKey);
+    console.log('[Mock] created API key', id);
+    return { ...newKey, key: rawKey };
+  };
+
+  // Override apiKeysRevoke
+  window.apiKeysRevoke = async function(keyId) {
+    const idx = MOCK_API_KEYS.findIndex(k => k.id === keyId);
+    if (idx !== -1) MOCK_API_KEYS.splice(idx, 1);
+    console.log('[Mock] revoked API key', keyId);
+  };
+
   if (callback) callback(user);
   return Promise.resolve(user);
 };
@@ -445,6 +473,26 @@ const MOCK_SESSIONS = [
   { recordName: 'mock-ts-12', id: 'ts-12', date: new Date('2026-01-15'), type: 'Hangboard',    duration: 45,  intensity: 3, notes: 'Volume day, high reps.' },
   { recordName: 'mock-ts-13', id: 'ts-13', date: new Date('2026-01-08'), type: 'Gym Session',  duration: 110, intensity: 3, notes: null },
   { recordName: 'mock-ts-14', id: 'ts-14', date: new Date('2025-12-20'), type: 'Running',      duration: 50,  intensity: 3, notes: '8km base building.' },
+];
+
+// =============================================================================
+// Section 4c — MOCK_API_KEYS dataset
+// =============================================================================
+const MOCK_API_KEYS = [
+  {
+    id: 'mock-key-001',
+    label: 'Home Dashboard',
+    scopes: ['climbs:read', 'training:read'],
+    createdAt: '2026-03-15T10:30:00.000Z',
+    lastUsedAt: '2026-04-28T08:12:00.000Z',
+  },
+  {
+    id: 'mock-key-002',
+    label: 'Training Tracker Script',
+    scopes: ['training:read'],
+    createdAt: '2026-04-01T14:00:00.000Z',
+    lastUsedAt: null,
+  },
 ];
 
 // =============================================================================
