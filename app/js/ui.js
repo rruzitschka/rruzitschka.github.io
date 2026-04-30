@@ -443,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindSendOverlayHandlers();
   bindProjectOverlayHandlers();
   bindTrainingOverlayHandlers();
+  bindApiKeyHandlers();
   bindPeriodTabs();
 });
 
@@ -505,6 +506,141 @@ async function handleDeleteAccount() {
     console.error('Delete account failed:', err);
     showToast('Failed to delete account. Please try again.', 'error');
   }
+}
+
+// ---------- API Keys ----------
+
+async function renderApiKeys() {
+  const list = document.getElementById('api-keys-list');
+  if (!list) return;
+
+  list.innerHTML = '<p style="color:#94a3b8;font-size:14px;margin:0">Loading…</p>';
+
+  try {
+    const keys = await apiKeysList();
+
+    if (keys.length === 0) {
+      list.innerHTML = '<p style="color:#94a3b8;font-size:14px;margin:0">No API keys yet.</p>';
+      return;
+    }
+
+    list.innerHTML = keys.map(k => {
+      const created = k.createdAt
+        ? new Date(k.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : '—';
+      const lastUsed = k.lastUsedAt
+        ? new Date(k.lastUsedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'never';
+      return `
+        <div class="account-card" style="margin-bottom:0.5rem">
+          <div class="account-card-text">
+            <strong>🔑 ${escapeHtml(k.label)}</strong>
+            <p style="margin:2px 0 0">
+              <span class="type-badge">${escapeHtml((k.scopes || []).join(', '))}</span>
+            </p>
+            <p style="font-size:12px;color:#94a3b8;margin:4px 0 0">
+              Created ${created} · Last used ${lastUsed}
+            </p>
+          </div>
+          <button class="btn btn-danger btn-sm"
+                  data-key-id="${escapeHtml(k.id)}"
+                  data-key-label="${escapeHtml(k.label)}">Revoke</button>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.btn-danger').forEach(btn => {
+      btn.addEventListener('click', () => handleRevokeKey(btn.dataset.keyId, btn.dataset.keyLabel));
+    });
+
+  } catch (e) {
+    console.error('Failed to load API keys:', e);
+    list.innerHTML = '<p style="color:#ef4444;font-size:14px;margin:0">Failed to load keys.</p>';
+  }
+}
+
+async function handleRevokeKey(keyId, label) {
+  const confirmed = await showConfirmDialog(
+    'Revoke Key?',
+    `"${label}" will stop working immediately. This cannot be undone.`
+  );
+  if (!confirmed) return;
+  try {
+    await apiKeysRevoke(keyId);
+    showToast('API key revoked.', 'success');
+    await renderApiKeys();
+  } catch (e) {
+    console.error('Revoke failed:', e);
+    showToast('Failed to revoke key. Please try again.', 'error');
+  }
+}
+
+function openApiKeyOverlay() {
+  document.getElementById('api-key-label').value = '';
+  document.getElementById('api-key-label-error').classList.add('hidden');
+  document.querySelectorAll('#api-key-overlay input[name="api-key-scope"]').forEach(cb => { cb.checked = true; });
+  document.getElementById('api-key-overlay').classList.remove('hidden');
+  document.getElementById('api-key-label').focus();
+}
+
+function closeApiKeyOverlay() {
+  document.getElementById('api-key-overlay').classList.add('hidden');
+}
+
+async function handleGenerateKey() {
+  const label = document.getElementById('api-key-label').value.trim();
+  const errorEl = document.getElementById('api-key-label-error');
+
+  if (!label) {
+    errorEl.classList.remove('hidden');
+    document.getElementById('api-key-label').focus();
+    return;
+  }
+  errorEl.classList.add('hidden');
+
+  const scopes = [...document.querySelectorAll('#api-key-overlay input[name="api-key-scope"]:checked')]
+    .map(cb => cb.value);
+  if (scopes.length === 0) {
+    showToast('Select at least one scope.', 'error');
+    return;
+  }
+
+  const saveBtn = document.getElementById('api-key-overlay-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Generating…';
+
+  try {
+    const result = await apiKeysCreate({ label, scopes });
+    closeApiKeyOverlay();
+    document.getElementById('api-key-created-value').textContent = result.key;
+    document.getElementById('api-key-created-overlay').classList.remove('hidden');
+    await renderApiKeys();
+  } catch (e) {
+    console.error('Generate key failed:', e);
+    showToast('Failed to generate key. Please try again.', 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Generate';
+  }
+}
+
+function bindApiKeyHandlers() {
+  document.getElementById('api-key-generate-btn')?.addEventListener('click', openApiKeyOverlay);
+  document.getElementById('api-key-overlay-close')?.addEventListener('click', closeApiKeyOverlay);
+  document.getElementById('api-key-overlay-cancel')?.addEventListener('click', closeApiKeyOverlay);
+  document.getElementById('api-key-overlay')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeApiKeyOverlay();
+  });
+  document.getElementById('api-key-overlay-save')?.addEventListener('click', handleGenerateKey);
+  document.getElementById('api-key-copy-btn')?.addEventListener('click', () => {
+    const key = document.getElementById('api-key-created-value').textContent;
+    navigator.clipboard.writeText(key)
+      .then(() => showToast('Key copied to clipboard!', 'success'))
+      .catch(() => showToast('Copy failed — please copy manually.', 'error'));
+  });
+  document.getElementById('api-key-created-done')?.addEventListener('click', () => {
+    document.getElementById('api-key-created-overlay').classList.add('hidden');
+  });
 }
 
 // ---------- loadData ----------
@@ -592,6 +728,8 @@ function showAccountView() {
   } else if (gradeSystemEl) {
     gradeSystemEl.value = getPreferredGradeSystem();
   }
+
+  renderApiKeys();
 }
 
 async function showStatsView() {
