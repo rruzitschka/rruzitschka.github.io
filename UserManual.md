@@ -12,7 +12,8 @@
 8. [Voice Notes](#voice-notes)
 9. [Sharing Your Achievements](#sharing-your-achievements)
 10. [Data Management](#data-management)
-11. [Settings and Preferences](#settings-and-preferences)
+11. [API Keys](#api-keys)
+12. [Settings and Preferences](#settings-and-preferences)
 
 ## Introduction
 
@@ -512,4 +513,53 @@ Access options for:
 
 ---
 
-**Last Updated:** June 27, 2025
+## API Keys
+
+API Keys let you give a third-party app or script read-only access to your SendLog data — for example, a home dashboard, a spreadsheet that tracks your progress, or a custom training analysis tool — without sharing your password.
+
+### Generating a Key
+
+1. Go to **My Account** (person icon in the top-right corner)
+2. Scroll to the **API Keys** section
+3. In the **Generate New Key** card, tap **+ Generate**
+4. Fill in the form:
+   - **Label** *(required)* — a name to remind you what the key is for (e.g. "Home Dashboard")
+   - **Scopes** — tick the data types the key may access:
+     - `climbs:read` — read your climbs and ascents
+     - `training:read` — read your training sessions
+     - `goals:read` — read your goals
+5. Tap **Generate**
+6. A one-time overlay appears showing your new key (format: `cnl_…`)
+   - **Copy it now** — for security the key is never shown again
+   - Tap **Copy to Clipboard**, then paste it into your app or script
+7. Tap **Done** to close the overlay
+
+### Viewing Your Keys
+
+The **API Keys** section on the Account page lists all your active keys, showing:
+- The label you gave each key
+- The scopes it was granted
+- When it was created
+- When it was last used (or "never")
+
+The raw key string is **not** shown in the list — only metadata.
+
+### Revoking a Key
+
+1. Find the key in the API Keys list
+2. Tap **Revoke**
+3. Confirm the prompt
+
+Revocation takes effect immediately. Any app using the revoked key will receive an authentication error on its next request. This cannot be undone — if you need access again, generate a new key and update your app.
+
+### Security Notes
+
+- Keys are scoped to the data you choose — a key with only `climbs:read` cannot access your training data even if someone obtains it
+- Keys only provide **read** access — no key can create, edit, or delete your data
+- Revoke a key any time you suspect it has been exposed
+- Each key is rate-limited to **1 000 requests per hour**
+- For full API documentation see [sendlog.at/docs/api](https://www.sendlog.at/docs/api)
+
+---
+
+**Last Updated:** April 30, 2026

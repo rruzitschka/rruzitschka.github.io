@@ -26,6 +26,7 @@ app/
     ├── stats.js            Client-side stats: summary, grade distribution, route types, heatmap, streaks, training
     ├── ui.js               All DOM rendering, overlays, event handlers, view routing
     ├── firebase-routes.js  Central Route Database service — search, create, and link shared route docs
+    ├── firebase-api-keys.js API key management — create, list, revoke partner API keys
     └── mock.js             Mock mode — overrides all Firebase calls with local data
 ```
 
@@ -37,7 +38,7 @@ app/
 | **Projects** | Routes marked as Project with progress notes |
 | **Training** | Training session log with duration and type; summary stats (total sessions, hours, avg/week) |
 | **Statistics** | Client-side analytics dashboard (see below) |
-| **Account** | Sign-in status, sign out |
+| **Account** | Sign-in status, grade preference, data export, API key management, danger zone |
 
 ### Statistics View
 
@@ -79,6 +80,14 @@ All user documents include `updatedAt` (server timestamp) and soft-delete via `d
 Aligned with iOS app: `Redpoint`, `Pinkpoint`, `On Sight`, `Top Rope`, `All Free`, `Project`.
 
 Color coding: Redpoint=red, On Sight=green, Pinkpoint=pink, Top Rope=slate, All Free=purple.
+
+## Partner API Keys
+
+Users can generate personal API keys from **Account → API Keys** to give third-party apps read access to their data. Keys are scoped (`climbs:read`, `training:read`, `goals:read`) and can be revoked at any time.
+
+- `firebase-api-keys.js` wraps the three key management REST endpoints (`POST /v1/keys`, `GET /v1/keys`, `DELETE /v1/keys/:id`)
+- The raw key is shown exactly once in a one-time display overlay after creation — it is never stored in Firestore in plaintext
+- Full API reference: [`docs/api.md`](docs/api.md)
 
 ## Central Route Database
 
@@ -127,12 +136,18 @@ Grade normalization: input is stored as a canonical French grade. YDS and UIAA i
 ### Mock Mode (no login required)
 
 ```bash
-cd app/
-python3 -m http.server 8765
-# Open: http://localhost:8765/?mock=true
+cd WebSite/sendlogwebsite
+python3 -m http.server 8080
+# Open: http://localhost:8080/app/?mock=true
 ```
 
-Mock mode loads `mock.js` instead of Firebase, which overrides all data calls with 15 sample climbs. No authentication required.
+Mock mode loads `mock.js` instead of Firebase, which overrides all data calls with in-memory fixtures. No authentication or network access required.
+
+| Mocked data | Detail |
+|-------------|--------|
+| Climbs | 22 sample sends and projects across various grades and areas |
+| Training sessions | 14 sample sessions across all session types |
+| API keys | 2 pre-seeded keys; generate/revoke fully functional in-memory |
 
 ### Production
 
