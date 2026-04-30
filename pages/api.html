@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner API Reference — SendLog</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ── Page shell ─────────────────────────────────────────────── */
+        .api-page {
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .api-page h1 {
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .api-page .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-page h2 {
+            margin-top: 2.5rem;
+        }
+
+        .api-page h3 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.4rem;
+        }
+
+        /* ── ToC ─────────────────────────────────────────────────────── */
+        .toc {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,.1);
+            margin-bottom: 2rem;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            border: none;
+            padding-bottom: 0;
+            color: var(--text-dark);
+        }
+
+        .toc h2::after { display: none; }
+
+        .toc ol {
+            list-style: decimal;
+            padding-left: 1.5rem;
+            margin: 0.75rem 0 0;
+        }
+
+        .toc li { margin-bottom: 0.35rem; }
+
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color .2s;
+        }
+
+        .toc a:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        .toc ul {
+            list-style: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.3rem;
+        }
+
+        /* ── Section cards ───────────────────────────────────────────── */
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,.1);
+            margin-bottom: 2rem;
+        }
+
+        .section ul, .section ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section li { margin-bottom: 0.4rem; }
+
+        /* ── Endpoint cards ──────────────────────────────────────────── */
+        .endpoint {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.9rem 1.25rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .endpoint-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .endpoint-body {
+            padding: 1.25rem;
+        }
+
+        .endpoint-body > *:last-child { margin-bottom: 0; }
+
+        /* ── Method badge ────────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .badge-get    { background: #dcfce7; color: #15803d; }
+        .badge-post   { background: #dbeafe; color: #1d4ed8; }
+        .badge-delete { background: #fee2e2; color: #b91c1c; }
+
+        .badge-scope {
+            background: #ede9fe;
+            color: #6d28d9;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .badge-auth {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.72rem;
+            font-family: 'Open Sans', sans-serif;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+        }
+
+        /* ── Code & pre ──────────────────────────────────────────────── */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.1em 0.35em;
+            color: #0f172a;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            overflow-x: auto;
+            margin: 0.75rem 0 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.65;
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+
+        /* simple token colouring */
+        pre .cm  { color: #94a3b8; }   /* comment */
+        pre .kw  { color: #7dd3fc; }   /* keyword / method */
+        pre .str { color: #86efac; }   /* string */
+        pre .pu  { color: #f9a8d4; }   /* punctuation */
+        pre .key { color: #fde68a; }   /* JSON key */
+        pre .num { color: #fca5a5; }   /* number */
+        pre .var { color: #c4b5fd; }   /* variable */
+
+        /* ── Tables ──────────────────────────────────────────────────── */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .param-table th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 0.55rem 0.75rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .param-table td {
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .param-table tr:last-child td { border-bottom: none; }
+
+        .param-table td:first-child code {
+            font-weight: 500;
+        }
+
+        .param-table .optional { color: #94a3b8; font-size: 0.8em; }
+
+        /* ── Callout boxes ───────────────────────────────────────────── */
+        .callout {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.9rem 1rem;
+            border-radius: 8px;
+            margin: 0.75rem 0 1rem;
+            font-size: 0.9rem;
+        }
+
+        .callout-icon { flex-shrink: 0; font-size: 1.1rem; line-height: 1.5; }
+
+        .callout-warning {
+            background: #fef9c3;
+            border-left: 3px solid #f59e0b;
+            color: #78350f;
+        }
+
+        .callout-info {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            color: #1e3a5f;
+        }
+
+        .callout-tip {
+            background: #f0fdf4;
+            border-left: 3px solid #22c55e;
+            color: #14532d;
+        }
+
+        /* ── Base-URL banner ─────────────────────────────────────────── */
+        .base-url-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 0.9rem 1.25rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .base-url-banner .label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .base-url-banner code {
+            background: none;
+            border: none;
+            color: #7dd3fc;
+            font-size: 0.92rem;
+            padding: 0;
+        }
+
+        /* ── Status table ────────────────────────────────────────────── */
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        /* ── Nav & footer helpers ────────────────────────────────────── */
+        .back-to-toc {
+            margin-top: 1.5rem;
+            text-align: right;
+        }
+
+        .back-to-toc a {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .back-to-toc a:hover { text-decoration: underline; }
+
+        .back-to-home {
+            text-align: center;
+            margin: 3rem 0 1rem;
+        }
+
+        .back-to-home a {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all .3s;
+        }
+
+        .back-to-home a:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+        }
+
+        .last-updated {
+            text-align: right;
+            font-style: italic;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        /* ── Responsive ──────────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            .api-page { padding: 1rem; }
+            .section  { padding: 1.25rem; }
+            .endpoint-body { padding: 1rem; }
+            pre { font-size: 0.75rem; }
+            .param-table { font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <img src="../sendlogheaderpic.jpg" alt="SendLog Header" class="header-img">
+        <h1>SendLog Partner API</h1>
+    </div>
+</header>
+
+<div class="nav-container">
+    <nav>
+        <a href="../index.html">Home</a>
+        <a href="../pages/manual.html">User Manual</a>
+        <a href="../pages/policy.html">Terms &amp; Privacy</a>
+        <a href="../app/login.html" class="nav-app-link">🌐 Web App</a>
+    </nav>
+</div>
+
+<div class="api-page" id="top">
+
+    <h1>Partner API Reference</h1>
+    <p class="subtitle">Read-only access to your climbing data for third-party apps and scripts</p>
+
+    <div class="base-url-banner">
+        <span class="label">Base URL</span>
+        <code>https://api-hoxktcdqvq-uc.a.run.app</code>
+    </div>
+
+    <!-- ── ToC ──────────────────────────────────────────────────────── -->
+    <div class="toc">
+        <h2>Contents</h2>
+        <ol>
+            <li><a href="#authentication">Authentication</a></li>
+            <li><a href="#rate-limiting">Rate Limiting</a></li>
+            <li><a href="#pagination">Pagination</a></li>
+            <li><a href="#errors">Errors</a></li>
+            <li>
+                <a href="#key-management">Key Management</a>
+                <ul>
+                    <li><a href="#post-keys">POST /v1/keys — Create key</a></li>
+                    <li><a href="#get-keys">GET /v1/keys — List keys</a></li>
+                    <li><a href="#delete-key">DELETE /v1/keys/:id — Revoke key</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#data-endpoints">Data Endpoints</a>
+                <ul>
+                    <li><a href="#get-climbs">GET /v1/climbs — List climbs</a></li>
+                    <li><a href="#get-climb">GET /v1/climbs/:id — Get climb</a></li>
+                    <li><a href="#get-training">GET /v1/training — List training sessions</a></li>
+                    <li><a href="#get-goals">GET /v1/goals — List goals</a></li>
+                </ul>
+            </li>
+            <li><a href="#incremental-sync">Incremental Sync</a></li>
+            <li><a href="#examples">Examples</a></li>
+        </ol>
+    </div>
+
+    <!-- ── 1. Authentication ─────────────────────────────────────────── -->
+    <div class="section" id="authentication">
+        <h2>1. Authentication</h2>
+        <p>Two schemes are used depending on the endpoint.</p>
+
+        <h3>Data endpoints — <code>X-API-Key</code></h3>
+        <p>All <code>/v1/climbs</code>, <code>/v1/training</code>, and <code>/v1/goals</code> requests must include the user's API key:</p>
+        <pre><code>X-API-Key: cnl_your_key_here</code></pre>
+        <p>Users generate keys in the SendLog Web App under <strong>My Account → API Keys</strong>.</p>
+
+        <h3>Key management endpoints — Firebase ID token</h3>
+        <p><code>POST /v1/keys</code>, <code>GET /v1/keys</code>, and <code>DELETE /v1/keys/:id</code> authenticate with the user's live Firebase session. The SendLog Web App handles this automatically — third-party apps do not call these endpoints.</p>
+        <pre><code>Authorization: Bearer &lt;firebase_id_token&gt;</code></pre>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 2. Rate limiting ──────────────────────────────────────────── -->
+    <div class="section" id="rate-limiting">
+        <h2>2. Rate Limiting</h2>
+        <p>Each API key is limited to <strong>1 000 requests per hour</strong>. The window resets on a rolling basis per key.</p>
+        <p>When the limit is exceeded:</p>
+        <pre><code>HTTP 429 Too Many Requests
+{ "error": "Rate limit exceeded (1000 req/hour)" }</code></pre>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 3. Pagination ─────────────────────────────────────────────── -->
+    <div class="section" id="pagination">
+        <h2>3. Pagination</h2>
+        <p>List endpoints that can return large result sets use <strong>cursor-based pagination</strong>.</p>
+
+        <table class="param-table">
+            <thead>
+                <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>limit</code></td>
+                    <td>integer</td>
+                    <td>Results per page. Min&nbsp;1, max&nbsp;100, default&nbsp;50.</td>
+                </tr>
+                <tr>
+                    <td><code>after</code></td>
+                    <td>string</td>
+                    <td>Opaque cursor returned as <code>nextCursor</code> in the previous response.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Response envelope for paginated endpoints:</p>
+        <pre><code>{
+  "data": [ ... ],
+  "nextCursor": "eyJpZCI6Ii4uLiJ9",
+  "hasMore": true
+}</code></pre>
+        <p>When <code>hasMore</code> is <code>false</code>, <code>nextCursor</code> is <code>null</code> — you have reached the last page.</p>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 4. Errors ─────────────────────────────────────────────────── -->
+    <div class="section" id="errors">
+        <h2>4. Errors</h2>
+        <p>All errors return a JSON body with a human-readable <code>error</code> field:</p>
+        <pre><code>{ "error": "Required scopes: climbs:read" }</code></pre>
+
+        <table class="param-table">
+            <thead>
+                <tr><th>Status</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>400</code></td><td>Bad request — invalid query parameter (e.g. non-ISO 8601 date)</td></tr>
+                <tr><td><code>401</code></td><td>Missing or invalid credentials</td></tr>
+                <tr><td><code>403</code></td><td>Valid key but missing a required scope</td></tr>
+                <tr><td><code>404</code></td><td>Resource not found or deleted</td></tr>
+                <tr><td><code>429</code></td><td>Rate limit exceeded</td></tr>
+                <tr><td><code>500</code></td><td>Internal server error</td></tr>
+            </tbody>
+        </table>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 5. Key management ─────────────────────────────────────────── -->
+    <div class="section" id="key-management">
+        <h2>5. Key Management</h2>
+        <p>These endpoints are called by the <a href="../app/login.html">SendLog Web App</a> when a user creates or revokes a key. They require a Firebase ID token, not an API key.</p>
+
+        <!-- POST /v1/keys -->
+        <div class="endpoint" id="post-keys">
+            <div class="endpoint-header">
+                <span class="badge badge-post">POST</span>
+                <h3>/v1/keys</h3>
+                <span class="badge badge-auth">Firebase ID token</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Create a new API key for the authenticated user.</p>
+
+                <h3>Request body</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>label</code></td>
+                            <td>string</td>
+                            <td><span class="optional">optional</span></td>
+                            <td><code>"API Key"</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>scopes</code></td>
+                            <td>string[]</td>
+                            <td><span class="optional">optional</span></td>
+                            <td>all three scopes</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Available scopes</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Scope</th><th>Grants access to</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><span class="badge badge-scope">climbs:read</span></td><td><code>GET /v1/climbs</code>, <code>GET /v1/climbs/:id</code></td></tr>
+                        <tr><td><span class="badge badge-scope">training:read</span></td><td><code>GET /v1/training</code></td></tr>
+                        <tr><td><span class="badge badge-scope">goals:read</span></td><td><code>GET /v1/goals</code></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Example</h3>
+                <pre><code>curl -X POST https://api-hoxktcdqvq-uc.a.run.app/v1/keys \
+  -H "Authorization: Bearer &lt;firebase_id_token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"label":"Home Dashboard","scopes":["climbs:read","training:read"]}'</code></pre>
+
+                <h3>Response <code>201 Created</code></h3>
+                <pre><code>{
+  "id": "a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5",
+  "key": "cnl_aBcDeFgHiJkLmNoPqRsTuVwXyZ01234567890123456789",
+  "label": "Home Dashboard",
+  "scopes": ["climbs:read", "training:read"]
+}</code></pre>
+
+                <div class="callout callout-warning">
+                    <span class="callout-icon">⚠️</span>
+                    <span>The <code>key</code> value is returned <strong>only once</strong>. Store it immediately — it cannot be retrieved again. Subsequent list responses include metadata but never the raw key string.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- GET /v1/keys -->
+        <div class="endpoint" id="get-keys">
+            <div class="endpoint-header">
+                <span class="badge badge-get">GET</span>
+                <h3>/v1/keys</h3>
+                <span class="badge badge-auth">Firebase ID token</span>
+            </div>
+            <div class="endpoint-body">
+                <p>List all API keys for the authenticated user. Raw key strings are never included.</p>
+
+                <h3>Example</h3>
+                <pre><code>curl https://api-hoxktcdqvq-uc.a.run.app/v1/keys \
+  -H "Authorization: Bearer &lt;firebase_id_token&gt;"</code></pre>
+
+                <h3>Response <code>200 OK</code></h3>
+                <pre><code>{
+  "data": [
+    {
+      "id": "a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5",
+      "label": "Home Dashboard",
+      "scopes": ["climbs:read", "training:read"],
+      "createdAt": "2026-04-30T10:00:00.000Z",
+      "lastUsedAt": "2026-04-30T14:23:11.000Z"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- DELETE /v1/keys/:id -->
+        <div class="endpoint" id="delete-key">
+            <div class="endpoint-header">
+                <span class="badge badge-delete">DELETE</span>
+                <h3>/v1/keys/:id</h3>
+                <span class="badge badge-auth">Firebase ID token</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Revoke a key. Takes effect immediately — any request using the revoked key returns <code>401</code>.</p>
+
+                <h3>Example</h3>
+                <pre><code>curl -X DELETE \
+  https://api-hoxktcdqvq-uc.a.run.app/v1/keys/a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5 \
+  -H "Authorization: Bearer &lt;firebase_id_token&gt;"</code></pre>
+
+                <h3>Response <code>204 No Content</code></h3>
+                <p>Empty body.</p>
+            </div>
+        </div>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 6. Data endpoints ─────────────────────────────────────────── -->
+    <div class="section" id="data-endpoints">
+        <h2>6. Data Endpoints</h2>
+        <p>All data endpoints authenticate with <code>X-API-Key</code> and return data belonging to the user who generated the key.</p>
+
+        <!-- GET /v1/climbs -->
+        <div class="endpoint" id="get-climbs">
+            <div class="endpoint-header">
+                <span class="badge badge-get">GET</span>
+                <h3>/v1/climbs</h3>
+                <span class="badge badge-scope">climbs:read</span>
+            </div>
+            <div class="endpoint-body">
+                <p>List climb notes (sends and projects). Ordered by <code>date</code> ascending by default, or by <code>updatedAt</code> ascending when <code>since</code> is used.</p>
+
+                <h3>Query parameters</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>limit</code></td><td>integer</td><td>Results per page (1–100, default 50)</td></tr>
+                        <tr><td><code>after</code></td><td>string</td><td>Pagination cursor from <code>nextCursor</code></td></tr>
+                        <tr><td><code>from</code></td><td>ISO 8601 date</td><td>Climbs on or after this date</td></tr>
+                        <tr><td><code>to</code></td><td>ISO 8601 date</td><td>Climbs on or before this date</td></tr>
+                        <tr><td><code>since</code></td><td>ISO 8601 datetime</td><td>Only records updated after this timestamp. Mutually exclusive with <code>from</code>/<code>to</code>.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Example</h3>
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&amp;limit=20" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+
+                <h3>Response <code>200 OK</code></h3>
+                <pre><code>{
+  "data": [
+    {
+      "id": "abc123",
+      "route": "Biographie",
+      "climbingArea": "Céüse",
+      "crag": "La Face",
+      "difficulty": "9a",
+      "sendType": "Redpoint",
+      "routeType": "Sport",
+      "noteText": "Dream route, finally!",
+      "rating": 5,
+      "attemptCount": 47,
+      "date": "2026-08-15T00:00:00.000Z",
+      "lastAttemptDate": null,
+      "projectStatus": null,
+      "projectNotes": null,
+      "highPoint": null,
+      "centralRouteID": "route_xyz",
+      "updatedAt": "2026-08-15T18:30:00.000Z"
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false
+}</code></pre>
+
+                <h3>Climb object fields</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>id</code></td><td>string</td><td>Firestore document ID</td></tr>
+                        <tr><td><code>route</code></td><td>string</td><td>Route name</td></tr>
+                        <tr><td><code>climbingArea</code></td><td>string</td><td>Broader area / region</td></tr>
+                        <tr><td><code>crag</code></td><td>string | null</td><td>Specific crag or wall</td></tr>
+                        <tr><td><code>difficulty</code></td><td>string</td><td>Grade (French, UIAA, or YDS depending on user preference)</td></tr>
+                        <tr><td><code>sendType</code></td><td>string</td><td><code>Redpoint</code> · <code>Pinkpoint</code> · <code>On Sight</code> · <code>Flash</code> · <code>Top Rope</code> · <code>All Free</code> · <code>Project</code></td></tr>
+                        <tr><td><code>routeType</code></td><td>string</td><td><code>Sport</code> · <code>Boulder</code> · <code>Multi-Pitch</code></td></tr>
+                        <tr><td><code>noteText</code></td><td>string | null</td><td>Free-text notes</td></tr>
+                        <tr><td><code>rating</code></td><td>integer</td><td>0–5 stars</td></tr>
+                        <tr><td><code>attemptCount</code></td><td>integer</td><td>Number of attempts logged</td></tr>
+                        <tr><td><code>date</code></td><td>ISO 8601 | null</td><td>Send date (null for active projects)</td></tr>
+                        <tr><td><code>lastAttemptDate</code></td><td>ISO 8601 | null</td><td>Last attempt date (projects)</td></tr>
+                        <tr><td><code>projectStatus</code></td><td>string | null</td><td><code>Working</code> · <code>Close</code> · <code>On Hold</code></td></tr>
+                        <tr><td><code>projectNotes</code></td><td>string | null</td><td>Project-specific notes</td></tr>
+                        <tr><td><code>highPoint</code></td><td>string | null</td><td>Highest point reached (projects)</td></tr>
+                        <tr><td><code>centralRouteID</code></td><td>string | null</td><td>Linked entry in the Central Route Database</td></tr>
+                        <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GET /v1/climbs/:id -->
+        <div class="endpoint" id="get-climb">
+            <div class="endpoint-header">
+                <span class="badge badge-get">GET</span>
+                <h3>/v1/climbs/:id</h3>
+                <span class="badge badge-scope">climbs:read</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Get a single climb note with its full repeat-ascent history.</p>
+
+                <h3>Example</h3>
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs/abc123" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+
+                <h3>Response <code>200 OK</code></h3>
+                <p>Same fields as the list item, plus an <code>ascents</code> array:</p>
+                <pre><code>{
+  "id": "abc123",
+  "route": "Biographie",
+  ...
+  "ascents": [
+    {
+      "id": "asc-uuid-1",
+      "sendType": "Redpoint",
+      "date": "2026-09-10T00:00:00.000Z",
+      "notes": "Even better second time"
+    }
+  ]
+}</code></pre>
+
+                <h3>Ascent object fields</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>id</code></td><td>string</td><td>Ascent UUID</td></tr>
+                        <tr><td><code>sendType</code></td><td>string</td><td>Send type for this repeat ascent</td></tr>
+                        <tr><td><code>date</code></td><td>ISO 8601 | null</td><td>Date of the repeat ascent</td></tr>
+                        <tr><td><code>notes</code></td><td>string | null</td><td>Notes specific to this ascent</td></tr>
+                    </tbody>
+                </table>
+
+                <p>Returns <code>404</code> if the climb does not exist or has been deleted.</p>
+            </div>
+        </div>
+
+        <!-- GET /v1/training -->
+        <div class="endpoint" id="get-training">
+            <div class="endpoint-header">
+                <span class="badge badge-get">GET</span>
+                <h3>/v1/training</h3>
+                <span class="badge badge-scope">training:read</span>
+            </div>
+            <div class="endpoint-body">
+                <p>List training sessions, ordered by <code>date</code> ascending (or <code>updatedAt</code> when <code>since</code> is used).</p>
+
+                <h3>Query parameters</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>limit</code></td><td>integer</td><td>Results per page (1–100, default 50)</td></tr>
+                        <tr><td><code>after</code></td><td>string</td><td>Pagination cursor</td></tr>
+                        <tr><td><code>from</code></td><td>ISO 8601 date</td><td>Sessions on or after this date</td></tr>
+                        <tr><td><code>to</code></td><td>ISO 8601 date</td><td>Sessions on or before this date</td></tr>
+                        <tr><td><code>since</code></td><td>ISO 8601 datetime</td><td>Incremental sync — records updated after this timestamp</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Example</h3>
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/training?from=2026-01-01" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+
+                <h3>Response <code>200 OK</code></h3>
+                <pre><code>{
+  "data": [
+    {
+      "id": "ts-uuid-1",
+      "type": "Hangboard",
+      "duration": 45,
+      "intensity": 4,
+      "notes": "Max hangs protocol, 20mm edge.",
+      "date": "2026-03-20T00:00:00.000Z",
+      "updatedAt": "2026-03-20T19:00:00.000Z"
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false
+}</code></pre>
+
+                <h3>Training session fields</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>id</code></td><td>string</td><td>Session UUID</td></tr>
+                        <tr><td><code>type</code></td><td>string</td><td><code>Hangboard</code> · <code>Campus Board</code> · <code>Gym Session</code> · <code>Running</code> · <code>Yoga</code> · or custom</td></tr>
+                        <tr><td><code>duration</code></td><td>integer</td><td>Duration in minutes</td></tr>
+                        <tr><td><code>intensity</code></td><td>integer</td><td>1–5 intensity rating</td></tr>
+                        <tr><td><code>notes</code></td><td>string | null</td><td>Free-text notes</td></tr>
+                        <tr><td><code>date</code></td><td>ISO 8601 | null</td><td>Session date</td></tr>
+                        <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GET /v1/goals -->
+        <div class="endpoint" id="get-goals">
+            <div class="endpoint-header">
+                <span class="badge badge-get">GET</span>
+                <h3>/v1/goals</h3>
+                <span class="badge badge-scope">goals:read</span>
+            </div>
+            <div class="endpoint-body">
+                <p>List goals. Supports <code>since</code> for incremental sync. No pagination (goal lists are typically small).</p>
+
+                <h3>Query parameters</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>since</code></td><td>ISO 8601 datetime</td><td>Only goals updated after this timestamp</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Example</h3>
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/goals" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+
+                <h3>Response <code>200 OK</code></h3>
+                <pre><code>{
+  "data": [
+    {
+      "id": "goal-uuid-1",
+      "type": "gradeTarget",
+      "target": 0,
+      "periodIsWeekly": false,
+      "gradeTarget": "8a",
+      "deadline": "2026-12-31T00:00:00.000Z",
+      "achievedAt": null,
+      "isArchived": false,
+      "completedPeriods": [],
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    }
+  ]
+}</code></pre>
+
+                <h3>Goal fields</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>id</code></td><td>string</td><td>Goal UUID</td></tr>
+                        <tr><td><code>type</code></td><td>string</td><td><code>gradeTarget</code> · <code>climbingDays</code> · <code>trainingDays</code></td></tr>
+                        <tr><td><code>target</code></td><td>integer</td><td>Numeric target (e.g. days per period)</td></tr>
+                        <tr><td><code>periodIsWeekly</code></td><td>boolean</td><td><code>true</code> = weekly, <code>false</code> = monthly</td></tr>
+                        <tr><td><code>gradeTarget</code></td><td>string | null</td><td>Target grade (grade-type goals only)</td></tr>
+                        <tr><td><code>deadline</code></td><td>ISO 8601 | null</td><td>Optional deadline</td></tr>
+                        <tr><td><code>achievedAt</code></td><td>ISO 8601 | null</td><td>When the goal was first achieved</td></tr>
+                        <tr><td><code>isArchived</code></td><td>boolean</td><td>Whether the goal has been archived</td></tr>
+                        <tr><td><code>completedPeriods</code></td><td>string[]</td><td>ISO week/month strings for completed periods</td></tr>
+                        <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 7. Incremental sync ───────────────────────────────────────── -->
+    <div class="section" id="incremental-sync">
+        <h2>7. Incremental Sync</h2>
+        <p>All list endpoints support a <code>since</code> parameter for efficient incremental sync. Pass the <code>updatedAt</code> of the most recently seen record to fetch only records changed after that point. When using <code>since</code>, results are ordered by <code>updatedAt</code> ascending and the parameter is mutually exclusive with <code>from</code>/<code>to</code>.</p>
+        <pre><code># 1. Initial full fetch — store the max updatedAt from the response
+curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?limit=100" \
+  -H "X-API-Key: cnl_your_key_here"
+
+# 2. On subsequent runs, pass it as `since`
+curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?since=2026-04-30T12:00:00.000Z" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+
+        <div class="callout callout-tip">
+            <span class="callout-icon">💡</span>
+            <span>Remember to paginate even when using <code>since</code> — a large batch update could produce more than 100 changed records at once.</span>
+        </div>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <!-- ── 8. Examples ──────────────────────────────────────────────── -->
+    <div class="section" id="examples">
+        <h2>8. Examples</h2>
+
+        <h3>Fetch all your sends from this year (curl)</h3>
+        <pre><code>API_KEY="cnl_your_key_here"
+BASE="https://api-hoxktcdqvq-uc.a.run.app"
+
+curl "$BASE/v1/climbs?from=2026-01-01&amp;limit=100" \
+  -H "X-API-Key: $API_KEY"</code></pre>
+
+        <h3>Home dashboard in Python</h3>
+        <pre><code>import requests
+
+API_KEY = "cnl_your_key_here"
+BASE    = "https://api-hoxktcdqvq-uc.a.run.app"
+HEADERS = {"X-API-Key": API_KEY}
+
+# Fetch all climbs (handles pagination automatically)
+climbs, cursor = [], None
+while True:
+    params = {"limit": 100}
+    if cursor:
+        params["after"] = cursor
+    r = requests.get(f"{BASE}/v1/climbs", headers=HEADERS, params=params)
+    r.raise_for_status()
+    body = r.json()
+    climbs.extend(body["data"])
+    cursor = body.get("nextCursor")
+    if not body.get("hasMore"):
+        break
+
+sends = [c for c in climbs if c["sendType"] != "Project"]
+print(f"Total sends : {len(sends)}")
+print(f"Hardest grade: {max((c['difficulty'] for c in sends), default='—')}")</code></pre>
+
+        <h3>Home Assistant REST sensor (YAML)</h3>
+        <pre><code>rest:
+  - resource: "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?limit=1&from=2026-01-01"
+    headers:
+      X-API-Key: "cnl_your_key_here"
+    scan_interval: 3600
+    sensor:
+      - name: "SendLog latest climb"
+        value_template: "{{ value_json.data[0].route }}"
+        attributes:
+          grade: "{{ value_json.data[0].difficulty }}"
+          date:  "{{ value_json.data[0].date }}"</code></pre>
+
+        <div class="callout callout-info">
+            <span class="callout-icon">ℹ️</span>
+            <span>Generate your API key at <a href="../app/login.html"><strong>sendlog.at/app</strong></a> → My Account → API Keys. You choose which scopes to grant and can revoke the key at any time.</span>
+        </div>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to top</a></div>
+    </div>
+
+    <div class="back-to-home">
+        <a href="../index.html">← Return to Home Page</a>
+    </div>
+
+    <p class="last-updated">Last Updated: April 2026 · API v1</p>
+
+</div>
+
+<footer>
+    &copy; 2026 SendLog App
+</footer>
+
+<script>
+    // Smooth-scroll for anchor links, offset for sticky nav
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({ top: target.offsetTop - 70, behavior: 'smooth' });
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
