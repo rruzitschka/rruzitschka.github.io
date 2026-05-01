@@ -818,6 +818,7 @@ function showTrainingView() {
   document.getElementById('training-view').classList.remove('hidden');
   document.getElementById('account-view')?.classList.add('hidden');
   document.getElementById('stats-view')?.classList.add('hidden');
+  document.getElementById('admin-view')?.classList.add('hidden');
   // Sidebar active state
   ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {
     document.getElementById(id)?.classList.remove('active');
@@ -843,6 +844,7 @@ function showAccountView() {
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.add('hidden');
   document.getElementById('stats-view')?.classList.add('hidden');
+  document.getElementById('admin-view')?.classList.add('hidden');
   document.getElementById('account-view').classList.remove('hidden');
   // Clear sidebar active state (account is in header, not sidebar)
   ['view-all', 'view-projects', 'view-sent'].forEach(id => {
@@ -880,6 +882,7 @@ async function showStatsView() {
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.add('hidden');
   document.getElementById('account-view')?.classList.add('hidden');
+  document.getElementById('admin-view')?.classList.add('hidden');
   document.getElementById('stats-view').classList.remove('hidden');
   // Sidebar active state
   ['view-all', 'view-projects', 'view-sent', 'view-account'].forEach(id => {

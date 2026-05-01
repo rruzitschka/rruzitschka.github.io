@@ -14,12 +14,17 @@ import {
   getDocs,
   deleteDoc,
   writeBatch,
+  setDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from './firebase-config.js';
 
 export async function initAuth() {
   return new Promise(resolve => {
-    onAuthStateChanged(auth, user => resolve(user ?? null));
+    onAuthStateChanged(auth, async user => {
+      if (user) await _ensureUserDocument(user);
+      resolve(user ?? null);
+    });
   });
 }
 
@@ -29,6 +34,7 @@ export async function signInWithApple() {
   provider.addScope('name');
   try {
     const result = await signInWithPopup(auth, provider);
+    await _ensureUserDocument(result.user);
     return result.user;
   } catch (error) {
     console.error('Apple sign-in failed:', error);
@@ -64,6 +70,19 @@ export async function deleteAccount() {
     } else {
       throw err;
     }
+  }
+}
+
+// Ensure a users/{uid} document exists so admin getCountFromServer returns correct totals.
+// Uses merge:true so it never clobbers existing fields written by iOS.
+async function _ensureUserDocument(user) {
+  try {
+    await setDoc(doc(db, 'users', user.uid), {
+      uid:        user.uid,
+      lastSeenAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn('ensureUserDocument failed (non-fatal):', err.code ?? err);
   }
 }
 
