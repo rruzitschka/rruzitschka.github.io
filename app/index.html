@@ -649,46 +649,52 @@
     </div>
   </div>
 
-  <!-- Firebase SDK — always loaded (CDN scripts must not use document.write) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-  <script>
-    // In mock mode, skip Firebase config/auth initialization (SDK is loaded but not initialized)
-    if (new URLSearchParams(window.location.search).get('mock') !== 'true') {
-      document.write('<scr' + 'ipt src="js/firebase-config.js"><\/scr' + 'ipt>');
-      document.write('<scr' + 'ipt src="js/firebase-auth.js?v=3.10.3"><\/scr' + 'ipt>');
+  <!-- Firebase Modular SDK 12.12.1 via CDN import map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app":       "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js",
+      "firebase/auth":      "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js",
+      "firebase/storage":   "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js"
     }
+  }
   </script>
+
+  <!-- Non-module scripts must load before any type="module" -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="js/grades.js?v=3.10.3"></script>
-  <script src="js/firebase-climbs.js?v=3.10.3"></script>
-  <script src="js/firebase-routes.js?v=3.10.3"></script>
-  <script src="js/firebase-training.js?v=3.10.3"></script>
-  <script src="js/firebase-api-keys.js?v=1.0.0"></script>
-  <script src="js/ui.js?v=3.10.3"></script>
-  <script src="js/admin.js?v=3.10.3"></script>
-  <script src="js/stats.js?v=3.10.3"></script>
-  <script>
-    if (new URLSearchParams(window.location.search).get('mock') === 'true') {
-      document.write('<scr' + 'ipt src="js/mock.js"><\/scr' + 'ipt>');
-    }
-  </script>
-  <script>
+  <script src="js/grades.js?v=3.11.0"></script>
+  <script src="js/stats.js?v=3.11.0"></script>
+
+  <!-- App entry-point module: cascades into ui.js → admin.js → firebase-* -->
+  <script type="module">
+    import { initAuth, signInWithApple, signOut } from './js/firebase-auth.js';
+    import { signInWithEmailAndPassword }         from 'firebase/auth';
+    import { auth }                               from './js/firebase-config.js';
+    import { loadData, renderUserChip, setMockServices } from './js/ui.js';
+
     (async () => {
-      function signInWithEmailPassword(email, password) {
-        return auth.signInWithEmailAndPassword(email, password);
+      const isMock    = new URLSearchParams(window.location.search).get('mock')    === 'true';
+      const isDevAuth = new URLSearchParams(window.location.search).get('devauth') === 'true';
+
+      let _initAuth         = initAuth;
+      let _signInWithApple  = signInWithApple;
+      let _signOut          = signOut;
+
+      if (isMock) {
+        const mock = await import('./js/mock.js');
+        setMockServices(mock);
+        _initAuth        = mock.initAuth;
+        _signInWithApple = mock.signInWithApple ?? signInWithApple;
+        _signOut         = () => window.location.reload();
       }
 
-      const isMock = new URLSearchParams(window.location.search).get('mock') === 'true';
-      const isDevAuth = new URLSearchParams(window.location.search).get('devauth') === 'true';
-      const user = await initAuth();
+      const user = await _initAuth();
+
       if (!user && !isMock) {
         document.getElementById('login-section').classList.remove('hidden');
         document.getElementById('app-container').classList.add('hidden');
 
-        // Show email/password form only in dev auth mode
         if (isDevAuth) {
           document.getElementById('devauth-form').style.display = 'flex';
         }
@@ -697,7 +703,7 @@
           renderUserChip(u);
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('app-container').classList.remove('hidden');
-          document.getElementById('signout-btn').addEventListener('click', signOut);
+          document.getElementById('signout-btn').addEventListener('click', _signOut);
           await loadData();
         }
 
@@ -706,7 +712,7 @@
           btn.disabled = true;
           btn.textContent = 'Signing in…';
           try {
-            const u = await signInWithApple();
+            const u = await _signInWithApple();
             await onSignedIn(u);
           } catch (e) {
             btn.disabled = false;
@@ -716,13 +722,13 @@
         });
 
         document.getElementById('devauth-btn')?.addEventListener('click', async () => {
-          const btn = document.getElementById('devauth-btn');
-          const email = document.getElementById('devauth-email').value.trim();
+          const btn      = document.getElementById('devauth-btn');
+          const email    = document.getElementById('devauth-email').value.trim();
           const password = document.getElementById('devauth-password').value;
           if (!email || !password) { alert('Enter email and password'); return; }
           btn.disabled = true; btn.textContent = 'Signing in…';
           try {
-            const result = await signInWithEmailPassword(email, password);
+            const result = await signInWithEmailAndPassword(auth, email, password);
             await onSignedIn(result.user);
           } catch (e) {
             btn.disabled = false; btn.textContent = 'Sign in with Email';
@@ -732,8 +738,9 @@
 
         return;
       }
+
       if (!isMock) renderUserChip(user);
-      document.getElementById('signout-btn').addEventListener('click', isMock ? () => {} : signOut);
+      document.getElementById('signout-btn').addEventListener('click', _signOut);
       await loadData();
     })();
   </script>

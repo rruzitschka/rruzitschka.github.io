@@ -1,7 +1,8 @@
 // Grade system definitions — mirrored from GradeSystem.swift
 // Order matches iOS app exactly (36 grades per system).
 
-const GRADES = {
+// var (not const) so window.GRADES is accessible from ES modules
+var GRADES = {
   French: [
     '3b', '3c', '4a', '4b', '4c', '5a', '5b', '5b+', '5c', '5c+',
     '6a', '6a+', '6b', '6b+', '6c', '6c+',

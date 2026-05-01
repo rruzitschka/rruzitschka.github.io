@@ -1,5 +1,7 @@
 // firebase-api-keys.js — API key management against the Cloud Functions REST API
-// Depends on: firebase-config.js (sets global `auth`)
+// Depends on: firebase-config.js (auth)
+
+import { auth } from './firebase-config.js';
 
 const API_KEYS_BASE = 'https://api-hoxktcdqvq-uc.a.run.app/v1/keys';
 
@@ -9,7 +11,7 @@ async function _apiKeysIdToken() {
   return user.getIdToken();
 }
 
-async function apiKeysCreate({ label, scopes }) {
+export async function apiKeysCreate({ label, scopes }) {
   const token = await _apiKeysIdToken();
   const res = await fetch(API_KEYS_BASE, {
     method: 'POST',
@@ -23,7 +25,7 @@ async function apiKeysCreate({ label, scopes }) {
   return res.json(); // { id, key, label, scopes }
 }
 
-async function apiKeysList() {
+export async function apiKeysList() {
   const token = await _apiKeysIdToken();
   const res = await fetch(API_KEYS_BASE, {
     headers: { 'Authorization': `Bearer ${token}` },
@@ -33,7 +35,7 @@ async function apiKeysList() {
   return body.data; // [{ id, label, scopes, createdAt, lastUsedAt }]
 }
 
-async function apiKeysRevoke(keyId) {
+export async function apiKeysRevoke(keyId) {
   const token = await _apiKeysIdToken();
   const res = await fetch(`${API_KEYS_BASE}/${keyId}`, {
     method: 'DELETE',

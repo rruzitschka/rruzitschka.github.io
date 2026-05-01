@@ -1,19 +1,34 @@
-// firebase-auth.js — Firebase Auth replacing CloudKit auth
-// Exposes: initAuth(), signInWithApple(), signOut(), getCurrentUser()
-// Depends on: firebase-config.js (sets window.auth, window.db, window.storage)
+// firebase-auth.js — Firebase Auth (modular SDK)
+// Exports: initAuth, signInWithApple, signOut, getCurrentUser, deleteAccount
+// Depends on: firebase-config.js
 
-async function initAuth() {
-  return new Promise((resolve) => {
-    auth.onAuthStateChanged(user => resolve(user ?? null));
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as _firebaseSignOut,
+  OAuthProvider,
+} from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDocs,
+  deleteDoc,
+  writeBatch,
+} from 'firebase/firestore';
+import { auth, db } from './firebase-config.js';
+
+export async function initAuth() {
+  return new Promise(resolve => {
+    onAuthStateChanged(auth, user => resolve(user ?? null));
   });
 }
 
-async function signInWithApple() {
-  const provider = new firebase.auth.OAuthProvider('apple.com');
+export async function signInWithApple() {
+  const provider = new OAuthProvider('apple.com');
   provider.addScope('email');
   provider.addScope('name');
   try {
-    const result = await auth.signInWithPopup(provider);
+    const result = await signInWithPopup(auth, provider);
     return result.user;
   } catch (error) {
     console.error('Apple sign-in failed:', error);
@@ -21,31 +36,30 @@ async function signInWithApple() {
   }
 }
 
-async function signOut() {
-  await auth.signOut();
+export async function signOut() {
+  await _firebaseSignOut(auth);
   window.location.reload();
 }
 
-function getCurrentUser() {
+export function getCurrentUser() {
   return auth.currentUser;
 }
 
-async function deleteAccount() {
+export async function deleteAccount() {
   const user = auth.currentUser;
   if (!user) throw new Error('No signed-in user');
 
-  // Delete all Firestore data before removing the auth user
-  await deleteUserFirestoreData(user.uid);
+  await _deleteUserFirestoreData(user.uid);
 
   try {
     await user.delete();
   } catch (err) {
     if (err.code === 'auth/requires-recent-login') {
       // Re-authenticate with Apple then retry
-      const provider = new firebase.auth.OAuthProvider('apple.com');
+      const provider = new OAuthProvider('apple.com');
       provider.addScope('email');
       provider.addScope('name');
-      await auth.signInWithPopup(provider);
+      await signInWithPopup(auth, provider);
       await auth.currentUser.delete();
     } else {
       throw err;
@@ -53,16 +67,16 @@ async function deleteAccount() {
   }
 }
 
-async function deleteUserFirestoreData(uid) {
+async function _deleteUserFirestoreData(uid) {
   // Delete all climbNotes and their subcollections (ascents, photos)
-  const climbNotesSnap = await db.collection(`users/${uid}/climbNotes`).get();
+  const climbNotesSnap = await getDocs(collection(db, `users/${uid}/climbNotes`));
   for (const noteDoc of climbNotesSnap.docs) {
     const notePath = `users/${uid}/climbNotes/${noteDoc.id}`;
     const [ascentsSnap, photosSnap] = await Promise.all([
-      db.collection(`${notePath}/ascents`).get(),
-      db.collection(`${notePath}/photos`).get()
+      getDocs(collection(db, `${notePath}/ascents`)),
+      getDocs(collection(db, `${notePath}/photos`)),
     ]);
-    const batch = db.batch();
+    const batch = writeBatch(db);
     ascentsSnap.docs.forEach(d => batch.delete(d.ref));
     photosSnap.docs.forEach(d => batch.delete(d.ref));
     batch.delete(noteDoc.ref);
@@ -70,13 +84,13 @@ async function deleteUserFirestoreData(uid) {
   }
 
   // Delete all training sessions
-  const sessionsSnap = await db.collection(`users/${uid}/trainingSessions`).get();
+  const sessionsSnap = await getDocs(collection(db, `users/${uid}/trainingSessions`));
   if (!sessionsSnap.empty) {
-    const batch = db.batch();
+    const batch = writeBatch(db);
     sessionsSnap.docs.forEach(d => batch.delete(d.ref));
     await batch.commit();
   }
 
   // Delete the user document itself
-  await db.doc(`users/${uid}`).delete().catch(() => {});
+  await deleteDoc(doc(db, `users/${uid}`)).catch(() => {});
 }

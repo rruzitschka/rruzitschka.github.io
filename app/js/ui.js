@@ -1,4 +1,113 @@
-// ui.js — Dashboard UI rendering and interaction
+// ui.js — Dashboard UI rendering and interaction (modular SDK)
+
+import { db, auth } from './firebase-config.js';
+import { doc, getDoc } from 'firebase/firestore';
+import {
+  fetchClimbs as $fetchClimbs,
+  saveClimbNote as $saveClimbNote,
+  deleteClimbNote as $deleteClimbNote,
+  saveAscent as $saveAscent,
+  deleteAscent as $deleteAscent,
+  fetchPhotos as $fetchPhotos,
+  computeStats as $computeStats,
+  filterClimbs as $filterClimbs,
+} from './firebase-climbs.js';
+import {
+  fetchTrainingSessions as $fetchTrainingSessions,
+  saveTrainingSession as $saveTrainingSession,
+  deleteTrainingSession as $deleteTrainingSession,
+  computeTrainingStats as $computeTrainingStats,
+  TYPE_EMOJI,
+} from './firebase-training.js';
+import {
+  getCurrentUser as $getCurrentUser,
+  signOut as $signOut,
+  deleteAccount as $deleteAccount,
+} from './firebase-auth.js';
+import {
+  apiKeysList as $apiKeysList,
+  apiKeysCreate as $apiKeysCreate,
+  apiKeysRevoke as $apiKeysRevoke,
+} from './firebase-api-keys.js';
+import {
+  searchRoutes as $searchRoutes,
+  createCentralRoute as $createCentralRoute,
+  updateCentralRoute as $updateCentralRoute,
+  shouldClearSoftLink as $shouldClearSoftLink,
+  checkAdminStatus as $checkAdminStatus,
+  incrementSendCount as $incrementSendCount,
+  incrementProjectCount as $incrementProjectCount,
+  decrementProjectCount as $decrementProjectCount,
+  completedProject as $completedProject,
+  convertFromFrench as $convertFromFrench,
+} from './firebase-routes.js';
+import { showAdminView } from './admin.js';
+
+// Grades API — provided by grades.js (regular script, always loaded before modules)
+const GRADES               = window.GRADES;
+const detectGradeSystem    = window.detectGradeSystem;
+const getPreferredGradeSystem  = () => window.getPreferredGradeSystem();
+const setPreferredGradeSystem  = (s) => window.setPreferredGradeSystem(s);
+const initGradePicker          = (...a) => window.initGradePicker(...a);
+
+// ── Mutable service references (can be overridden by setMockServices) ──
+let fetchClimbs         = $fetchClimbs;
+let saveClimbNote       = $saveClimbNote;
+let deleteClimbNote     = $deleteClimbNote;
+let saveAscent          = $saveAscent;
+let deleteAscent        = $deleteAscent;
+let fetchPhotos         = $fetchPhotos;
+let computeStats        = $computeStats;
+let filterClimbs        = $filterClimbs;
+let fetchTrainingSessions = $fetchTrainingSessions;
+let saveTrainingSession   = $saveTrainingSession;
+let deleteTrainingSession = $deleteTrainingSession;
+let computeTrainingStats  = $computeTrainingStats;
+let getCurrentUser      = $getCurrentUser;
+let signOut             = $signOut;
+let deleteAccount       = $deleteAccount;
+let apiKeysList         = $apiKeysList;
+let apiKeysCreate       = $apiKeysCreate;
+let apiKeysRevoke       = $apiKeysRevoke;
+let searchRoutes        = $searchRoutes;
+let createCentralRoute  = $createCentralRoute;
+let updateCentralRoute  = $updateCentralRoute;
+let shouldClearSoftLink = $shouldClearSoftLink;
+let checkAdminStatus    = $checkAdminStatus;
+let incrementSendCount  = $incrementSendCount;
+let incrementProjectCount = $incrementProjectCount;
+let decrementProjectCount = $decrementProjectCount;
+let completedProject    = $completedProject;
+let convertFromFrench   = $convertFromFrench;
+
+/**
+ * Override service bindings for mock mode.
+ * Call this before loadData() when mock=true.
+ */
+export function setMockServices(mocks) {
+  if (mocks.fetchClimbs)           fetchClimbs           = mocks.fetchClimbs;
+  if (mocks.saveClimbNote)         saveClimbNote         = mocks.saveClimbNote;
+  if (mocks.deleteClimbNote)       deleteClimbNote       = mocks.deleteClimbNote;
+  if (mocks.saveAscent)            saveAscent            = mocks.saveAscent;
+  if (mocks.deleteAscent)          deleteAscent          = mocks.deleteAscent;
+  if (mocks.fetchPhotos)           fetchPhotos           = mocks.fetchPhotos;
+  if (mocks.computeStats)          computeStats          = mocks.computeStats;
+  if (mocks.filterClimbs)          filterClimbs          = mocks.filterClimbs;
+  if (mocks.fetchTrainingSessions) fetchTrainingSessions = mocks.fetchTrainingSessions;
+  if (mocks.saveTrainingSession)   saveTrainingSession   = mocks.saveTrainingSession;
+  if (mocks.deleteTrainingSession) deleteTrainingSession = mocks.deleteTrainingSession;
+  if (mocks.computeTrainingStats)  computeTrainingStats  = mocks.computeTrainingStats;
+  if (mocks.getCurrentUser)        getCurrentUser        = mocks.getCurrentUser;
+  if (mocks.signOut)               signOut               = mocks.signOut;
+  if (mocks.deleteAccount)         deleteAccount         = mocks.deleteAccount;
+  if (mocks.apiKeysList)           apiKeysList           = mocks.apiKeysList;
+  if (mocks.apiKeysCreate)         apiKeysCreate         = mocks.apiKeysCreate;
+  if (mocks.apiKeysRevoke)         apiKeysRevoke         = mocks.apiKeysRevoke;
+  if (mocks.searchRoutes)          searchRoutes          = mocks.searchRoutes;
+  if (mocks.createCentralRoute)    createCentralRoute    = mocks.createCentralRoute;
+  if (mocks.updateCentralRoute)    updateCentralRoute    = mocks.updateCentralRoute;
+  if (mocks.checkAdminStatus)      checkAdminStatus      = mocks.checkAdminStatus;
+}
 
 // ---------- Module-level state ----------
 
@@ -229,10 +338,10 @@ function showDetailModal(climb) {
 
   // Async: fetch central route ownership and update chip
   if (climb.centralRouteID) {
-    db.collection('routes').doc(climb.centralRouteID).get().then(doc => {
+    getDoc(doc(db, 'routes', climb.centralRouteID)).then(routeSnap => {
       const chip = document.getElementById('detail-central-route-chip');
-      if (!chip || !doc.exists) return;
-      const createdBy = doc.data().createdBy;
+      if (!chip || !routeSnap.exists()) return;
+      const createdBy = routeSnap.data().createdBy;
       if (createdBy && createdBy === auth.currentUser?.uid) {
         chip.innerHTML = '☁ In community database <span title="You created this route">👤</span>';
       }
@@ -337,7 +446,7 @@ function populateFilters(climbs) {
 
 // ---------- User chip ----------
 
-function renderUserChip(user) {
+export function renderUserChip(user) {
   const chip = document.getElementById('user-chip');
   if (!chip) return;
   const name = user?.displayName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Climber';
@@ -432,7 +541,8 @@ function bindFilterHandlers(initialClimbs) {
 
 // ---------- Modal close handlers ----------
 
-document.addEventListener('DOMContentLoaded', () => {
+// Modules run after DOM is parsed; execute init immediately (no DOMContentLoaded needed)
+{
   document.getElementById('modal-close')?.addEventListener('click', hideDetailModal);
   document.getElementById('modal-overlay')?.addEventListener('click', e => {
     if (e.target === e.currentTarget) hideDetailModal();
@@ -441,7 +551,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') hideDetailModal();
   });
 
-  // Training view sidebar item
   document.querySelector('[data-view="training"]')?.addEventListener('click', e => {
     e.preventDefault();
     showTrainingView();
@@ -470,7 +579,11 @@ document.addEventListener('DOMContentLoaded', () => {
   bindTrainingOverlayHandlers();
   bindApiKeyHandlers();
   bindPeriodTabs();
-});
+
+  // Expose helpers for non-module consumers (stats.js, admin.js)
+  window.escapeHtml        = escapeHtml;
+  window.showConfirmDialog = showConfirmDialog;
+}
 
 
 // ---------- Utility ----------
@@ -670,7 +783,7 @@ function bindApiKeyHandlers() {
 
 // ---------- loadData ----------
 
-async function loadData() {
+export async function loadData() {
   showLoading(true);
   try {
     const climbs = await fetchClimbs();
@@ -1074,10 +1187,10 @@ function showEditSendOverlay(climb) {
     _centralRouteCreatedBy = null;
     setFindRouteLinked('find-route-btn-send', climb.route, null);
     // Fetch createdBy asynchronously to update ownership icon
-    db.collection('routes').doc(climb.centralRouteID).get()
-      .then(doc => {
-        if (doc.exists) {
-          _centralRouteCreatedBy = doc.data().createdBy ?? null;
+    getDoc(doc(db, 'routes', climb.centralRouteID))
+      .then(routeSnap => {
+        if (routeSnap.exists()) {
+          _centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
           setFindRouteLinked('find-route-btn-send', climb.route, _centralRouteCreatedBy);
         }
       }).catch(() => {});
@@ -1130,10 +1243,10 @@ function showEditProjectOverlay(climb) {
     _centralRouteArea      = climb.climbingArea || '';
     _centralRouteCreatedBy = null;
     setFindRouteLinked('find-route-btn-project', climb.route, null);
-    db.collection('routes').doc(climb.centralRouteID).get()
-      .then(doc => {
-        if (doc.exists) {
-          _centralRouteCreatedBy = doc.data().createdBy ?? null;
+    getDoc(doc(db, 'routes', climb.centralRouteID))
+      .then(routeSnap => {
+        if (routeSnap.exists()) {
+          _centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
           setFindRouteLinked('find-route-btn-project', climb.route, _centralRouteCreatedBy);
         }
       }).catch(() => {});
@@ -1691,7 +1804,7 @@ function renderTrainingPage(sessions, period) {
     return true;
   });
   listEl.innerHTML = filtered.map(s => {
-    const emoji = (typeof TYPE_EMOJI !== 'undefined' ? TYPE_EMOJI[s.type] : '') || '🏋️';
+    const emoji = TYPE_EMOJI[s.type] || '🏋️';
     const dateStr = s.date ? s.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
     const dots = [1, 2, 3, 4, 5].map(i =>
       `<div class="intensity-dot${i <= (s.intensity ?? 0) ? ' filled' : ''}"></div>`

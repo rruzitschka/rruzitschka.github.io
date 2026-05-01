@@ -1,13 +1,27 @@
-// firebase-training.js — Firestore implementation replacing training.js
-// Exposes same interface as training.js
-// Depends on: firebase-config.js (sets window.db), firebase-auth.js
+// firebase-training.js — Firestore implementation (modular SDK)
+// Exposes same interface as the original
+// Depends on: firebase-config.js, firebase-auth.js
 
-const TRAINING_TYPES = [
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore';
+import { db } from './firebase-config.js';
+import { getCurrentUser } from './firebase-auth.js';
+
+export const TRAINING_TYPES = [
   'Hangboard', 'Campus Board', 'System Wall',
   'Gym Session', 'Yoga', 'Cardio', 'Other'
 ];
 
-const TYPE_EMOJI = {
+export const TYPE_EMOJI = {
   'Hangboard':    '🏋️',
   'Campus Board': '🪜',
   'System Wall':  '🧩',
@@ -17,57 +31,56 @@ const TYPE_EMOJI = {
   'Other':        '⚡',
 };
 
-async function fetchTrainingSessions() {
+export async function fetchTrainingSessions() {
   const user = getCurrentUser();
   if (!user) return [];
-  const snapshot = await db
-    .collection(`users/${user.uid}/trainingSessions`)
-    .orderBy('date', 'desc')
-    .get();
+  const snapshot = await getDocs(
+    query(collection(db, `users/${user.uid}/trainingSessions`), orderBy('date', 'desc'))
+  );
   return snapshot.docs
-    .filter(doc => !doc.data().deletedAt)
-    .map(doc => {
-      const d = doc.data();
+    .filter(d => !d.data().deletedAt)
+    .map(d => {
+      const data = d.data();
       return {
-        recordName: doc.id,
-        id:         d.id ?? doc.id,
-        date:       d.date?.toDate() ?? null,
-        type:       d.type ?? 'Gym Session',
-        duration:   d.duration ?? 60,
-        intensity:  d.intensity ?? 3,
-        notes:      d.notes ?? null,
+        recordName: d.id,
+        id:         data.id ?? d.id,
+        date:       data.date?.toDate() ?? null,
+        type:       data.type ?? 'Gym Session',
+        duration:   data.duration ?? 60,
+        intensity:  data.intensity ?? 3,
+        notes:      data.notes ?? null,
       };
     });
 }
 
-async function saveTrainingSession(session) {
+export async function saveTrainingSession(session) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not signed in');
   const id = session.id ?? session.recordName ?? crypto.randomUUID();
-  const doc = {
+  const docData = {
     id,
     type:      session.type ?? 'Gym Session',
     duration:  session.duration ?? 60,
     intensity: session.intensity ?? 3,
     notes:     session.notes ?? '',
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
-  if (session.date) doc.date = firebase.firestore.Timestamp.fromDate(new Date(session.date));
-  await db.doc(`users/${user.uid}/trainingSessions/${id}`).set(doc, { merge: true });
+  if (session.date) docData.date = Timestamp.fromDate(new Date(session.date));
+  await setDoc(doc(db, `users/${user.uid}/trainingSessions/${id}`), docData, { merge: true });
   return id;
 }
 
-async function deleteTrainingSession(id) {
+export async function deleteTrainingSession(id) {
   const user = getCurrentUser();
   if (!user) return;
-  const ts = firebase.firestore.FieldValue.serverTimestamp();
-  await db.doc(`users/${user.uid}/trainingSessions/${id}`).update({
+  const ts = serverTimestamp();
+  await updateDoc(doc(db, `users/${user.uid}/trainingSessions/${id}`), {
     deletedAt: ts,
     updatedAt: ts,
   });
 }
 
-function computeTrainingStats(sessions, period = 'allTime') {
+export function computeTrainingStats(sessions, period = 'allTime') {
   const now = new Date();
   const filtered = sessions.filter(s => {
     if (!s.date || period === 'allTime') return true;

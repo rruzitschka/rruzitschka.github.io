@@ -1,6 +1,20 @@
-// firebase-climbs.js — Firestore implementation replacing climbs.js
-// Exposes same interface as climbs.js
-// Depends on: firebase-config.js (sets window.db), firebase-auth.js
+// firebase-climbs.js — Firestore implementation (modular SDK)
+// Exposes same interface as the original
+// Depends on: firebase-config.js, firebase-auth.js
+
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore';
+import { db } from './firebase-config.js';
+import { getCurrentUser } from './firebase-auth.js';
 
 // recordName for ascents is encoded as "noteId/ascentId" so deleteAscent
 // can reconstruct the Firestore sub-collection path without a noteId parameter.
@@ -21,57 +35,57 @@ function normalizeSendType(raw) {
   return SEND_TYPE_NORMALIZE[raw?.toLowerCase()] ?? raw ?? 'Redpoint';
 }
 
-async function fetchClimbs() {
+export async function fetchClimbs() {
   const user = getCurrentUser();
   if (!user) return [];
-  const snapshot = await db
-    .collection(`users/${user.uid}/climbNotes`)
-    .orderBy('date', 'desc')
-    .get();
+  const snapshot = await getDocs(
+    query(collection(db, `users/${user.uid}/climbNotes`), orderBy('date', 'desc'))
+  );
 
   const notes = await Promise.all(
     snapshot.docs
-      .filter(doc => !doc.data().deletedAt)
-      .map(async doc => {
-        const d = doc.data();
-        const ascSnap = await db
-          .collection(`users/${user.uid}/climbNotes/${doc.id}/ascents`)
-          .orderBy('date', 'desc')
-          .get();
+      .filter(noteDoc => !noteDoc.data().deletedAt)
+      .map(async noteDoc => {
+        const d = noteDoc.data();
+        const ascSnap = await getDocs(
+          query(
+            collection(db, `users/${user.uid}/climbNotes/${noteDoc.id}/ascents`),
+            orderBy('date', 'desc')
+          )
+        );
         const ascents = ascSnap.docs
           .filter(a => !a.data().deletedAt)
           .map(a => {
             const ad = a.data();
             return {
-              recordName: `${doc.id}/${a.id}`,  // composite: noteId/ascentId
-              id:       ad.id ?? a.id,
-              date:     ad.date?.toDate() ?? null,
-              sendType: normalizeSendType(ad.sendType),
-              notes:    ad.notes ?? null,
+              recordName: `${noteDoc.id}/${a.id}`,  // composite: noteId/ascentId
+              id:         ad.id ?? a.id,
+              date:       ad.date?.toDate() ?? null,
+              sendType:   normalizeSendType(ad.sendType),
+              notes:      ad.notes ?? null,
             };
           });
-        // Normalize sendType: iOS stores lowercase, web expects Title Case
         const sendType = normalizeSendType(d.sendType);
         const isProject = sendType === 'Project';
         return {
-          recordName:    doc.id,
-          id:            d.id ?? doc.id,
-          route:         d.route ?? '',
-          climbingArea:  d.climbingArea ?? '',
-          crag:          d.crag ?? '',
-          difficulty:    d.difficulty ?? '',
+          recordName:      noteDoc.id,
+          id:              d.id ?? noteDoc.id,
+          route:           d.route ?? '',
+          climbingArea:    d.climbingArea ?? '',
+          crag:            d.crag ?? '',
+          difficulty:      d.difficulty ?? '',
           sendType,
           isProject,
-          routeType:     d.routeType ?? 'Sport',
-          noteText:      d.noteText ?? '',
-          rating:        d.rating ?? 0,
-          attemptCount:  d.attemptCount ?? 0,
-          date:          d.date?.toDate() ?? null,
+          routeType:       d.routeType ?? 'Sport',
+          noteText:        d.noteText ?? '',
+          rating:          d.rating ?? 0,
+          attemptCount:    d.attemptCount ?? 0,
+          date:            d.date?.toDate() ?? null,
           lastAttemptDate: d.lastAttemptDate?.toDate() ?? null,
-          projectStatus: d.projectStatus ?? null,
-          projectNotes:  d.projectNotes ?? null,
-          highPoint:     d.highPoint ?? null,
-          centralRouteID: d.centralRouteID ?? null,
+          projectStatus:   d.projectStatus ?? null,
+          projectNotes:    d.projectNotes ?? null,
+          highPoint:       d.highPoint ?? null,
+          centralRouteID:  d.centralRouteID ?? null,
           ascents,
         };
       })
@@ -79,11 +93,11 @@ async function fetchClimbs() {
   return notes;
 }
 
-async function saveClimbNote(note) {
+export async function saveClimbNote(note) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not signed in');
   const id = (note.id ?? note.recordName ?? crypto.randomUUID()).toUpperCase();
-  const doc = {
+  const docData = {
     id,
     route:        note.route ?? '',
     climbingArea: note.climbingArea ?? '',
@@ -94,57 +108,81 @@ async function saveClimbNote(note) {
     noteText:     note.noteText ?? '',
     rating:       note.rating ?? 0,
     attemptCount: note.attemptCount ?? 0,
-    updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:    serverTimestamp(),
   };
-  if (note.date)            doc.date = firebase.firestore.Timestamp.fromDate(new Date(note.date));
-  if (note.lastAttemptDate) doc.lastAttemptDate = firebase.firestore.Timestamp.fromDate(new Date(note.lastAttemptDate));
-  if (note.projectStatus)   doc.projectStatus = note.projectStatus;
-  if (note.projectNotes)    doc.projectNotes = note.projectNotes;
-  if (note.highPoint)       doc.highPoint = note.highPoint;
-  if (note.centralRouteID)  doc.centralRouteID = note.centralRouteID;
-  await db.doc(`users/${user.uid}/climbNotes/${id}`).set(doc, { merge: true });
+  if (note.date)            docData.date = Timestamp.fromDate(new Date(note.date));
+  if (note.lastAttemptDate) docData.lastAttemptDate = Timestamp.fromDate(new Date(note.lastAttemptDate));
+  if (note.projectStatus)   docData.projectStatus = note.projectStatus;
+  if (note.projectNotes)    docData.projectNotes = note.projectNotes;
+  if (note.highPoint)       docData.highPoint = note.highPoint;
+  if (note.centralRouteID)  docData.centralRouteID = note.centralRouteID;
+  await setDoc(doc(db, `users/${user.uid}/climbNotes/${id}`), docData, { merge: true });
   return id;
 }
 
-async function deleteClimbNote(id) {
+export async function deleteClimbNote(id) {
   const user = getCurrentUser();
   if (!user) return;
-  const ts = firebase.firestore.FieldValue.serverTimestamp();
-  await db.doc(`users/${user.uid}/climbNotes/${id}`).update({
+  const ts = serverTimestamp();
+  await updateDoc(doc(db, `users/${user.uid}/climbNotes/${id}`), {
     deletedAt: ts,
     updatedAt: ts,
   });
 }
 
-async function saveAscent(ascent) {
+export async function saveAscent(ascent) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not signed in');
   const noteId = ascent.climbNoteRecordName ?? ascent.noteId;
   const id = ascent.id ?? crypto.randomUUID();
-  await db.doc(`users/${user.uid}/climbNotes/${noteId}/ascents/${id}`).set({
-    id,
-    sendType: ascent.sendType ?? 'redpoint',
-    notes:    ascent.notes ?? '',
-    date:     ascent.date ? firebase.firestore.Timestamp.fromDate(new Date(ascent.date)) : firebase.firestore.Timestamp.now(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await setDoc(
+    doc(db, `users/${user.uid}/climbNotes/${noteId}/ascents/${id}`),
+    {
+      id,
+      sendType:  ascent.sendType ?? 'redpoint',
+      notes:     ascent.notes ?? '',
+      date:      ascent.date ? Timestamp.fromDate(new Date(ascent.date)) : Timestamp.now(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   return id;
 }
 
-async function deleteAscent(compositeId) {
+export async function deleteAscent(compositeId) {
   // compositeId is "noteId/ascentId" — encoded in fetchClimbs recordName
   const user = getCurrentUser();
   if (!user) return;
   const [noteId, ascentId] = compositeId.split('/');
   if (!noteId || !ascentId) { console.warn('deleteAscent: bad compositeId', compositeId); return; }
-  const ts = firebase.firestore.FieldValue.serverTimestamp();
-  await db.doc(`users/${user.uid}/climbNotes/${noteId}/ascents/${ascentId}`).update({
-    deletedAt: ts,
-    updatedAt: ts,
-  });
+  const ts = serverTimestamp();
+  await updateDoc(
+    doc(db, `users/${user.uid}/climbNotes/${noteId}/ascents/${ascentId}`),
+    { deletedAt: ts, updatedAt: ts }
+  );
 }
 
-function computeStats(climbs) {
+export async function fetchPhotos(noteId) {
+  const user = getCurrentUser();
+  if (!user) return [];
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, `users/${user.uid}/climbNotes/${noteId}/photos`),
+        orderBy('updatedAt', 'asc')
+      )
+    );
+    return snap.docs
+      .filter(d => !d.data().deletedAt)
+      .map(d => ({ id: d.id, storageURL: d.data().storageURL, fileName: d.data().fileName }))
+      .filter(p => p.storageURL);
+  } catch (err) {
+    console.warn('fetchPhotos error:', err);
+    return [];
+  }
+}
+
+export function computeStats(climbs) {
   const now = new Date();
   const thisYear = now.getFullYear();
   const byType = {};
@@ -158,6 +196,8 @@ function computeStats(climbs) {
   );
   let hardestThisYear = null;
   let hardestIndex = -1;
+  const GRADES = window.GRADES;
+  const detectGradeSystem = window.detectGradeSystem;
   for (const c of thisYearSends) {
     const system = detectGradeSystem(c.difficulty);
     const idx = GRADES[system]?.indexOf(c.difficulty) ?? -1;
@@ -176,25 +216,7 @@ function computeStats(climbs) {
   };
 }
 
-async function fetchPhotos(noteId) {
-  const user = getCurrentUser();
-  if (!user) return [];
-  try {
-    const snap = await db
-      .collection(`users/${user.uid}/climbNotes/${noteId}/photos`)
-      .orderBy('updatedAt', 'asc')
-      .get();
-    return snap.docs
-      .filter(d => !d.data().deletedAt)
-      .map(d => ({ id: d.id, storageURL: d.data().storageURL, fileName: d.data().fileName }))
-      .filter(p => p.storageURL);
-  } catch (err) {
-    console.warn('fetchPhotos error:', err);
-    return [];
-  }
-}
-
-function filterClimbs(climbs, { area, year, sendType, routeType, search, sort } = {}) {
+export function filterClimbs(climbs, { area, year, sendType, routeType, search, sort } = {}) {
   let result = [...climbs];
   if (area)      result = result.filter(c => c.climbingArea === area);
   if (year)      result = result.filter(c => c.date && c.date.getFullYear() === parseInt(year));

@@ -1,8 +1,25 @@
-// firebase-routes.js — Central route database service
-// Depends on: firebase-config.js (sets window.db, window.auth)
-// Mirrors the pattern of firebase-climbs.js
+// firebase-routes.js — Central route database service (modular SDK)
+// Depends on: firebase-config.js, firebase-auth.js
 
 'use strict';
+
+import {
+  collection,
+  collectionGroup,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  limit,
+  runTransaction,
+  serverTimestamp,
+  increment,
+} from 'firebase/firestore';
+import { db, auth } from './firebase-config.js';
 
 // ── Grade normalization ────────────────────────────────────────────────────
 // Must match GradeSystem.swift and grades.js exactly (36 grades each)
@@ -11,10 +28,6 @@ const YDS    = ['5.3','5.4','5.5','5.6','5.7','5.8','5.9','5.9+','5.10a','5.10a+
 const UIAA   = ['3','3+','4-','4','4+','5','6-','6-/6','6','6/6+','6+','7-','7','7+','8-','8','8+','9-','9','9+','10-','10','10+','11-','11','11+','12-','12','12+','13-','13','13+','14-','14','14+','15-'];
 const SYSTEM_ARRAYS = { French: FRENCH, YDS, UIAA };
 
-/**
- * Detect which grade system a grade string belongs to.
- * Returns 'French' as fallback.
- */
 function detectRouteGradeSystem(grade) {
   if (!grade) return 'French';
   for (const [system, arr] of Object.entries(SYSTEM_ARRAYS)) {
@@ -23,10 +36,6 @@ function detectRouteGradeSystem(grade) {
   return 'French';
 }
 
-/**
- * Normalize a grade to French using aligned index mapping.
- * Returns the first French grade as fallback for unrecognized grades.
- */
 function normalizeToFrench(grade) {
   const system = detectRouteGradeSystem(grade);
   if (system === 'French') return grade;
@@ -36,11 +45,7 @@ function normalizeToFrench(grade) {
   return FRENCH[Math.min(idx, FRENCH.length - 1)];
 }
 
-/**
- * Convert a French grade to any target system using aligned index mapping.
- * Returns the French grade unchanged if system is 'French'.
- */
-function convertFromFrench(frenchGrade, targetSystem) {
+export function convertFromFrench(frenchGrade, targetSystem) {
   if (!targetSystem || targetSystem === 'French') return frenchGrade;
   const target = SYSTEM_ARRAYS[targetSystem];
   if (!target) return frenchGrade;
@@ -49,10 +54,6 @@ function convertFromFrench(frenchGrade, targetSystem) {
   return target[Math.min(idx, target.length - 1)];
 }
 
-/**
- * Strip diacritics and lowercase for Firestore prefix search.
- * Matches String.foldedForSearch() in iOS.
- */
 function foldedForSearch(str) {
   return (str || '').toLowerCase()
     .normalize('NFD')
@@ -61,37 +62,28 @@ function foldedForSearch(str) {
 
 // ── Firestore search ───────────────────────────────────────────────────────
 
-/**
- * Search central routes by name prefix with optional crag filter.
- * Returns routes with grade converted to the user's preferred system.
- * @param {string} namePrefix - at least 2 chars
- * @param {string|null} cragFilter - optional crag filter (exact cragSearch match)
- * @param {string} displaySystem - 'French' | 'YDS' | 'UIAA'
- * @param {number} limit
- * @returns {Promise<Array>} array of route objects
- */
-async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'French', limit = 20) {
+export async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'French', maxResults = 20) {
   const normalized = foldedForSearch(namePrefix);
   if (normalized.length < 2) return [];
 
-  let query = db.collection('routes')
-    .where('nameSearch', '>=', normalized)
-    .where('nameSearch', '<', normalized + '\uf8ff')
-    .limit(limit);
-
+  const constraints = [
+    where('nameSearch', '>=', normalized),
+    where('nameSearch', '<',  normalized + '\uf8ff'),
+    limit(maxResults),
+  ];
   if (cragFilter && cragFilter.trim()) {
-    query = query.where('cragSearch', '==', foldedForSearch(cragFilter));
+    constraints.push(where('cragSearch', '==', foldedForSearch(cragFilter)));
   }
 
-  const snapshot = await query.get();
-  return snapshot.docs.map(doc => {
-    const d = doc.data();
+  const snapshot = await getDocs(query(collection(db, 'routes'), ...constraints));
+  return snapshot.docs.map(routeDoc => {
+    const d = routeDoc.data();
     return {
-      id:            d.id ?? doc.id,
+      id:            d.id ?? routeDoc.id,
       name:          d.name ?? '',
       climbingArea:  d.climbingArea ?? '',
       crag:          d.crag ?? '',
-      grade:         d.grade ?? '',         // French canonical
+      grade:         d.grade ?? '',
       displayGrade:  convertFromFrench(d.grade ?? '', displaySystem),
       createdGrade:  d.createdGrade ?? d.grade ?? '',
       routeType:     d.routeType ?? 'Sport',
@@ -104,20 +96,16 @@ async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'Fren
   });
 }
 
-/**
- * Create a new central route document.
- * Sets createdBy to the current user's UID.
- */
-async function createCentralRoute({ name, climbingArea, crag, grade, gradeSystem, routeType }) {
+export async function createCentralRoute({ name, climbingArea, crag, grade, gradeSystem, routeType }) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not signed in');
 
-  const id = db.collection('routes').doc().id;
+  const id = doc(collection(db, 'routes')).id;
   const french = normalizeToFrench(grade);
   const system = detectRouteGradeSystem(grade);
-  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const now = serverTimestamp();
 
-  await db.collection('routes').doc(id).set({
+  await setDoc(doc(db, 'routes', id), {
     id,
     name,
     climbingArea: climbingArea ?? '',
@@ -132,7 +120,7 @@ async function createCentralRoute({ name, climbingArea, crag, grade, gradeSystem
     projectCount: 0,
     createdAt: now,
     updatedAt: now,
-    createdBy: user.uid,      // never displayed in UI
+    createdBy: user.uid,
     isOrphaned: false,
     orphanedAt: null,
     nameSearch: foldedForSearch(name),
@@ -144,52 +132,44 @@ async function createCentralRoute({ name, climbingArea, crag, grade, gradeSystem
 
 // ── Counter updates (fire-and-forget) ─────────────────────────────────────
 
-function incrementSendCount(routeID) {
-  db.collection('routes').doc(routeID).update({
-    sendCount: firebase.firestore.FieldValue.increment(1),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+export function incrementSendCount(routeID) {
+  updateDoc(doc(db, 'routes', routeID), {
+    sendCount: increment(1),
+    updatedAt: serverTimestamp(),
   }).catch(err => console.warn('incrementSendCount failed:', err));
 }
 
-function incrementProjectCount(routeID) {
-  db.collection('routes').doc(routeID).update({
-    projectCount: firebase.firestore.FieldValue.increment(1),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+export function incrementProjectCount(routeID) {
+  updateDoc(doc(db, 'routes', routeID), {
+    projectCount: increment(1),
+    updatedAt: serverTimestamp(),
   }).catch(err => console.warn('incrementProjectCount failed:', err));
 }
 
-function decrementProjectCount(routeID) {
-  db.collection('routes').doc(routeID).update({
-    projectCount: firebase.firestore.FieldValue.increment(-1),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+export function decrementProjectCount(routeID) {
+  updateDoc(doc(db, 'routes', routeID), {
+    projectCount: increment(-1),
+    updatedAt: serverTimestamp(),
   }).catch(err => console.warn('decrementProjectCount failed:', err));
 }
 
-function completedProject(routeID) {
-  db.collection('routes').doc(routeID).update({
-    projectCount: firebase.firestore.FieldValue.increment(-1),
-    sendCount: firebase.firestore.FieldValue.increment(1),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+export function completedProject(routeID) {
+  updateDoc(doc(db, 'routes', routeID), {
+    projectCount: increment(-1),
+    sendCount:    increment(1),
+    updatedAt:    serverTimestamp(),
   }).catch(err => console.warn('completedProject counters failed:', err));
 }
 
 // ── Owner update ───────────────────────────────────────────────────────────
 
-/**
- * Update a central route's canonical fields when the creator edits their climb.
- * Fire-and-forget — never blocks the user's save.
- * Firestore rules enforce that only the original creator can write this.
- *
- * @param {string} routeID
- * @param {{ name: string, climbingArea: string, crag: string, grade: string, gradeSystem: string, routeType: string }} fields
- */
-function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType }) {
+export function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType }) {
   const uid    = auth.currentUser?.uid ?? 'unknown';
   const french = normalizeToFrench(grade);
-  const ref    = db.collection('routes').doc(routeID);
-  db.runTransaction(async tx => {
+  const ref    = doc(db, 'routes', routeID);
+  runTransaction(db, async tx => {
     const snap = await tx.get(ref);
-    if (!snap.exists) return;
+    if (!snap.exists()) return;
     const prev = snap.data().recentEdits ?? [];
     const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
     tx.update(ref, {
@@ -203,47 +183,36 @@ function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSys
       nameSearch:         foldedForSearch(name),
       cragSearch:         foldedForSearch(crag ?? ''),
       updatedBy:          uid,
-      updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:          serverTimestamp(),
       recentEdits:        next,
     });
   }).catch(err => console.warn('updateCentralRoute failed:', err));
 }
 
-// ── Admin ────────────────────────────────────────────────────────────────
+// ── Admin ──────────────────────────────────────────────────────────────────
 
 let _adminStatusCache = null; // null = unknown, true/false = resolved
 
-/**
- * Returns true if the current user is in the admins collection.
- * Result is cached for the lifetime of the page session.
- */
-async function checkAdminStatus() {
+export async function checkAdminStatus() {
   if (_adminStatusCache !== null) return _adminStatusCache;
   const user = auth.currentUser;
   if (!user) { _adminStatusCache = false; return false; }
   try {
-    const doc = await db.collection('admins').doc(user.uid).get();
-    _adminStatusCache = doc.exists;
+    const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+    _adminStatusCache = adminSnap.exists();
   } catch {
     _adminStatusCache = false;
   }
   return _adminStatusCache;
 }
 
-/**
- * Admin: update any route's canonical fields plus ownership and orphan status.
- * Returns a Promise — not fire-and-forget, so the UI can confirm success.
- *
- * @param {string} routeID
- * @param {{ name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }} fields
- */
-async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }) {
+export async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }) {
   const uid    = auth.currentUser?.uid ?? 'unknown';
   const french = normalizeToFrench(grade);
-  const ref    = db.collection('routes').doc(routeID);
-  await db.runTransaction(async tx => {
+  const ref    = doc(db, 'routes', routeID);
+  await runTransaction(db, async tx => {
     const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error('Route not found');
+    if (!snap.exists()) throw new Error('Route not found');
     const data = snap.data();
     const prev = data.recentEdits ?? [];
     const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
@@ -262,17 +231,16 @@ async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeS
       isOrphaned:         isOrphaned ?? false,
       orphanedAt:         isOrphaned ? new Date() : null,
       updatedBy:          uid,
-      updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:          serverTimestamp(),
       recentEdits:        next,
     };
 
-    // Record ownership transfer if createdBy changed
     if (createdBy && createdBy !== data.createdBy) {
       fields.lastOwnershipTransfer = {
-        fromUID:        data.createdBy ?? null,
-        toUID:          createdBy,
-        transferredBy:  uid,
-        transferredAt:  new Date(),
+        fromUID:       data.createdBy ?? null,
+        toUID:         createdBy,
+        transferredBy: uid,
+        transferredAt: new Date(),
       };
     }
 
@@ -280,21 +248,13 @@ async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeS
   });
 }
 
-/**
- * Admin: permanently delete a route document.
- * Returns a Promise.
- */
-async function adminDeleteRoute(routeID) {
-  await db.collection('routes').doc(routeID).delete();
+export async function adminDeleteRoute(routeID) {
+  await deleteDoc(doc(db, 'routes', routeID));
 }
 
-/**
- * Fetch a single route document by ID, returning all fields.
- * Used by admin edit form to load recentEdits and lastOwnershipTransfer.
- */
-async function getRoute(routeID) {
-  const snap = await db.collection('routes').doc(routeID).get();
-  if (!snap.exists) return null;
+export async function getRoute(routeID) {
+  const snap = await getDoc(doc(db, 'routes', routeID));
+  if (!snap.exists()) return null;
   const d = snap.data();
   return {
     id:                    d.id ?? snap.id,
@@ -311,7 +271,7 @@ async function getRoute(routeID) {
     createdBy:             d.createdBy ?? null,
     updatedBy:             d.updatedBy ?? null,
     updatedAt:             d.updatedAt?.toDate() ?? null,
-    recentEdits:           (d.recentEdits ?? []).map(e => ({
+    recentEdits: (d.recentEdits ?? []).map(e => ({
       editedAt: e.editedAt?.toDate ? e.editedAt.toDate() : new Date(e.editedAt),
       editedBy: e.editedBy,
     })),
@@ -328,12 +288,12 @@ async function getRoute(routeID) {
 
 // ── Soft link drift detection ──────────────────────────────────────────────
 
-/**
- * Returns true if identity fields (name, crag, area) have changed from the
- * central route — meaning centralRouteID should be cleared.
- */
-function shouldClearSoftLink(original, current) {
+export function shouldClearSoftLink(original, current) {
   return original.name !== current.name
       || original.crag !== current.crag
       || original.area !== current.area;
 }
+
+// ── Admin stats helpers (used by admin.js) ────────────────────────────────
+// Re-export Firestore primitives needed by admin.js for count queries
+export { collection, collectionGroup, query, where, getDocs };

@@ -1,8 +1,29 @@
-// admin.js — Admin panel for central route database moderation
-// Depends on: firebase-routes.js (checkAdminStatus, adminSaveRoute, adminDeleteRoute, getRoute, searchRoutes)
-// Depends on: ui.js (escapeHtml, showConfirmDialog, getPreferredGradeSystem)
+// admin.js — Admin panel for central route database moderation (modular SDK)
+// Depends on: firebase-config.js, firebase-routes.js
+// Depends on: escapeHtml, showConfirmDialog (exposed on window by ui.js)
+// Depends on: getPreferredGradeSystem (global from grades.js)
 
 'use strict';
+
+import { getCountFromServer } from 'firebase/firestore';
+import { db, auth } from './firebase-config.js';
+import {
+  searchRoutes,
+  adminSaveRoute,
+  adminDeleteRoute,
+  getRoute,
+  convertFromFrench,
+  collection,
+  collectionGroup,
+  query,
+  where,
+  getDocs,
+} from './firebase-routes.js';
+
+// ── Shim: ui.js globals (set on window after ui.js loads; safe to call at runtime) ──
+const escapeHtml         = (...a) => window.escapeHtml(...a);
+const showConfirmDialog  = (...a) => window.showConfirmDialog(...a);
+const getPreferredGradeSystem = () => window.getPreferredGradeSystem?.() ?? 'French';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -21,7 +42,7 @@ function uidShort(uid) {
 
 // ── Admin view entry point ─────────────────────────────────────────────────
 
-async function showAdminView() {
+export async function showAdminView() {
   document.getElementById('stats-bar').classList.add('hidden');
   document.querySelector('.table-container').classList.add('hidden');
   document.getElementById('training-view').classList.add('hidden');
@@ -96,19 +117,19 @@ async function loadAndRenderAdminStats() {
       usersSnap,
       apiKeysSnap,
     ] = await Promise.all([
-      db.collection('routes').count().get(),
-      db.collection('routes').where('isOrphaned', '==', false).count().get(),
-      db.collection('routes').where('isOrphaned', '==', true).count().get(),
-      db.collection('users').count().get(),
-      db.collectionGroup('apiKeys').get(),
+      getCountFromServer(collection(db, 'routes')),
+      getCountFromServer(query(collection(db, 'routes'), where('isOrphaned', '==', false))),
+      getCountFromServer(query(collection(db, 'routes'), where('isOrphaned', '==', true))),
+      getCountFromServer(collection(db, 'users')),
+      getDocs(collectionGroup(db, 'apiKeys')),
     ]);
 
-    const totalRoutes   = totalSnap.data().count;
-    const activeRoutes  = activeSnap.data().count;
+    const totalRoutes    = totalSnap.data().count;
+    const activeRoutes   = activeSnap.data().count;
     const orphanedRoutes = orphanedSnap.data().count;
-    const totalUsers    = usersSnap.data().count;
-    const totalKeys     = apiKeysSnap.size;
-    const usersWithKeys = new Set(
+    const totalUsers     = usersSnap.data().count;
+    const totalKeys      = apiKeysSnap.size;
+    const usersWithKeys  = new Set(
       apiKeysSnap.docs.map(d => d.ref.parent.parent.id)
     ).size;
 
@@ -209,9 +230,9 @@ function renderAdminSearch() {
           </div>
         `).join('');
 
-        resultsEl.querySelectorAll('.admin-route-row').forEach(el => {
-          const route = filtered.find(r => r.id === el.dataset.id);
-          if (route) el.addEventListener('click', () => openAdminEditForm(route.id));
+        resultsEl.querySelectorAll('.admin-route-row').forEach(rowEl => {
+          const route = filtered.find(r => r.id === rowEl.dataset.id);
+          if (route) rowEl.addEventListener('click', () => openAdminEditForm(route.id));
         });
       })
       .catch(err => {
@@ -254,12 +275,9 @@ async function openAdminEditForm(routeID) {
 function renderAdminEditForm(route) {
   const currentUID = auth.currentUser?.uid ?? '';
 
-  // Convert stored French grade back to display system for editing
-  const displayGrade = typeof convertFromFrench === 'function'
-    ? convertFromFrench(route.grade, getPreferredGradeSystem())
-    : route.createdGrade || route.grade;
+  const displayGrade = convertFromFrench(route.grade, getPreferredGradeSystem())
+    || route.createdGrade || route.grade;
 
-  // ── Audit: recent edits ────────────────────────────────────────────────
   const recentEditsHtml = route.recentEdits.length ? `
     <div style="margin-bottom:1rem">
       <div style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem">
@@ -275,7 +293,6 @@ function renderAdminEditForm(route) {
     </div>
   ` : '<p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">No edit history recorded yet.</p>';
 
-  // ── Audit: last ownership transfer ────────────────────────────────────
   const lot = route.lastOwnershipTransfer;
   const ownershipHtml = lot ? `
     <div style="margin-bottom:1rem">
@@ -332,7 +349,6 @@ function renderAdminEditForm(route) {
         <div style="font-size:0.75rem;font-weight:600;color:#f97316;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
           ⚙ Admin Fields
         </div>
-
         <div class="form-group">
           <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
             <span>Owner UID <span style="font-weight:400;color:#94a3b8">(paste new UID to transfer)</span></span>
@@ -344,7 +360,6 @@ function renderAdminEditForm(route) {
                  value="${escapeHtml(route.createdBy ?? '')}"
                  style="font-family:monospace;font-size:0.82rem" />
         </div>
-
         <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;cursor:pointer;margin-top:0.5rem">
           <input type="checkbox" id="admin-f-orphaned" ${route.isOrphaned ? 'checked' : ''} />
           Mark as orphaned
@@ -402,7 +417,6 @@ function renderAdminEditForm(route) {
       });
       status.style.color = 'var(--success-color, #16a34a)';
       status.textContent = '✓ Saved successfully';
-      // Refresh the form to show updated audit trail
       setTimeout(() => openAdminEditForm(route.id), 800);
     } catch (err) {
       console.error('adminSaveRoute failed:', err);
