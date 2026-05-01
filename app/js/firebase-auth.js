@@ -22,7 +22,10 @@ import { auth, db } from './firebase-config.js';
 export async function initAuth() {
   return new Promise(resolve => {
     onAuthStateChanged(auth, async user => {
-      if (user) await _ensureUserDocument(user);
+      if (user && !sessionStorage.getItem('_userDocEnsured')) {
+        await _ensureUserDocument(user);
+        sessionStorage.setItem('_userDocEnsured', '1');
+      }
       resolve(user ?? null);
     });
   });
@@ -75,11 +78,15 @@ export async function deleteAccount() {
 
 // Ensure a users/{uid} document exists so admin getCountFromServer returns correct totals.
 // Uses merge:true so it never clobbers existing fields written by iOS.
+// registeredAt is only written on first creation (setDoc + merge leaves existing fields intact).
+// NOTE: iOS should do an equivalent write on first sync to be counted here.
 async function _ensureUserDocument(user) {
   try {
     await setDoc(doc(db, 'users', user.uid), {
-      uid:        user.uid,
-      lastSeenAt: serverTimestamp(),
+      uid:          user.uid,
+      lastSeenWeb:  serverTimestamp(),
+      // registeredAt only lands on the very first write; merge:true leaves it alone after that
+      registeredAt: serverTimestamp(),
     }, { merge: true });
   } catch (err) {
     console.warn('ensureUserDocument failed (non-fatal):', err.code ?? err);
