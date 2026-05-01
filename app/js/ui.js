@@ -145,20 +145,21 @@ function showDetailModal(climb) {
         <span style="font-weight:400;color:inherit">${escapeHtml(climb.difficulty || '—')}</span>
       </h2>
       ${climb.routeType ? `<span style="font-size:0.9rem;color:#64748b;font-weight:500">${escapeHtml(climb.routeType)}</span>` : ''}
-      ${climb.centralRouteID ? `<span id="detail-central-route-chip" style="
-        display:inline-flex;align-items:center;gap:4px;
-        font-size:0.75rem;color:#64748b;
-        background:#f1f5f9;border-radius:6px;
-        padding:2px 8px;margin-left:4px;">
-        ☁ In community database
-      </span>` : ''}
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${climb.centralRouteID ? '0.4rem' : '1.25rem'}">
       <span style="color:#64748b;font-size:0.95rem">
         ${escapeHtml(climb.climbingArea || '')}${climb.crag ? ` &rsaquo; ${escapeHtml(climb.crag)}` : ''}
       </span>
       <span class="badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span>
     </div>
+    ${climb.centralRouteID ? `<div style="margin-bottom:1rem">
+      <span id="detail-central-route-chip" style="
+        display:inline-flex;align-items:center;gap:4px;
+        font-size:0.75rem;color:#64748b;
+        background:#f1f5f9;border-radius:6px;
+        padding:2px 8px;">☁ In community database
+      </span>
+    </div>` : ''}
     <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
       <tr>
         <td style="padding:0.35rem 0;color:#64748b;width:40%">Date</td>
