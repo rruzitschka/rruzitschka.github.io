@@ -139,7 +139,6 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
       "projectStatus": null,
       "projectNotes": null,
       "highPoint": null,
-      "centralRouteID": "route_xyz",
       "updatedAt": "2026-08-15T18:30:00.000Z"
     }
   ],
@@ -167,7 +166,6 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
 | `projectStatus` | string \| null | `Working` · `Close` · `On Hold` (projects) |
 | `projectNotes` | string \| null | Project-specific notes |
 | `highPoint` | string \| null | Highest point reached (projects) |
-| `centralRouteID` | string \| null | Linked route in the Central Route Database |
 | `updatedAt` | ISO8601 \| null | Last modification timestamp |
 
 ---
