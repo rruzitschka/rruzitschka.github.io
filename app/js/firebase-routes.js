@@ -199,6 +199,61 @@ function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSys
   }).catch(err => console.warn('updateCentralRoute failed:', err));
 }
 
+// ── Admin ────────────────────────────────────────────────────────────────
+
+let _adminStatusCache = null; // null = unknown, true/false = resolved
+
+/**
+ * Returns true if the current user is in the admins collection.
+ * Result is cached for the lifetime of the page session.
+ */
+async function checkAdminStatus() {
+  if (_adminStatusCache !== null) return _adminStatusCache;
+  const user = auth.currentUser;
+  if (!user) { _adminStatusCache = false; return false; }
+  try {
+    const doc = await db.collection('admins').doc(user.uid).get();
+    _adminStatusCache = doc.exists;
+  } catch {
+    _adminStatusCache = false;
+  }
+  return _adminStatusCache;
+}
+
+/**
+ * Admin: update any route's canonical fields plus ownership and orphan status.
+ * Returns a Promise — not fire-and-forget, so the UI can confirm success.
+ *
+ * @param {string} routeID
+ * @param {{ name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }} fields
+ */
+async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }) {
+  const french = normalizeToFrench(grade);
+  await db.collection('routes').doc(routeID).update({
+    name,
+    climbingArea:       climbingArea ?? '',
+    crag:               crag ?? '',
+    grade:              french,
+    createdGrade:       grade,
+    createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
+    routeType:          routeType ?? 'Sport',
+    nameSearch:         foldedForSearch(name),
+    cragSearch:         foldedForSearch(crag ?? ''),
+    createdBy:          createdBy,
+    isOrphaned:         isOrphaned ?? false,
+    orphanedAt:         isOrphaned ? firebase.firestore.FieldValue.serverTimestamp() : null,
+    updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * Admin: permanently delete a route document.
+ * Returns a Promise.
+ */
+async function adminDeleteRoute(routeID) {
+  await db.collection('routes').doc(routeID).delete();
+}
+
 // ── Soft link drift detection ──────────────────────────────────────────────
 
 /**

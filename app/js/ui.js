@@ -452,6 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatsView();
   });
 
+  document.getElementById('view-admin')?.addEventListener('click', e => {
+    e.preventDefault();
+    showAdminView();
+  });
+
   document.getElementById('view-account')?.addEventListener('click', e => {
     e.preventDefault();
     showAccountView();
@@ -681,6 +686,10 @@ async function loadData() {
       renderClimbsTable(climbs);
       bindFilterHandlers(climbs);
     }
+    // Reveal admin sidebar item if current user is an admin
+    checkAdminStatus().then(isAdmin => {
+      document.getElementById('view-admin')?.classList.toggle('hidden', !isAdmin);
+    });
   } catch (err) {
     showLoading(false);
     showToast('Failed to load climbs. Please try again.', 'error');
@@ -713,6 +722,7 @@ function showLogbookView() {
   document.getElementById('training-view').classList.add('hidden');
   document.getElementById('account-view')?.classList.add('hidden');
   document.getElementById('stats-view')?.classList.add('hidden');
+  document.getElementById('admin-view')?.classList.add('hidden');
 }
 
 function showAccountView() {
