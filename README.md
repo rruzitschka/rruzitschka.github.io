@@ -5,7 +5,7 @@ A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-base
 ## Tech Stack
 
 - **Vanilla HTML/CSS/JavaScript** — no framework, no build step
-- **Firebase JS SDK 10.x** (compat CDN) — Firestore, Auth, Storage
+- **Firebase JS SDK 12.12.1** (modular CDN via import map) — Firestore, Auth, Storage
 - **Chart.js 4.4.2** (CDN) — grade distribution and route type bar charts
 - **Sign In with Apple** via Firebase Auth
 
@@ -18,18 +18,26 @@ app/
 ├── css/
 │   └── app.css              Design system (variables, components, overlays)
 └── js/
-    ├── firebase-config.js   Firebase project config + SDK init
-    ├── firebase-auth.js     initAuth(), signInWithApple(), signOut()
+    ├── firebase-config.js   Firebase init — exports db, auth, app, storage
+    ├── firebase-auth.js     initAuth(), signInWithApple(), signOut(), getCurrentUser()
     ├── firebase-climbs.js   fetchClimbs(), saveClimbNote(), saveAscent(), computeStats(), filterClimbs()
     ├── firebase-training.js fetchTrainingSessions(), saveTrainingSession(), computeTrainingStats()
-    ├── grades.js            GRADES arrays, detectGradeSystem() — shared grade logic
-    ├── stats.js             Client-side stats: summary, grade distribution, route types, heatmap, streaks, training
+    ├── grades.js            GRADES arrays, detectGradeSystem() — shared grade logic (regular script)
+    ├── stats.js             Client-side stats: summary, grade distribution, route types, heatmap, streaks (regular script)
     ├── firebase-routes.js   Central Route Database service — search, create, link, owner update, admin ops
     ├── firebase-api-keys.js API key management — create, list, revoke partner API keys
     ├── admin.js             Admin panel — route moderation, ownership transfer, audit trail
     ├── ui.js                All DOM rendering, overlays, event handlers, view routing
-    └── mock.js              Mock mode — overrides all Firebase calls with local data
+    └── mock.js              Mock mode — exports mock implementations of all Firebase service functions
 ```
+
+### Module system
+
+All `firebase-*.js`, `admin.js`, and `ui.js` are **ES modules** loaded via a `<script type="importmap">` in `index.html` that maps bare specifiers (`firebase/app`, `firebase/firestore`, etc.) to the Firebase 12.12.1 CDN URLs. There is no build step or bundler — modules are resolved natively by the browser.
+
+`grades.js` and `stats.js` remain regular `<script>` tags (no imports/exports needed) and are loaded before any module scripts. They expose globals on `window` (`window.GRADES`, `window.detectGradeSystem`, etc.) that ES modules access at runtime.
+
+The single entry-point module is an inline `<script type="module">` at the bottom of `index.html`. It imports from `firebase-auth.js` and `ui.js`, which cascade all other imports. In mock mode (`?mock=true`) it dynamically imports `mock.js` and calls `setMockServices()` to swap all Firebase bindings before `loadData()` runs.
 
 ## Views
 
@@ -64,6 +72,7 @@ Shared with the iOS app. All paths under `users/{uid}/`:
 
 | Path | Entity |
 |------|--------|
+| `users/{uid}` | User registration doc — written on first web sign-in and first iOS sync. Fields: `uid`, `registeredAt`, `lastSeenWeb` / `lastSeenIOS` |
 | `climbNotes/{id}` | Climb note (send or project) |
 | `climbNotes/{id}/ascents/{id}` | Repeat ascent sub-collection |
 | `climbNotes/{id}/photos/{id}` | Photo metadata sub-collection |
@@ -209,15 +218,24 @@ Ownership transfers additionally write `lastOwnershipTransfer` with `fromUID`, `
 
 ## Development
 
-### Mock Mode (no login required)
+### Local server
+
+Python 3.14's `http.server` has a known bug (empty responses). Use the included Node.js server instead:
 
 ```bash
 cd WebSite/sendlogwebsite
-python3 -m http.server 8080
-# Open: http://localhost:8080/app/?mock=true
+node serve.js . 8080
 ```
 
-Mock mode loads `mock.js` instead of Firebase, which overrides all data calls with in-memory fixtures. No authentication or network access required.
+Leave the terminal open while testing. `serve.js` is git-ignored.
+
+### Mock Mode (no login required)
+
+```
+http://localhost:8080/app/?mock=true
+```
+
+`mock.js` exports mock implementations of all Firebase service functions. The init script dynamically imports it and calls `setMockServices()` to replace the real Firebase bindings before `loadData()` runs — no network calls are made.
 
 | Mocked data | Detail |
 |-------------|--------|
