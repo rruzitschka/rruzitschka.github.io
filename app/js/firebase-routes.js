@@ -184,18 +184,28 @@ function completedProject(routeID) {
  * @param {{ name: string, climbingArea: string, crag: string, grade: string, gradeSystem: string, routeType: string }} fields
  */
 function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType }) {
+  const uid    = auth.currentUser?.uid ?? 'unknown';
   const french = normalizeToFrench(grade);
-  db.collection('routes').doc(routeID).update({
-    name:               name,
-    climbingArea:       climbingArea ?? '',
-    crag:               crag ?? '',
-    grade:              french,
-    createdGrade:       grade,
-    createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
-    routeType:          routeType ?? 'Sport',
-    nameSearch:         foldedForSearch(name),
-    cragSearch:         foldedForSearch(crag ?? ''),
-    updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+  const ref    = db.collection('routes').doc(routeID);
+  db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    const prev = snap.data().recentEdits ?? [];
+    const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
+    tx.update(ref, {
+      name,
+      climbingArea:       climbingArea ?? '',
+      crag:               crag ?? '',
+      grade:              french,
+      createdGrade:       grade,
+      createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
+      routeType:          routeType ?? 'Sport',
+      nameSearch:         foldedForSearch(name),
+      cragSearch:         foldedForSearch(crag ?? ''),
+      updatedBy:          uid,
+      updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+      recentEdits:        next,
+    });
   }).catch(err => console.warn('updateCentralRoute failed:', err));
 }
 
@@ -228,21 +238,45 @@ async function checkAdminStatus() {
  * @param {{ name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }} fields
  */
 async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }) {
+  const uid    = auth.currentUser?.uid ?? 'unknown';
   const french = normalizeToFrench(grade);
-  await db.collection('routes').doc(routeID).update({
-    name,
-    climbingArea:       climbingArea ?? '',
-    crag:               crag ?? '',
-    grade:              french,
-    createdGrade:       grade,
-    createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
-    routeType:          routeType ?? 'Sport',
-    nameSearch:         foldedForSearch(name),
-    cragSearch:         foldedForSearch(crag ?? ''),
-    createdBy:          createdBy,
-    isOrphaned:         isOrphaned ?? false,
-    orphanedAt:         isOrphaned ? firebase.firestore.FieldValue.serverTimestamp() : null,
-    updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+  const ref    = db.collection('routes').doc(routeID);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error('Route not found');
+    const data = snap.data();
+    const prev = data.recentEdits ?? [];
+    const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
+
+    const fields = {
+      name,
+      climbingArea:       climbingArea ?? '',
+      crag:               crag ?? '',
+      grade:              french,
+      createdGrade:       grade,
+      createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
+      routeType:          routeType ?? 'Sport',
+      nameSearch:         foldedForSearch(name),
+      cragSearch:         foldedForSearch(crag ?? ''),
+      createdBy,
+      isOrphaned:         isOrphaned ?? false,
+      orphanedAt:         isOrphaned ? new Date() : null,
+      updatedBy:          uid,
+      updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+      recentEdits:        next,
+    };
+
+    // Record ownership transfer if createdBy changed
+    if (createdBy && createdBy !== data.createdBy) {
+      fields.lastOwnershipTransfer = {
+        fromUID:        data.createdBy ?? null,
+        toUID:          createdBy,
+        transferredBy:  uid,
+        transferredAt:  new Date(),
+      };
+    }
+
+    tx.update(ref, fields);
   });
 }
 
@@ -252,6 +286,44 @@ async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeS
  */
 async function adminDeleteRoute(routeID) {
   await db.collection('routes').doc(routeID).delete();
+}
+
+/**
+ * Fetch a single route document by ID, returning all fields.
+ * Used by admin edit form to load recentEdits and lastOwnershipTransfer.
+ */
+async function getRoute(routeID) {
+  const snap = await db.collection('routes').doc(routeID).get();
+  if (!snap.exists) return null;
+  const d = snap.data();
+  return {
+    id:                    d.id ?? snap.id,
+    name:                  d.name ?? '',
+    climbingArea:          d.climbingArea ?? '',
+    crag:                  d.crag ?? '',
+    grade:                 d.grade ?? '',
+    createdGrade:          d.createdGrade ?? d.grade ?? '',
+    createdGradeSystem:    d.createdGradeSystem ?? 'French',
+    routeType:             d.routeType ?? 'Sport',
+    sendCount:             d.sendCount ?? 0,
+    projectCount:          d.projectCount ?? 0,
+    isOrphaned:            d.isOrphaned ?? false,
+    createdBy:             d.createdBy ?? null,
+    updatedBy:             d.updatedBy ?? null,
+    updatedAt:             d.updatedAt?.toDate() ?? null,
+    recentEdits:           (d.recentEdits ?? []).map(e => ({
+      editedAt: e.editedAt?.toDate ? e.editedAt.toDate() : new Date(e.editedAt),
+      editedBy: e.editedBy,
+    })),
+    lastOwnershipTransfer: d.lastOwnershipTransfer ? {
+      fromUID:       d.lastOwnershipTransfer.fromUID ?? null,
+      toUID:         d.lastOwnershipTransfer.toUID ?? null,
+      transferredBy: d.lastOwnershipTransfer.transferredBy ?? null,
+      transferredAt: d.lastOwnershipTransfer.transferredAt?.toDate
+        ? d.lastOwnershipTransfer.transferredAt.toDate()
+        : new Date(d.lastOwnershipTransfer.transferredAt),
+    } : null,
+  };
 }
 
 // ── Soft link drift detection ──────────────────────────────────────────────

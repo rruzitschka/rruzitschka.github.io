@@ -1,8 +1,23 @@
 // admin.js — Admin panel for central route database moderation
-// Depends on: firebase-routes.js (checkAdminStatus, adminSaveRoute, adminDeleteRoute, searchRoutes)
+// Depends on: firebase-routes.js (checkAdminStatus, adminSaveRoute, adminDeleteRoute, getRoute, searchRoutes)
 // Depends on: ui.js (escapeHtml, showConfirmDialog, getPreferredGradeSystem)
 
 'use strict';
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function fmtDateTime(date) {
+  if (!date) return '—';
+  return date.toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function uidShort(uid) {
+  if (!uid) return '—';
+  return uid.length > 12 ? uid.slice(0, 6) + '…' + uid.slice(-4) : uid;
+}
 
 // ── Admin view entry point ─────────────────────────────────────────────────
 
@@ -96,7 +111,7 @@ function renderAdminSearch() {
 
         resultsEl.querySelectorAll('.admin-route-row').forEach(el => {
           const route = filtered.find(r => r.id === el.dataset.id);
-          if (route) el.addEventListener('click', () => renderAdminEditForm(route));
+          if (route) el.addEventListener('click', () => openAdminEditForm(route.id));
         });
       })
       .catch(err => {
@@ -114,9 +129,67 @@ function renderAdminSearch() {
   document.getElementById('admin-search-orphaned').addEventListener('change', doSearch);
 }
 
-// ── Edit form ──────────────────────────────────────────────────────────────
+// ── Edit form — fetch full doc then render ─────────────────────────────────
+
+async function openAdminEditForm(routeID) {
+  const view = document.getElementById('admin-view');
+  view.innerHTML = '<div style="max-width:560px;margin:0 auto;padding:1.5rem 0;color:#94a3b8;font-size:0.875rem">Loading…</div>';
+  try {
+    const route = await getRoute(routeID);
+    if (!route) throw new Error('Route not found');
+    renderAdminEditForm(route);
+  } catch (err) {
+    console.error('openAdminEditForm failed:', err);
+    view.innerHTML = `<div style="max-width:560px;margin:0 auto;padding:1.5rem 0">
+      <button id="admin-back-btn" class="btn btn-secondary btn-sm" style="margin-bottom:1rem">← Back</button>
+      <p style="color:#ef4444">Failed to load route: ${escapeHtml(err.message ?? err)}</p>
+    </div>`;
+    document.getElementById('admin-back-btn')?.addEventListener('click', renderAdminSearch);
+  }
+}
+
+// ── Edit form render ───────────────────────────────────────────────────────
 
 function renderAdminEditForm(route) {
+  const currentUID = auth.currentUser?.uid ?? '';
+
+  // Convert stored French grade back to display system for editing
+  const displayGrade = typeof convertFromFrench === 'function'
+    ? convertFromFrench(route.grade, getPreferredGradeSystem())
+    : route.createdGrade || route.grade;
+
+  // ── Audit: recent edits ────────────────────────────────────────────────
+  const recentEditsHtml = route.recentEdits.length ? `
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem">
+        Recent Edits (last ${route.recentEdits.length})
+      </div>
+      ${route.recentEdits.map(e => `
+        <div style="font-size:0.8rem;color:#64748b;padding:3px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px">
+          <span style="color:#94a3b8;min-width:140px">${fmtDateTime(e.editedAt)}</span>
+          <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(e.editedBy)}">${uidShort(e.editedBy)}</span>
+          ${e.editedBy === currentUID ? '<span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ''}
+        </div>
+      `).join('')}
+    </div>
+  ` : '<p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">No edit history recorded yet.</p>';
+
+  // ── Audit: last ownership transfer ────────────────────────────────────
+  const lot = route.lastOwnershipTransfer;
+  const ownershipHtml = lot ? `
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem">
+        Last Ownership Transfer
+      </div>
+      <div style="font-size:0.8rem;color:#64748b;background:#f8fafc;border:1px solid var(--border-color);border-radius:6px;padding:8px 10px;line-height:1.8">
+        <div><span style="color:#94a3b8;width:80px;display:inline-block">When</span> ${fmtDateTime(lot.transferredAt)}</div>
+        <div><span style="color:#94a3b8;width:80px;display:inline-block">From</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.fromUID ?? '')}">${uidShort(lot.fromUID)}</span></div>
+        <div><span style="color:#94a3b8;width:80px;display:inline-block">To</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.toUID ?? '')}">${uidShort(lot.toUID)}</span></div>
+        <div><span style="color:#94a3b8;width:80px;display:inline-block">By admin</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.transferredBy ?? '')}">${uidShort(lot.transferredBy)}</span>${lot.transferredBy === currentUID ? ' <span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ''}</div>
+      </div>
+    </div>
+  ` : '<p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">No ownership transfer recorded.</p>';
+
   const view = document.getElementById('admin-view');
   view.innerHTML = `
     <div style="max-width:560px;margin:0 auto;padding:1.5rem 0">
@@ -142,7 +215,7 @@ function renderAdminEditForm(route) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Grade</label>
-          <input type="text" id="admin-f-grade" class="form-input" value="${escapeHtml(route.displayGrade)}" />
+          <input type="text" id="admin-f-grade" class="form-input" value="${escapeHtml(displayGrade)}" />
         </div>
         <div class="form-group">
           <label class="form-label">Route Type</label>
@@ -158,25 +231,38 @@ function renderAdminEditForm(route) {
         <div style="font-size:0.75rem;font-weight:600;color:#f97316;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
           ⚙ Admin Fields
         </div>
+
         <div class="form-group">
-          <label class="form-label">
-            Owner UID
-            <span style="font-weight:400;color:#94a3b8">(paste new UID to transfer ownership)</span>
+          <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Owner UID <span style="font-weight:400;color:#94a3b8">(paste new UID to transfer)</span></span>
+            <button id="admin-transfer-to-me" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:2px 8px">
+              Transfer to me
+            </button>
           </label>
           <input type="text" id="admin-f-createdby" class="form-input"
                  value="${escapeHtml(route.createdBy ?? '')}"
                  style="font-family:monospace;font-size:0.82rem" />
         </div>
+
         <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;cursor:pointer;margin-top:0.5rem">
           <input type="checkbox" id="admin-f-orphaned" ${route.isOrphaned ? 'checked' : ''} />
           Mark as orphaned
         </label>
       </div>
 
+      <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
+        <div style="font-size:0.75rem;font-weight:600;color:#64748b;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
+          Audit Trail
+        </div>
+        ${recentEditsHtml}
+        ${ownershipHtml}
+      </div>
+
       <div style="background:#f8fafc;border:1px solid var(--border-color);border-radius:8px;padding:0.75rem;margin-bottom:1.25rem;font-size:0.8rem;color:#64748b">
-        <strong>Route ID:</strong> <span style="font-family:monospace">${escapeHtml(route.id)}</span><br>
-        <strong>Sends:</strong> ${route.sendCount} &nbsp;
-        <strong>Projects:</strong> ${route.projectCount}
+        <strong>Route ID:</strong> <span style="font-family:monospace;font-size:0.75rem">${escapeHtml(route.id)}</span><br>
+        <strong>Last saved:</strong> ${fmtDateTime(route.updatedAt)}
+        ${route.updatedBy ? ` &nbsp;·&nbsp; <span title="${escapeHtml(route.updatedBy)}">${uidShort(route.updatedBy)}</span>` : ''}
+        &nbsp;·&nbsp; <strong>Sends:</strong> ${route.sendCount} &nbsp; <strong>Projects:</strong> ${route.projectCount}
       </div>
 
       <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
@@ -192,6 +278,10 @@ function renderAdminEditForm(route) {
 
   document.getElementById('admin-back-btn').addEventListener('click', renderAdminSearch);
   document.getElementById('admin-cancel-btn').addEventListener('click', renderAdminSearch);
+
+  document.getElementById('admin-transfer-to-me').addEventListener('click', () => {
+    document.getElementById('admin-f-createdby').value = auth.currentUser?.uid ?? '';
+  });
 
   document.getElementById('admin-save-btn').addEventListener('click', async () => {
     const btn    = document.getElementById('admin-save-btn');
@@ -211,6 +301,8 @@ function renderAdminEditForm(route) {
       });
       status.style.color = 'var(--success-color, #16a34a)';
       status.textContent = '✓ Saved successfully';
+      // Refresh the form to show updated audit trail
+      setTimeout(() => openAdminEditForm(route.id), 800);
     } catch (err) {
       console.error('adminSaveRoute failed:', err);
       status.style.color = '#ef4444';
