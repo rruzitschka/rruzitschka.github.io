@@ -135,12 +135,12 @@ async function loadAndRenderAdminStats() {
 
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem">
-        ${adminStatCard('Community Routes', totalRoutes, '🗺️')}
-        ${adminStatCard('Active Routes', activeRoutes, '✅')}
-        ${adminStatCard('Orphaned Routes', orphanedRoutes, '👻', orphanedRoutes > 0 ? '#f97316' : null)}
-        ${adminStatCard('Registered Users', totalUsers, '👥')}
-        ${adminStatCard('API Keys Issued', totalKeys, '🔑')}
-        ${adminStatCard('Users with API Keys', usersWithKeys, '🔐')}
+        ${adminStatCard('Community Routes', totalRoutes)}
+        ${adminStatCard('Active Routes', activeRoutes)}
+        ${adminStatCard('Orphaned Routes', orphanedRoutes, orphanedRoutes > 0 ? '#f97316' : null)}
+        ${adminStatCard('Registered Users', totalUsers)}
+        ${adminStatCard('API Keys Issued', totalKeys)}
+        ${adminStatCard('Users with API Keys', usersWithKeys)}
       </div>
       <p style="font-size:0.75rem;color:#94a3b8;text-align:right">
         <button id="admin-stats-refresh" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:0.75rem;">↻ Refresh</button>
@@ -156,11 +156,10 @@ async function loadAndRenderAdminStats() {
   }
 }
 
-function adminStatCard(label, value, icon, valueColor) {
+function adminStatCard(label, value, valueColor) {
   return `
     <div style="background:var(--card-bg,#fff);border:1px solid var(--border-color);
       border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:4px">
-      <div style="font-size:1.4rem">${icon}</div>
       <div style="font-size:1.6rem;font-weight:700;color:${valueColor ?? 'inherit'}">${value}</div>
       <div style="font-size:0.78rem;color:#64748b">${label}</div>
     </div>
