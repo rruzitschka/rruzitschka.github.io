@@ -145,6 +145,13 @@ function showDetailModal(climb) {
         <span style="font-weight:400;color:inherit">${escapeHtml(climb.difficulty || '—')}</span>
       </h2>
       ${climb.routeType ? `<span style="font-size:0.9rem;color:#64748b;font-weight:500">${escapeHtml(climb.routeType)}</span>` : ''}
+      ${climb.centralRouteID ? `<span id="detail-central-route-chip" style="
+        display:inline-flex;align-items:center;gap:4px;
+        font-size:0.75rem;color:#64748b;
+        background:#f1f5f9;border-radius:6px;
+        padding:2px 8px;margin-left:4px;">
+        ☁ In community database
+      </span>` : ''}
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
       <span style="color:#64748b;font-size:0.95rem">
@@ -218,6 +225,18 @@ function showDetailModal(climb) {
   content.innerHTML = html;
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+
+  // Async: fetch central route ownership and update chip
+  if (climb.centralRouteID) {
+    db.collection('routes').doc(climb.centralRouteID).get().then(doc => {
+      const chip = document.getElementById('detail-central-route-chip');
+      if (!chip || !doc.exists) return;
+      const createdBy = doc.data().createdBy;
+      if (createdBy && createdBy === auth.currentUser?.uid) {
+        chip.innerHTML = '☁ In community database <span title="You created this route">👤</span>';
+      }
+    }).catch(() => {}); // silently ignore — chip stays without 👤
+  }
 
   // Async photo load
   if (climb.recordName && typeof fetchPhotos === 'function') {
@@ -1147,7 +1166,8 @@ function bindSendOverlayHandlers() {
 
   ['so-route', 'so-crag', 'so-area'].forEach(fieldId => {
     document.getElementById(fieldId)?.addEventListener('input', () => {
-      if (_centralRouteID && shouldClearSoftLink(
+      const isOwner = _centralRouteCreatedBy && _centralRouteCreatedBy === auth.currentUser?.uid;
+      if (_centralRouteID && !isOwner && shouldClearSoftLink(
         { name: _centralRouteName, crag: _centralRouteCrag, area: _centralRouteArea },
         { name: document.getElementById('so-route').value,
           crag: document.getElementById('so-crag').value,
@@ -1213,6 +1233,18 @@ function bindSendOverlayHandlers() {
         noteText:       document.getElementById('so-notes').value.trim() || null,
         centralRouteID: centralID ?? null,
       });
+
+      // Propagate edits back to central route if current user is the creator
+      if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
+        updateCentralRoute(centralID, {
+          name:         routeVal,
+          climbingArea: document.getElementById('so-area').value.trim() || '',
+          crag:         document.getElementById('so-crag').value.trim() || '',
+          grade:        document.getElementById('so-difficulty').value || '',
+          gradeSystem:  getPreferredGradeSystem(),
+          routeType:    document.getElementById('so-routetype').value,
+        });
+      }
 
       if (centralID) {
         if (projectRecordName) {
@@ -1329,7 +1361,8 @@ function bindProjectOverlayHandlers() {
 
   ['po-route', 'po-crag', 'po-area'].forEach(fieldId => {
     document.getElementById(fieldId)?.addEventListener('input', () => {
-      if (_centralRouteID && shouldClearSoftLink(
+      const isOwner = _centralRouteCreatedBy && _centralRouteCreatedBy === auth.currentUser?.uid;
+      if (_centralRouteID && !isOwner && shouldClearSoftLink(
         { name: _centralRouteName, crag: _centralRouteCrag, area: _centralRouteArea },
         { name: document.getElementById('po-route').value,
           crag: document.getElementById('po-crag').value,
@@ -1392,6 +1425,18 @@ function bindProjectOverlayHandlers() {
         noteText:         document.getElementById('po-notes').value.trim() || null,
         centralRouteID:   centralID ?? null,
       });
+
+      // Propagate edits back to central route if current user is the creator
+      if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
+        updateCentralRoute(centralID, {
+          name:         routeVal,
+          climbingArea: document.getElementById('po-area').value.trim() || '',
+          crag:         document.getElementById('po-crag').value.trim() || '',
+          grade:        document.getElementById('po-difficulty').value || '',
+          gradeSystem:  getPreferredGradeSystem(),
+          routeType:    document.getElementById('po-routetype').value,
+        });
+      }
 
       if (centralID) {
         const isNew = !recordName;
