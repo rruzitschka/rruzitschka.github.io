@@ -513,9 +513,10 @@ function bindFilterHandlers(initialClimbs) {
     ['view-all', 'view-projects', 'view-sent'].forEach(id => {
       document.getElementById(id)?.classList.remove('active');
     });
-    // Deactivate training and stats sidebar items
+    // Deactivate training, stats and admin sidebar items
     document.querySelector('[data-view="training"]')?.classList.remove('active');
     document.getElementById('view-stats')?.classList.remove('active');
+    document.getElementById('view-admin')?.classList.remove('active');
     const viewMap  = { all: 'view-all', projects: 'view-projects', sent: 'view-sent' };
     const labelMap = { all: 'All Climbs', projects: 'Projects', sent: 'Sent Climbs' };
     document.getElementById(viewMap[view])?.classList.add('active');
@@ -824,6 +825,7 @@ function showTrainingView() {
     document.getElementById(id)?.classList.remove('active');
   });
   document.getElementById('view-stats')?.classList.remove('active');
+  document.getElementById('view-admin')?.classList.remove('active');
   document.querySelector('[data-view="training"]')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
@@ -852,6 +854,7 @@ function showAccountView() {
   });
   document.querySelector('[data-view="training"]')?.classList.remove('active');
   document.getElementById('view-stats')?.classList.remove('active');
+  document.getElementById('view-admin')?.classList.remove('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
 
@@ -889,6 +892,7 @@ async function showStatsView() {
     document.getElementById(id)?.classList.remove('active');
   });
   document.querySelector('[data-view="training"]')?.classList.remove('active');
+  document.getElementById('view-admin')?.classList.remove('active');
   document.getElementById('view-stats')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');

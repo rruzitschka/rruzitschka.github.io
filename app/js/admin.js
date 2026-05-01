@@ -55,7 +55,7 @@ export async function showAdminView() {
   });
   document.getElementById('view-stats')?.classList.remove('active');
   document.querySelector('[data-view="training"]')?.classList.remove('active');
-  document.querySelector('[data-view="admin"]')?.classList.add('active');
+  document.getElementById('view-admin')?.classList.add('active');
   document.getElementById('btn-log-send')?.classList.add('hidden');
   document.getElementById('btn-add-project')?.classList.add('hidden');
 
