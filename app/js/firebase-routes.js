@@ -173,6 +173,32 @@ function completedProject(routeID) {
   }).catch(err => console.warn('completedProject counters failed:', err));
 }
 
+// ── Owner update ───────────────────────────────────────────────────────────
+
+/**
+ * Update a central route's canonical fields when the creator edits their climb.
+ * Fire-and-forget — never blocks the user's save.
+ * Firestore rules enforce that only the original creator can write this.
+ *
+ * @param {string} routeID
+ * @param {{ name: string, climbingArea: string, crag: string, grade: string, gradeSystem: string, routeType: string }} fields
+ */
+function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType }) {
+  const french = normalizeToFrench(grade);
+  db.collection('routes').doc(routeID).update({
+    name:               name,
+    climbingArea:       climbingArea ?? '',
+    crag:               crag ?? '',
+    grade:              french,
+    createdGrade:       grade,
+    createdGradeSystem: gradeSystem ?? detectRouteGradeSystem(grade),
+    routeType:          routeType ?? 'Sport',
+    nameSearch:         foldedForSearch(name),
+    cragSearch:         foldedForSearch(crag ?? ''),
+    updatedAt:          firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(err => console.warn('updateCentralRoute failed:', err));
+}
+
 // ── Soft link drift detection ──────────────────────────────────────────────
 
 /**
