@@ -144,7 +144,7 @@ function adminStatCard(label, value, icon, valueColor) {
       <div style="font-size:0.78rem;color:#64748b">${label}</div>
     </div>
   `;
-}─────
+}
 
 function renderAdminSearch() {
   const el = document.getElementById('admin-tab-content');
