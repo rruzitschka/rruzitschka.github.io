@@ -1,10 +1,10 @@
 # SendLog Web App
 
-A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-based view of your climbing logbook with full CRUD support for climb notes, ascents, and training sessions.
+A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-based view of your climbing logbook with full CRUD support for climb notes, ascents, training sessions, and the shared central route database.
 
 ## Tech Stack
 
-- **Vanilla HTML/CSS/JavaScript** — no framework dependencies
+- **Vanilla HTML/CSS/JavaScript** — no framework, no build step
 - **Firebase JS SDK 10.x** (compat CDN) — Firestore, Auth, Storage
 - **Chart.js 4.4.2** (CDN) — grade distribution and route type bar charts
 - **Sign In with Apple** via Firebase Auth
@@ -13,21 +13,22 @@ A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-base
 
 ```
 app/
-├── index.html              Main dashboard (auth gate + app shell)
-├── login.html              Sign In with Apple landing page
+├── index.html               Main dashboard (auth gate + app shell)
+├── login.html               Sign In with Apple landing page
 ├── css/
-│   └── app.css             Design system (variables, components, overlays)
+│   └── app.css              Design system (variables, components, overlays)
 └── js/
-    ├── firebase-config.js  Firebase project config + SDK init
-    ├── firebase-auth.js    initAuth(), signInWithApple(), signOut()
-    ├── firebase-climbs.js  fetchClimbs(), saveClimbNote(), saveAscent(), computeStats(), filterClimbs()
+    ├── firebase-config.js   Firebase project config + SDK init
+    ├── firebase-auth.js     initAuth(), signInWithApple(), signOut()
+    ├── firebase-climbs.js   fetchClimbs(), saveClimbNote(), saveAscent(), computeStats(), filterClimbs()
     ├── firebase-training.js fetchTrainingSessions(), saveTrainingSession(), computeTrainingStats()
-    ├── grades.js           GRADES arrays, detectGradeSystem() — shared grade logic
-    ├── stats.js            Client-side stats: summary, grade distribution, route types, heatmap, streaks, training
-    ├── ui.js               All DOM rendering, overlays, event handlers, view routing
-    ├── firebase-routes.js  Central Route Database service — search, create, and link shared route docs
+    ├── grades.js            GRADES arrays, detectGradeSystem() — shared grade logic
+    ├── stats.js             Client-side stats: summary, grade distribution, route types, heatmap, streaks, training
+    ├── firebase-routes.js   Central Route Database service — search, create, link, owner update, admin ops
     ├── firebase-api-keys.js API key management — create, list, revoke partner API keys
-    └── mock.js             Mock mode — overrides all Firebase calls with local data
+    ├── admin.js             Admin panel — route moderation, ownership transfer, audit trail
+    ├── ui.js                All DOM rendering, overlays, event handlers, view routing
+    └── mock.js              Mock mode — overrides all Firebase calls with local data
 ```
 
 ## Views
@@ -39,6 +40,7 @@ app/
 | **Training** | Training session log with duration and type; summary stats (total sessions, hours, avg/week) |
 | **Statistics** | Client-side analytics dashboard (see below) |
 | **Account** | Sign-in status, grade preference, data export, API key management, danger zone |
+| **Admin** | *(admin users only)* Central route database moderation panel — visible only when the signed-in user is in the `admins` Firestore collection |
 
 ### Statistics View
 
@@ -56,9 +58,9 @@ Computed entirely client-side from already-loaded climb and training data. No ex
 | Training Summary | Total sessions, total hours, avg sessions/week |
 | Training by Type | Bar chart of sessions grouped by type |
 
+## Firestore Data Model
 
-
-Shared with iOS app. All paths are under `users/{uid}/`:
+Shared with the iOS app. All paths under `users/{uid}/`:
 
 | Path | Entity |
 |------|--------|
@@ -69,11 +71,12 @@ Shared with iOS app. All paths are under `users/{uid}/`:
 
 All user documents include `updatedAt` (server timestamp) and soft-delete via `deletedAt`.
 
-**Global collection** (not scoped to a user):
+**Global collections** (not scoped to a user):
 
 | Path | Entity |
 |------|--------|
 | `routes/{id}` | Central Route Database entry (shared across all users) |
+| `admins/{uid}` | Admin roster — presence of a document grants admin privileges |
 
 ## Send Types
 
@@ -89,19 +92,38 @@ Users can generate personal API keys from **Account → API Keys** to give third
 - The raw key is shown exactly once in a one-time display overlay after creation — it is never stored in Firestore in plaintext
 - Full API reference: [`docs/api.md`](docs/api.md)
 
+---
+
 ## Central Route Database
 
 A shared, global Firestore collection (`routes/`) that lives outside the per-user path. Any logged-in user can search for and link to an existing route, or create a new one. This enables cross-user statistics (e.g. total sends on a route) without duplicating route metadata in every user's document.
 
-### How it works
+### Linking a route
 
-1. A **🔍 icon** appears next to the "Route Name" label in the log form. Clicking it opens a search overlay.
-2. Typing in the overlay queries `searchRoutes()`, which prefix-searches on the route name and crag using folded (lowercase, diacritic-stripped) search fields.
-3. Selecting a result **pre-fills** the form's name, crag, area, and grade fields.
-4. A **"Create new route"** option is always available at the bottom of results if the route doesn't exist yet.
+1. A **🔍 icon** appears next to the Route Name field in the log send and add project overlays. Clicking it opens a search overlay.
+2. Typing queries `searchRoutes()`, which prefix-searches on name and crag using folded (lowercase, diacritic-stripped) search fields.
+3. Selecting a result **pre-fills** the form's name, crag, area, grade, and route type fields.
+4. A **"Create new route"** option is available at the bottom of results if the route doesn't exist yet. A duplicate-name warning is shown before creating.
 5. On save, `centralRouteID` is written to the `climbNote` document and the matching route's counter is incremented atomically.
-6. **Drift detection:** if the user edits name, crag, or area after linking, `shouldClearSoftLink()` detects the mismatch and silently clears `centralRouteID` before saving.
-7. **👤 icon** appears next to routes in search results and edit overlays when the logged-in user is the creator.
+
+### Community database indicator
+
+When viewing the detail modal for a climb that is linked to a central route, a **☁ In community database** chip appears below the area/crag line. If the signed-in user is the creator of that route, a **👤** icon is appended to the chip (resolved asynchronously on modal open).
+
+### Drift detection
+
+If the user edits the name, crag, or area fields after linking a route:
+- **Non-owners:** `shouldClearSoftLink()` detects the mismatch and clears `centralRouteID` before saving. The 🔍 button resets to unlinked.
+- **Owners:** the link is **preserved** — the owner is editing their own route, so the changes are propagated back to the central route document on save (see below).
+
+### Owner edit propagation
+
+When the route creator edits a linked climb's identity fields (name, area, crag, grade, routeType) and saves, `updateCentralRoute()` is called fire-and-forget after `saveClimbNote()`. This keeps the central route document in sync with the creator's source of truth.
+
+- All canonical fields are updated (including grade normalization to French, folded search fields)
+- `updatedBy` and `updatedAt` are written
+- A new entry is prepended to `recentEdits` (see schema below)
+- Non-owners who attempt the same call receive a silent `PERMISSION_DENIED` from Firestore rules
 
 ### `routes/{id}` document schema
 
@@ -111,25 +133,79 @@ A shared, global Firestore collection (`routes/`) that lives outside the per-use
 | `crag` | string | Crag / cliff name |
 | `climbingArea` | string | Broader area (region) |
 | `grade` | string | Canonical French grade |
+| `createdGrade` | string | Grade as originally entered by creator |
+| `createdGradeSystem` | string | Grade system of `createdGrade` (`French` / `YDS` / `UIAA`) |
+| `routeType` | string | `Sport` / `Trad` / `Boulder` / etc. |
 | `sendCount` | number | Atomic counter — incremented/decremented on save/delete |
 | `projectCount` | number | Atomic counter — incremented/decremented when saved as Project |
+| `attemptCount` | number | Atomic counter — incremented on attempt log |
 | `createdBy` | string | UID of the user who created the route |
-| `createdAt` | timestamp | Server timestamp |
-| `nameFolded` | string | Lowercase, diacritic-stripped name (for prefix search) |
-| `cragFolded` | string | Lowercase, diacritic-stripped crag (for prefix search) |
+| `createdAt` | timestamp | Server timestamp at creation |
+| `updatedAt` | timestamp | Server timestamp of last write |
+| `updatedBy` | string | UID of the user who last saved the route (owner or admin) |
+| `nameSearch` | string | Lowercase, diacritic-stripped name (for prefix search) |
+| `cragSearch` | string | Lowercase, diacritic-stripped crag (for prefix search) |
+| `isOrphaned` | boolean | `true` if the creating user's account has been deleted |
+| `orphanedAt` | timestamp | When the route was orphaned (null if not orphaned) |
+| `recentEdits` | array (max 3) | Rolling log of the last 3 saves: `[{ editedAt, editedBy }]`, newest first |
+| `lastOwnershipTransfer` | object / null | Last transfer record: `{ fromUID, toUID, transferredBy, transferredAt }` |
 
-### `firebase-routes.js` API
+### `firebase-routes.js` public API
 
 | Function | Description |
 |----------|-------------|
-| `searchRoutes(query, options)` | Prefix-search by name/crag; returns id, name, crag, climbingArea, grade, sendCount, projectCount, createdBy |
-| `createCentralRoute(data)` | Creates a new route doc with grade normalization and folded search fields |
-| `incrementSendCount(id)` / `decrementSendCount(id)` | Atomic send counter update |
-| `incrementProjectCount(id)` / `decrementProjectCount(id)` | Atomic project counter update |
+| `searchRoutes(namePrefix, cragFilter, displaySystem, limit)` | Prefix-search by name; optional crag filter; returns grade converted to display system |
+| `createCentralRoute(data)` | Creates a new route doc with grade normalization and search fields; sets `createdBy` to current user |
+| `updateCentralRoute(routeID, fields)` | Fire-and-forget owner update — syncs identity fields + audit trail via transaction |
+| `incrementSendCount(id)` | Atomic send counter increment |
+| `decrementProjectCount(id)` / `incrementProjectCount(id)` | Atomic project counter updates |
 | `completedProject(id)` | Atomic: decrement projectCount + increment sendCount in a single write |
-| `shouldClearSoftLink(linked, current)` | Returns `true` if form fields have drifted from the linked route |
+| `shouldClearSoftLink(original, current)` | Returns `true` if form fields have drifted from the linked route |
+| `checkAdminStatus()` | Async; returns `true` if current user is in the `admins` collection. Cached per session. |
+| `adminSaveRoute(routeID, fields)` | Admin: update any route including `createdBy` and `isOrphaned`; writes audit trail via transaction |
+| `adminDeleteRoute(routeID)` | Admin: hard-delete a route document |
+| `getRoute(routeID)` | Fetch a single route document with all fields including `recentEdits` and `lastOwnershipTransfer` |
 
-Grade normalization: input is stored as a canonical French grade. YDS and UIAA input is detected and converted automatically before writing to Firestore.
+Grade normalization: all grades are stored as canonical French in the `grade` field. YDS and UIAA input is detected and converted automatically. The `displayGrade` in search results is converted back to the user's preferred system at query time.
+
+---
+
+## Admin Panel
+
+The **⚙ Admin** sidebar item is hidden for all users by default. After login, `checkAdminStatus()` reads the `admins/{uid}` document; if it exists, the item becomes visible. The panel is located at `app/js/admin.js`.
+
+### Security model
+
+Security is enforced **server-side by Firestore rules**, not by the UI. Even if a non-admin user calls `adminSaveRoute()` or `adminDeleteRoute()` directly from the browser console, Firestore returns `PERMISSION_DENIED`. The `isAdmin()` helper in `firestore.rules` checks for the presence of `admins/{uid}` on every admin write/delete operation.
+
+The admin UI being hosted on GitHub Pages (a public static host) is therefore safe — the rules are the enforcement boundary, not the host.
+
+### Seeding an admin
+
+In the Firebase Console → Firestore, create the `admins` collection with a document whose **ID is the target user's UID** and any field (e.g. `role: "admin"`). No code or Cloud Function is required. To revoke admin access, delete the document.
+
+### Admin capabilities
+
+| Feature | Description |
+|---------|-------------|
+| **Route search** | Same prefix search as the main app; results show send/project counts and orphan badge |
+| **Orphaned filter** | Checkbox to show only orphaned routes (e.g. after account deletion) |
+| **Edit any route** | Name, area, crag, grade, route type — all fields editable regardless of ownership |
+| **Transfer ownership** | Paste any user UID into the Owner UID field and save; `lastOwnershipTransfer` is recorded |
+| **Transfer to me** | One-click button pre-fills the Owner UID field with the current admin's UID |
+| **Orphan / unorphan** | Checkbox to manually set `isOrphaned` status |
+| **Delete route** | Hard-delete with confirmation dialog; blocked for non-admins by Firestore rules |
+| **Audit trail** | Edit form shows the rolling last-3-edits list (timestamp + UID) and the last ownership transfer record |
+
+### Audit trail fields
+
+All saves — whether by the route owner or an admin — write:
+- `updatedBy`: UID of the person who saved
+- An entry prepended to `recentEdits` (max 3, oldest dropped automatically)
+
+Ownership transfers additionally write `lastOwnershipTransfer` with `fromUID`, `toUID`, `transferredBy` (the admin's UID), and `transferredAt`. This is a single object that is overwritten on each transfer — it records the most recent transfer only.
+
+---
 
 ## Development
 
@@ -152,13 +228,13 @@ Mock mode loads `mock.js` instead of Firebase, which overrides all data calls wi
 ### Production
 
 Requires Firebase project with:
-- Firestore database
+- Firestore database with rules deployed from `Firebase/firestore.rules`
 - Firebase Auth with Sign In with Apple enabled
 - `firebase-config.js` with your project credentials (not committed)
+- *(Optional)* An `admins/{uid}` document for each admin user
 
 ## Known Limitations
 
-- Photos: iOS app uploads/downloads photos via Firebase Storage. Web app reads photo metadata but has no upload UI yet.
-- Scale: per-note sub-collection fetches; tested up to ~200 notes.
-- Central Route Database: web-only for now; iOS app does not yet read or write `centralRouteID` or increment route counters (implementation pending).
-
+- **Photos:** iOS app uploads/downloads photos via Firebase Storage. Web app reads and displays photo metadata but has no upload UI.
+- **Scale:** per-note sub-collection fetches tested up to ~200 notes.
+- **Ownership transfer by UID only:** the admin panel requires pasting a user UID. Email-to-UID lookup is not available client-side and would require a Cloud Function.
