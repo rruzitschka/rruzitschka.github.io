@@ -11,6 +11,7 @@ import {
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   deleteDoc,
   writeBatch,
@@ -78,16 +79,24 @@ export async function deleteAccount() {
 
 // Ensure a users/{uid} document exists so admin getCountFromServer returns correct totals.
 // Uses merge:true so it never clobbers existing fields written by iOS.
-// registeredAt is only written on first creation (setDoc + merge leaves existing fields intact).
+// registeredAt is only set on first creation by checking if it already exists.
 // NOTE: iOS should do an equivalent write on first sync to be counted here.
 async function _ensureUserDocument(user) {
   try {
-    await setDoc(doc(db, 'users', user.uid), {
-      uid:          user.uid,
-      lastSeenWeb:  serverTimestamp(),
-      // registeredAt only lands on the very first write; merge:true leaves it alone after that
-      registeredAt: serverTimestamp(),
-    }, { merge: true });
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+
+    const data = {
+      uid:         user.uid,
+      lastSeenWeb: serverTimestamp(),
+    };
+
+    // Only set registeredAt if the document doesn't exist yet or is missing the field
+    if (!snap.exists() || !snap.data().registeredAt) {
+      data.registeredAt = serverTimestamp();
+    }
+
+    await setDoc(userRef, data, { merge: true });
   } catch (err) {
     console.warn('ensureUserDocument failed (non-fatal):', err.code ?? err);
   }
