@@ -153,7 +153,7 @@
 <div class="user-manual">
     <div class="section">
         <h1 id="top">SendLog — Climbing Notes User Manual</h1>
-        <p class="version-info" style="text-align: center; margin-bottom: 1.5rem; font-weight: 500; color: var(--accent-color);">Version 3.9.0</p>
+        <p class="version-info" style="text-align: center; margin-bottom: 1.5rem; font-weight: 500; color: var(--accent-color);">Version 3.10.0</p>
 
         <div class="toc">
             <h2>Table of Contents</h2>
@@ -176,6 +176,7 @@
                 <li><a href="#cloud-sync-and-web-dashboard">Cloud Sync &amp; Web App <span class="new-badge">NEW</span></a></li>
                 <li><a href="#data-management">Data Management</a></li>
                 <li><a href="#settings-and-preferences">Settings and Preferences</a></li>
+                <li><a href="#api-keys">Partner API Keys</a></li>
                 <li><a href="#app-performance">App Performance</a></li>
             </ol>
         </div>
@@ -185,7 +186,7 @@
     <div class="section" id="introduction">
         <h2>1. Introduction</h2>
         <p>SendLog is an iOS app designed specifically for climbers to log, track, and analyze their climbing achievements. Whether you're documenting sent routes, working on projects, or tracking your progress over time, SendLog provides all the tools you need to enhance your climbing journey.</p>
-        <p>Version 3.8.0 introduces optional Cloud Sync powered by Firebase, photo attachments for climbs, a companion Web Dashboard at <a href="https://sendlog.at/app" target="_blank">sendlog.at/app</a>, expanded grade ranges, the ability to quickly duplicate a send, and the Central Route Database — a community-shared collection of routes you can search and link when logging sends and projects.</p>
+        <p>Version 3.9.0 introduced optional Cloud Sync powered by Firebase, photo attachments for climbs, a companion Web App at <a href="https://sendlog.at/app" target="_blank">sendlog.at/app</a>, expanded grade ranges, the ability to quickly duplicate a send, and the Central Route Database — a community-shared collection of routes you can search and link when logging sends and projects. Version 3.10.0 adds community ratings for routes in the Central Route Database.</p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
@@ -284,6 +285,7 @@
                     <li>Route name and crag/area</li>
                     <li>Grade</li>
                     <li>How many SendLog users have sent or are projecting the route</li>
+                    <li><strong>Community rating</strong>: the average star rating across all climbers who have logged that route (shown once at least one rating exists)</li>
                     <li>A 👤 icon if you originally created that route entry</li>
                 </ul>
             </li>
@@ -749,10 +751,17 @@
     <div class="section" id="app-performance">
         <h2>15. App Performance</h2>
 
+        <h3>v3.10.0 Improvements</h3>
+        <ul>
+            <li><strong>Community Ratings</strong>: Routes in the Central Route Database now display a community star rating — the average of all individual ratings submitted by climbers who have logged that route. Ratings appear in the route search results and in the route detail view.</li>
+            <li><strong>Rating aggregation</strong>: Your personal star rating on any send linked to a Central Route Database entry automatically contributes to that route’s community average.</li>
+        </ul>
+
         <h3>v3.9.0 Improvements</h3>
         <ul>
             <li><strong>Goals — full feature</strong>: Edit and delete goals; achieved grade goals kept as permanent history; confetti celebration on achievement; grade goals only count actual sends (not projects)</li>
             <li><strong>Goals Cloud Sync</strong>: Goals now sync across devices via Firestore</li>
+            <li><strong>Partner API Keys</strong>: Generate personal read-only API keys in the Web App to connect SendLog data to external tools and dashboards</li>
             <li><strong>Grade comparison fix</strong>: All grade systems now correctly distinguish the lowest grade from an unset grade</li>
         </ul>
 
@@ -775,11 +784,30 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
+    <!-- Partner API Keys -->
+    <div class="section" id="api-keys">
+        <h2>16. Partner API Keys <span class="new-badge">NEW in 3.9</span></h2>
+
+        <p>Partner API Keys let you give a third-party app or script read-only access to your SendLog data — for example a home dashboard, a spreadsheet that tracks your progress, or a custom training analysis tool — without sharing your password.</p>
+
+        <h3>Generating a Key</h3>
+        <ol>
+            <li>Open the Web App at <a href="https://sendlog.at/app" target="_blank">sendlog.at/app</a> and sign in</li>
+            <li>Go to <strong>My Account</strong> (person icon, top-right)</li>
+            <li>Scroll to the <strong>API Keys</strong> section and tap <strong>+ Generate</strong></li>
+            <li>Give the key a label and select the data scopes it may access (<code>climbs:read</code>, <code>training:read</code>, <code>goals:read</code>)</li>
+            <li>Copy the key immediately — for security it is never shown again</li>
+        </ol>
+        <p>You can revoke any key at any time from the same page. Keys are read-only — they cannot create, edit, or delete your data. Full API documentation is available at <a href="api.html">sendlog.at/docs/api</a>.</p>
+
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+    </div>
+
     <div class="back-to-home">
         <a href="../index.html">Return to Home Page</a>
     </div>
 
-    <p class="last-updated">Last Updated: April 2026 · Version 3.9.0</p>
+    <p class="last-updated">Last Updated: May 2026 · Version 3.10.0</p>
 </div>
 
 <footer>
