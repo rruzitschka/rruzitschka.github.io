@@ -13,44 +13,44 @@
     <style>
         /* ── Page shell ─────────────────────────────────────────────── */
         .api-page {
-            padding: 2rem;
+            padding: 1rem 1.5rem;
             max-width: 900px;
             margin: 0 auto;
         }
 
         .api-page h1 {
             text-align: center;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .api-page .subtitle {
             text-align: center;
-            color: #64748b;
-            font-size: 1rem;
-            margin-bottom: 2rem;
+            color: var(--text-soft);
+            font-size: 0.88rem;
+            margin-bottom: 1.2rem;
         }
 
         .api-page h2 {
-            margin-top: 2.5rem;
+            margin-top: 1.5rem;
         }
 
         .api-page h3 {
             font-family: 'Montserrat', sans-serif;
             color: var(--text-dark);
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-top: 1.25rem;
-            margin-bottom: 0.4rem;
+            margin-top: 1rem;
+            margin-bottom: 0.35rem;
         }
 
         /* ── ToC ─────────────────────────────────────────────────────── */
         .toc {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem 2rem;
+            border-radius: 6px;
+            padding: 1rem 1.5rem;
             box-shadow: none;
-            margin-bottom: 2rem;
+            margin-bottom: 1.2rem;
         }
 
         .toc h2 {
@@ -92,9 +92,9 @@
         .section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            border-radius: 6px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .section ul, .section ol {
@@ -107,8 +107,8 @@
         /* ── Endpoint cards ──────────────────────────────────────────── */
         .endpoint {
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin: 1.5rem 0;
+            border-radius: 6px;
+            margin: 1rem 0;
             overflow: hidden;
         }
 
@@ -131,7 +131,7 @@
         }
 
         .endpoint-body {
-            padding: 1.25rem;
+            padding: 1rem 1.25rem;
         }
 
         .endpoint-body > *:last-child { margin-bottom: 0; }
@@ -185,13 +185,13 @@
         pre {
             background: #1e293b;
             color: #e2e8f0;
-            border-radius: 8px;
-            padding: 1.1rem 1.25rem;
+            border-radius: 6px;
+            padding: 0.8rem 1rem;
             overflow-x: auto;
-            margin: 0.75rem 0 1rem;
+            margin: 0.5rem 0 0.75rem;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            line-height: 1.65;
+            font-size: 0.8rem;
+            line-height: 1.6;
         }
 
         pre code {
@@ -319,7 +319,7 @@
 
         /* ── Nav & footer helpers ────────────────────────────────────── */
         .back-to-toc {
-            margin-top: 1.5rem;
+            margin-top: 1rem;
             text-align: right;
         }
 
@@ -797,7 +797,7 @@ BASE="https://api-hoxktcdqvq-uc.a.run.app"
 curl "$BASE/v1/climbs?from=2026-01-01&amp;limit=100" \
   -H "X-API-Key: $API_KEY"</code></pre>
 
-        <h3>Home dashboard in Python</h3>
+        <h3>Fetch all climbs with pagination (Python)</h3>
         <pre><code>import requests
 
 API_KEY = "cnl_your_key_here"
@@ -821,19 +821,6 @@ while True:
 sends = [c for c in climbs if c["sendType"] != "Project"]
 print(f"Total sends : {len(sends)}")
 print(f"Hardest grade: {max((c['difficulty'] for c in sends), default='—')}")</code></pre>
-
-        <h3>Home Assistant REST sensor (YAML)</h3>
-        <pre><code>rest:
-  - resource: "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?limit=1&from=2026-01-01"
-    headers:
-      X-API-Key: "cnl_your_key_here"
-    scan_interval: 3600
-    sensor:
-      - name: "SendLog latest climb"
-        value_template: "{{ value_json.data[0].route }}"
-        attributes:
-          grade: "{{ value_json.data[0].difficulty }}"
-          date:  "{{ value_json.data[0].date }}"</code></pre>
 
         <div class="callout callout-info">
             <span class="callout-icon">ℹ️</span>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<!-- MOCK B — Editorial: near-black/white, single dark-green accent, 4-column grid, very tight -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendLog — Mock B: Editorial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ── Tokens ─────────────────────────────────────────────── */
+        :root {
+            --accent:     #1e3d2f;   /* dark forest green — single accent */
+            --accent-mid: #2d5a44;
+            --accent-dim: #4a7c61;
+            --bg:         #ffffff;
+            --bg-alt:     #f9fafb;
+            --bg-nav:     #111827;
+            --text:       #111827;
+            --text-mid:   #374151;
+            --text-soft:  #6b7280;
+            --text-inv:   #f9fafb;
+            --border:     #e5e7eb;
+            --radius:     4px;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        /* ── Type ───────────────────────────────────────────────── */
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--text-inv);
+            padding: 0.5rem 1rem 0.8rem;
+            letter-spacing: 0.02em;
+        }
+
+        h2 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin: 1.2rem 0 0.6rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 0.88rem;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+            font-weight: 700;
+        }
+
+        p { margin-bottom: 0.65rem; color: var(--text-mid); }
+
+        a { color: var(--accent-dim); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ── Header ─────────────────────────────────────────────── */
+        header { background: var(--bg-nav); }
+
+        .header-img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: cover;
+            display: block;
+            opacity: 0.6;
+            filter: grayscale(40%);
+        }
+
+        /* ── Nav ────────────────────────────────────────────────── */
+        .nav-container {
+            background: var(--bg-nav);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 0.5rem;
+            gap: 0;
+        }
+
+        nav a {
+            color: #9ca3af;
+            padding: 0.5rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        nav a:hover { color: #fff; border-bottom-color: var(--accent-dim); text-decoration: none; }
+
+        nav a.nav-app-link {
+            color: #fff;
+            background: var(--accent);
+            border-radius: 3px;
+            margin-left: 0.75rem;
+            border: none;
+            padding: 0.35rem 0.9rem;
+        }
+
+        nav a.nav-app-link:hover { background: var(--accent-mid); }
+
+        /* ── Layout ─────────────────────────────────────────────── */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0.8rem 1.5rem;
+        }
+
+        /* ── Intro ──────────────────────────────────────────────── */
+        .intro {
+            border-left: 3px solid var(--accent);
+            padding: 0.6rem 1rem;
+            margin: 1rem 0 0.5rem;
+            max-width: 700px;
+        }
+
+        .intro p {
+            font-size: 0.95rem;
+            color: var(--text-mid);
+            margin: 0;
+        }
+
+        /* ── Screenshots ────────────────────────────────────────── */
+        .screenshots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin: 0.7rem 0;
+        }
+
+        .screenshot-container {
+            aspect-ratio: 9/16;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .screenshots img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            filter: grayscale(20%);
+            transition: filter 0.2s;
+        }
+
+        .screenshots img:hover { filter: grayscale(0); }
+
+        /* ── Feature grid ───────────────────────────────────────── */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            margin: 0.7rem 0;
+            border: 1px solid var(--border);
+            background: var(--border);  /* gap colour */
+        }
+
+        .feature-card {
+            background: var(--bg);
+            padding: 0.85rem 0.9rem;
+        }
+
+        .feature-card h3 { font-size: 0.82rem; color: var(--text); }
+
+        .feature-card p { font-size: 0.8rem; color: var(--text-soft); margin: 0.25rem 0 0; }
+
+        .btn-web-app {
+            display: inline-block;
+            margin-top: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 3px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        /* ── What's New ─────────────────────────────────────────── */
+        .version-block {
+            border-left: 2px solid var(--border);
+            padding: 0 0 0.6rem 1rem;
+            margin: 0.5rem 0 0.8rem;
+            position: relative;
+        }
+
+        .version-block::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .version-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.35rem;
+        }
+
+        .version-block ul {
+            padding-left: 1rem;
+            list-style: disc;
+        }
+
+        .version-block li {
+            font-size: 0.84rem;
+            color: var(--text-mid);
+            margin-bottom: 0.3rem;
+        }
+
+        /* ── Download ───────────────────────────────────────────── */
+        .download {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .download a {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            padding: 0.65rem 2.5rem;
+            border-radius: 3px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            transition: background 0.2s;
+        }
+
+        .download a:hover { background: var(--accent-mid); text-decoration: none; }
+
+        /* ── FAQ ────────────────────────────────────────────────── */
+        .faq-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            margin: 0.7rem 0;
+        }
+
+        .faq {
+            background: var(--bg-alt);
+            padding: 0.8rem 1rem;
+        }
+
+        .faq strong {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 0.25rem;
+        }
+
+        .faq p { font-size: 0.8rem; color: var(--text-soft); margin: 0; }
+
+        /* ── About Me ───────────────────────────────────────────── */
+        .about-me {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-top: 2px solid var(--accent);
+            padding: 0.9rem 1.1rem;
+            margin: 1rem 0;
+        }
+
+        .about-me p { font-size: 0.85rem; }
+
+        /* ── Footer ─────────────────────────────────────────────── */
+        footer {
+            background: var(--bg-nav);
+            color: #4b5563;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.78rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 860px) {
+            .feature-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 540px) {
+            .feature-grid  { grid-template-columns: 1fr; }
+            .faq-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="../sendlogheaderpic.jpg" alt="SendLog" class="header-img">
+    <h1>SendLog — Climbing Notes App</h1>
+</header>
+
+<div class="nav-container">
+    <nav>
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="#whats-new">What's New</a>
+        <a href="#screenshots">Screenshots</a>
+        <a href="#faq">Q&amp;A</a>
+        <a href="#about-me">About Me</a>
+        <a href="../pages/manual.html">Manual</a>
+        <a href="../pages/api.html">API</a>
+        <a href="../pages/policy.html">Terms</a>
+        <a href="../app/login.html" class="nav-app-link">🌐 Web App</a>
+    </nav>
+</div>
+
+<section>
+
+    <div class="intro" id="about">
+        <p>SendLog is an iOS app for rock climbers to log, track, and analyze climbing activities. Record achievements, access detailed statistics, and keep notes for each climb — free, offline-first.</p>
+    </div>
+
+    <h2 id="screenshots">Screenshots</h2>
+    <div class="screenshots">
+        <div class="screenshot-container"><img src="../images/screenshot1_thumb.png" alt="Screenshot 1"></div>
+        <div class="screenshot-container"><img src="../images/screenshot2_thumb.png" alt="Screenshot 2"></div>
+        <div class="screenshot-container"><img src="../images/screenshot3_thumb.png" alt="Screenshot 3"></div>
+        <div class="screenshot-container"><img src="../images/screenshot4_thumb.png" alt="Screenshot 4"></div>
+        <div class="screenshot-container"><img src="../images/screenshot5_thumb.png" alt="Screenshot 5"></div>
+        <div class="screenshot-container"><img src="../images/screenshot6_thumb.png" alt="Screenshot 6"></div>
+    </div>
+
+    <h2 id="features">Features</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>Log Climbing Routes</h3>
+            <p>Route name, area, date, grade, rating, send type, and notes.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Photo Attachments</h3>
+            <p>Attach photos to climbs — stored locally, synced to cloud.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Training Tracking</h3>
+            <p>Dedicated training log separate from route logs.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Project Tracking</h3>
+            <p>Manage projects, log attempts, track high points.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Voice Notes</h3>
+            <p>Speech-to-text in English, German, French, Spanish.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Sharing</h3>
+            <p>Generate achievement cards for social media.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Statistics</h3>
+            <p>Grade charts, heatmap, unique vs total climbs, time filtering.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Route Types</h3>
+            <p>Sport, Multi-Pitch, and Boulder — tracked and filtered separately.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Data Import &amp; Export</h3>
+            <p>CSV/ZIP export with full backward compatibility.</p>
+        </div>
+        <div class="feature-card">
+            <h3>☁️ Cloud Sync</h3>
+            <p>Optional cross-device sync. Sign in with Apple. Offline by default.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🌐 Web App</h3>
+            <p>Full logbook access from any browser.</p>
+            <a href="../app/login.html" class="btn-web-app">Open →</a>
+        </div>
+        <div class="feature-card">
+            <h3>🗺️ Route Database</h3>
+            <p>Community routes with send counters and community ratings.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔑 Partner API</h3>
+            <p>Read-only API keys for dashboards and integrations. <a href="../pages/api.html">Docs →</a></p>
+        </div>
+    </div>
+
+    <h2 id="whats-new">What's New</h2>
+
+    <div class="version-block">
+        <div class="version-label">Version 3.10 — May 2026</div>
+        <ul>
+            <li><strong>Community Ratings:</strong> Routes in the Central Database now show a community star rating — the average of all individual ratings from climbers who logged that route.</li>
+        </ul>
+    </div>
+
+    <div class="version-block">
+        <div class="version-label">Version 3.9 — April 2026</div>
+        <ul>
+            <li><strong>Goals — Full Feature:</strong> Edit/delete goals, permanent milestone history, confetti celebration, sends only (no projects).</li>
+            <li><strong>Goals Cloud Sync:</strong> Goals sync across all devices.</li>
+            <li><strong>Partner API Keys:</strong> Read-only API keys via Web App for third-party integrations.</li>
+            <li><strong>Bug Fixes:</strong> Sync, training sessions, statistics.</li>
+        </ul>
+    </div>
+
+    <div class="version-block">
+        <div class="version-label">Version 3.8 — April 2026</div>
+        <ul>
+            <li><strong>Central Route Database:</strong> Community route collection, search and auto-link, ownership indicator.</li>
+            <li><strong>Route Search Overlay:</strong> 🔍 icon pre-fills route details instantly.</li>
+            <li><strong>Web App CRUD:</strong> Full create/edit/delete in the browser.</li>
+        </ul>
+    </div>
+
+    <div class="download">
+        <a href="https://apps.apple.com/at/app/sendlog/id6745050437">Download on the App Store</a>
+    </div>
+
+    <h2 id="faq">Questions &amp; Answers</h2>
+    <div class="faq-container">
+        <div class="faq">
+            <strong>Can I add photos to my climbing routes?</strong>
+            <p>Yes. Attach photos to each climb — stored locally and synced if Cloud Sync is enabled.</p>
+        </div>
+        <div class="faq">
+            <strong>Is my data secure?</strong>
+            <p>All data lives locally by default. Cloud Sync uses Firebase with Sign in with Apple — no password created or stored.</p>
+        </div>
+        <div class="faq">
+            <strong>How does Cloud Sync work?</strong>
+            <p>Enable in Settings → Cloud Sync. Sign in with Apple. Climbs, ascents, photos sync in background. Fully offline at all times.</p>
+        </div>
+        <div class="faq">
+            <strong>Can I export my data?</strong>
+            <p>Yes — CSV/ZIP from Settings. Works with or without Cloud Sync.</p>
+        </div>
+        <div class="faq">
+            <strong>What is the Central Route Database?</strong>
+            <p>A shared community route collection. Search when logging to pre-fill details and link to the shared record.</p>
+        </div>
+        <div class="faq">
+            <strong>Does SendLog require internet?</strong>
+            <p>No. Fully offline. Internet is only used for optional Cloud Sync.</p>
+        </div>
+        <div class="faq">
+            <strong>Can I delete my cloud account?</strong>
+            <p>Yes — Settings → Delete My Account. Server data deleted; local history preserved.</p>
+        </div>
+        <div class="faq">
+            <strong>Can I track projects separately?</strong>
+            <p>Yes. The Projects tab manages active, completed, and abandoned projects.</p>
+        </div>
+    </div>
+
+    <div class="about-me" id="about-me">
+        <h3 style="margin-bottom:0.4rem;">About Me</h3>
+        <p>Hi! I'm Robert, the developer behind SendLog. Built for climbers, by a climber.</p>
+        <p style="margin:0;">Feedback: <a href="https://bsky.app/profile/ruzitschka.at">@ruzitschka.at</a> on Bluesky · <a href="mailto:support@sendlog.at">support@sendlog.at</a></p>
+    </div>
+
+</section>
+
+<footer>&copy; 2026 SendLog App</footer>
+
+</body>
+</html>

@@ -29,11 +29,9 @@
 
 <div class="nav-container">
     <nav>
-        <a href="#about">About</a>
-        <a href="#features">Features</a>
         <a href="#whats-new">What's New</a>
         <a href="#screenshots">Screenshots</a>
-        <a href="#faq">Q&A</a>
+        <a href="#faq">FAQ</a>
         <a href="#about-me">About Me</a>
         <a href="pages/manual.html">User Manual</a>
         <a href="pages/api.html">API</a>
@@ -82,56 +80,56 @@
     <div class="feature-grid">
         <div class="feature-card">
             <h3>Log Climbing Routes</h3>
-            <p>Record detailed information for each climb including route name, climbing area, date, difficulty grade, personal rating (1-5 stars), send type (redpoint, pinkpoint, on sight), and personal notes.</p>
+            <p>Route name, area, date, grade, send type, personal rating and notes — all in one quick form.</p>
         </div>
         <div class="feature-card">
             <h3>Photo Attachments</h3>
-            <p>Attach photos directly to your climbing routes to capture beta, celebrate achievements, or document memorable climbs. Photos are stored locally and fully integrated with your send logs.</p>
+            <p>Attach photos to any climb. Stored locally and synced to the cloud if enabled.</p>
         </div>
         <div class="feature-card">
             <h3>Training Session Tracking</h3>
-            <p>Track your climbing training sessions separately from route logs. Record duration, training type, notes, and monitor your training consistency over time.</p>
+            <p>Log gym and training sessions separately from route logs. Track duration, type, and consistency over time.</p>
         </div>
         <div class="feature-card">
             <h3>Project Tracking</h3>
-            <p>Dedicated section to manage climbing projects, track attempts, record high points, add specific notes, update status (active, completed, abandoned), and convert projects into completed sends.</p>
+            <p>Track attempts, record high points, and manage active, completed, and abandoned projects. Converts to a send automatically when you finish.</p>
         </div>
         <div class="feature-card">
             <h3>Voice Notes</h3>
-            <p>Conveniently record and transcribe climbing notes using multilingual speech recognition in English, German, French, and Spanish.</p>
+            <p>Dictate notes hands-free. Speech recognition in English, German, French, and Spanish.</p>
         </div>
         <div class="feature-card">
             <h3>Enhanced Sharing</h3>
-            <p>Generate visually appealing climbing achievement cards with send type icons and improved layouts for easy sharing on social media.</p>
+            <p>Generate achievement cards with route, grade, and send type for sharing on social media.</p>
         </div>
         <div class="feature-card">
             <h3>Comprehensive Statistics</h3>
-            <p>Gain insights through detailed climbing statistics including total routes climbed, average rating, top climbing areas, visual grade distribution charts, and calendar heatmap showing climbing frequency.</p>
+            <p>Grade distribution, calendar heatmap, unique vs total climbs, and time-period filtering.</p>
         </div>
         <div class="feature-card">
             <h3>Multi-Pitch & Route Types</h3>
-            <p>Distinguish between Sport, Multi-Pitch, and Boulder routes with dedicated tracking and filtering options for each climbing style.</p>
+            <p>Sport, Boulder, and Multi-Pitch — colour-coded, filterable, and tracked separately.</p>
         </div>
         <div class="feature-card">
             <h3>Data Import & Export</h3>
-            <p>Securely backup your logs by exporting data in CSV format within a ZIP archive. Import climbing logs effortlessly, including support for older file formats with full backward compatibility.</p>
+            <p>Export all logs as a CSV/ZIP archive. Import on any device with full backward compatibility.</p>
         </div>
         <div class="feature-card">
             <h3>☁️ Cloud Sync</h3>
-            <p>Optionally back up and sync your climbs, ascents, and photos across devices using Firebase. Enable Cloud Sync in Settings — the app works fully offline by default. Sign in with Apple to keep your data private and secure.</p>
+            <p>Optional cross-device sync via Firebase. Sign in with Apple. Fully offline by default.</p>
         </div>
         <div class="feature-card">
             <h3>🌐 Web Dashboard</h3>
-            <p>Access your climbing logbook from any browser. Enable Cloud Sync in the app, then use the web dashboard to view your climbs and training sessions from your desktop or tablet.</p>
+            <p>Full logbook access from any browser once Cloud Sync is enabled.</p>
             <a href="app/login.html" class="btn-web-app">Open Web App →</a>
         </div>
         <div class="feature-card">
             <h3>🔑 Partner API</h3>
-            <p>Generate personal read-only API keys in the Web App to connect your SendLog data to third-party tools — custom dashboards, spreadsheets, or home automation. Choose exactly which data each key can access and revoke any key at any time. <a href="pages/api.html">View the API documentation →</a></p>
+            <p>Read-only API keys for dashboards and spreadsheets. <a href="pages/api.html">API docs →</a></p>
         </div>
         <div class="feature-card">
             <h3>🗺️ Central Route Database</h3>
-            <p>Search a shared community database when logging climbs. Find the route, pre-fill all details automatically, and see how many other climbers have sent or projected it — plus the community star rating contributed by everyone who has logged that route. Contribute new routes for the community as you log your sends.</p>
+            <p>Search a shared route database to pre-fill details. See send counts and community ratings from other climbers.</p>
         </div>
     </div>
 
@@ -149,7 +147,7 @@
         <ul>
             <li><strong>Goals — Full Feature:</strong> Edit and delete goals at any time. Achieved grade goals are kept permanently as a milestone history. A confetti animation plays when a goal is first reached. Grade goals only count actual sends — a route sitting in your projects does not count.</li>
             <li><strong>Goals Cloud Sync:</strong> Goals now sync across all your devices via Cloud Sync.</li>
-            <li><strong>Partner API Keys:</strong> Generate personal read-only API keys in the Web App (My Account → API Keys) to connect your SendLog data to custom dashboards, spreadsheets, or home automation tools. Full documentation at <a href="pages/api.html">sendlog.at/docs/api</a>.</li>
+            <li><strong>Partner API Keys:</strong> Generate personal read-only API keys in the Web App (My Account → API Keys) to connect your SendLog data to custom dashboards and spreadsheets. Full documentation at <a href="pages/api.html">sendlog.at/docs/api</a>.</li>
             <li><strong>Bug Fixes:</strong> Resolved sync issues, training session edge cases, and statistics calculation inconsistencies.</li>
         </ul>
     </div>
@@ -318,6 +316,16 @@
             </div>
         </div>
 
+        <div class="faq">
+            <button class="faq-question" onclick="toggleFaq(this)">
+                Is there an API available?
+                <span class="faq-chevron">&#9660;</span>
+            </button>
+            <div class="faq-answer">
+                Yes. Once Cloud Sync is enabled, you can generate personal read-only API keys in the Web App under My Account &rarr; API Keys. Keys give third-party tools — dashboards and spreadsheets — scoped access to your climbs, training, and goals data. Full documentation is at <a href="pages/api.html">sendlog.at/docs/api</a>.
+            </div>
+        </div>
+
     </div>
 
     <div class="about-me" id="about-me">
@@ -345,7 +353,7 @@
         }
     }
 
-    
+    const screenshots = [
         'images/screenshot1.png',
         'images/screenshot2.png',
         'images/screenshot3.png',

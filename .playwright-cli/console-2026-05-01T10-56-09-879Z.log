@@ -1,0 +1,2 @@
+[     350ms] [WARNING] [2026-05-01T10:56:10.229Z]  @firebase/firestore: Firestore (12.12.1): enableIndexedDbPersistence() will be deprecated in the future, you can use `FirestoreSettings.cache` instead. @ https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js:0
+[     353ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8080/app/:0

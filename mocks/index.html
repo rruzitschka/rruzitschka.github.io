@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendLog — CSS Mocks</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Open Sans', sans-serif; background: #0d1117; color: #e6edf3; margin: 0; padding: 2rem; }
+        h1 { font-family: 'Montserrat', sans-serif; font-size: 1.4rem; margin-bottom: 0.3rem; color: #f0f6fc; }
+        p  { color: #8b949e; font-size: 0.88rem; margin-bottom: 1.5rem; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; max-width: 900px; margin: 0 auto; }
+        .card  { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 1.25rem; }
+        .card h2 { font-family: 'Montserrat', sans-serif; font-size: 1rem; color: #f0f6fc; margin-bottom: 0.2rem; }
+        .card .tag { font-size: 0.75rem; color: #58a6ff; font-weight: 600; margin-bottom: 0.6rem; display: block; }
+        .card p  { font-size: 0.83rem; color: #8b949e; margin-bottom: 1rem; }
+        .card a  { display: inline-block; border: 1px solid #58a6ff; color: #58a6ff; padding: 0.3rem 0.9rem; border-radius: 4px; font-size: 0.82rem; font-weight: 600; text-decoration: none; }
+        .card a:hover { background: #58a6ff22; }
+        header { text-align: center; max-width: 900px; margin: 0 auto 2rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SendLog — CSS Mock Proposals</h1>
+        <p>Three design directions exploring a more compact, less colorful landing page. Click any card to open the mock.</p>
+    </header>
+    <div class="cards">
+        <div class="card">
+            <h2>Mock A — Stone</h2>
+            <span class="tag">Warm neutral · Single slate accent</span>
+            <p>Warm off-white background, slate-600 as the single accent color replacing all blue/orange. Cards use a left border instead of a top border. Spacing reduced to ~70% of current. Feature grid at 260px min column. 2-column FAQ grid.</p>
+            <a href="mock-a-stone.html">View Mock A →</a>
+        </div>
+        <div class="card">
+            <h2>Mock B — Editorial</h2>
+            <span class="tag">Black + white · Dark green accent</span>
+            <p>Near-black text on white background. Single dark forest-green accent. Feature grid is a flush 4-column tile layout (no gaps, 1px borders between cells). "What's New" rendered as a timeline instead of cards. Uppercase tracked section labels.</p>
+            <a href="mock-b-editorial.html">View Mock B →</a>
+        </div>
+        <div class="card">
+            <h2>Mock C — Night</h2>
+            <span class="tag">Full dark theme · Muted blue-gray</span>
+            <p>Dark background throughout (#0d1117). Muted steel-blue used sparingly for links and the Web App nav item only. Screenshots desaturated. Download button is outline-only. "What's New" uses a clean version/date header with a left-bordered list.</p>
+            <a href="mock-c-night.html">View Mock C →</a>
+        </div>
+    </div>
+</body>
+</html>

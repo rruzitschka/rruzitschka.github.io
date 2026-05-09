@@ -237,7 +237,6 @@ section {
     border-radius: 6px;
     padding: 0.9rem 1.2rem;
     margin: 1rem 0 0.5rem;
-    max-width: 800px;
 }
 
 .intro p {
@@ -495,7 +494,6 @@ section {
 .about-me {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-left: 3px solid var(--primary-color);
     border-radius: 6px;
     padding: 1rem 1.2rem;
     margin: 1rem 0;
