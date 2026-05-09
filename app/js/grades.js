@@ -41,6 +41,7 @@ function getPreferredGradeSystem() {
   return localStorage.getItem(GRADE_SYSTEM_KEY) || 'French';
 }
 
+// eslint-disable-next-line no-unused-vars -- consumed via window by ui.js
 function setPreferredGradeSystem(system) {
   localStorage.setItem(GRADE_SYSTEM_KEY, system);
 }
@@ -73,6 +74,7 @@ function populateGradeSelect(selectEl, system, selectedValue) {
  * Populate a grade <select> using the user's preferred grade system.
  * Optionally pre-select an existing grade value (auto-detects its system).
  */
+// eslint-disable-next-line no-unused-vars -- consumed via window by ui.js
 function initGradePicker(gradeSelectEl, initialGrade) {
   const system = initialGrade ? detectGradeSystem(initialGrade) : getPreferredGradeSystem();
   populateGradeSelect(gradeSelectEl, system, initialGrade);

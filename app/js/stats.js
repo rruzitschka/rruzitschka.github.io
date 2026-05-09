@@ -267,6 +267,7 @@ function renderStatsPage(climbs, sessions) {
 
 let _statsTabsBound = false;
 
+// eslint-disable-next-line no-unused-vars -- consumed via window by ui.js
 function bindStatsPeriodTabs() {
   if (_statsTabsBound) return;
   _statsTabsBound = true;

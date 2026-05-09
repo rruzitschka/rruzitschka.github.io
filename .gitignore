@@ -4,7 +4,11 @@ app/js/cloudkit-config.js
 # Firebase config — public client config, safe to commit (security enforced by Firestore rules)
 # app/js/firebase-config.js
 
+# Dependencies
+node_modules/
+
 # OS / editor
 .DS_Store
 .vscode/
 .worktrees/
+serve.js

@@ -56,9 +56,10 @@
     }
 
     try {
-      const data = { ...doc.data(), updatedAt: now };
-      // Write uppercase copy
-      await upperRef.set(data, { merge: true });
+      // Explicitly clear deletedAt in case the uppercase doc previously existed as deleted
+      const data = { ...doc.data(), deletedAt: null, updatedAt: now };
+      // Write uppercase copy (set replaces entirely to avoid inheriting old deletedAt)
+      await upperRef.set(data);
       // Soft-delete the lowercase original
       await lowerRef.update({ deletedAt: now, updatedAt: now });
       console.log(`  ✓ ${doc.id} → ${uppercaseId}  (${doc.data().route})`);

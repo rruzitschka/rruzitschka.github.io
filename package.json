@@ -1,0 +1,16 @@
+{
+  "name": "sendlog-website",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "SendLog web companion — climbing tracker",
+  "scripts": {
+    "lint": "eslint app/js scripts",
+    "lint:fix": "eslint app/js scripts --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "globals": "^15.15.0"
+  }
+}

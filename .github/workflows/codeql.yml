@@ -1,0 +1,40 @@
+name: "CodeQL Security Analysis"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Runs every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+
+jobs:
+  analyze:
+    name: Analyze JavaScript
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions:      read
+      contents:     read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Query suites: security-extended adds more security checks on top of
+          # the default set. Remove the line below to use only the defaults.
+          queries: security-extended
+
+      # CodeQL auto-builds are not needed for interpreted languages (JS/TS).
+      # The autobuild step is skipped intentionally.
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"

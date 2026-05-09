@@ -21,7 +21,6 @@ import {
 } from './firebase-training.js';
 import {
   getCurrentUser as $getCurrentUser,
-  signOut as $signOut,
   deleteAccount as $deleteAccount,
 } from './firebase-auth.js';
 import {
@@ -39,13 +38,11 @@ import {
   incrementProjectCount as $incrementProjectCount,
   decrementProjectCount as $decrementProjectCount,
   completedProject as $completedProject,
-  convertFromFrench as $convertFromFrench,
 } from './firebase-routes.js';
 import { showAdminView } from './admin.js';
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES               = window.GRADES;
-const detectGradeSystem    = window.detectGradeSystem;
 const getPreferredGradeSystem  = () => window.getPreferredGradeSystem();
 const setPreferredGradeSystem  = (s) => window.setPreferredGradeSystem(s);
 const initGradePicker          = (...a) => window.initGradePicker(...a);
@@ -64,7 +61,6 @@ let saveTrainingSession   = $saveTrainingSession;
 let deleteTrainingSession = $deleteTrainingSession;
 let computeTrainingStats  = $computeTrainingStats;
 let getCurrentUser      = $getCurrentUser;
-let signOut             = $signOut;
 let deleteAccount       = $deleteAccount;
 let apiKeysList         = $apiKeysList;
 let apiKeysCreate       = $apiKeysCreate;
@@ -72,13 +68,12 @@ let apiKeysRevoke       = $apiKeysRevoke;
 let searchRoutes        = $searchRoutes;
 let createCentralRoute  = $createCentralRoute;
 let updateCentralRoute  = $updateCentralRoute;
-let shouldClearSoftLink = $shouldClearSoftLink;
+const shouldClearSoftLink = $shouldClearSoftLink;
 let checkAdminStatus    = $checkAdminStatus;
-let incrementSendCount  = $incrementSendCount;
-let incrementProjectCount = $incrementProjectCount;
-let decrementProjectCount = $decrementProjectCount;
-let completedProject    = $completedProject;
-let convertFromFrench   = $convertFromFrench;
+const incrementSendCount  = $incrementSendCount;
+const incrementProjectCount = $incrementProjectCount;
+const decrementProjectCount = $decrementProjectCount;
+const completedProject    = $completedProject;
 
 /**
  * Override service bindings for mock mode.
@@ -98,7 +93,6 @@ export function setMockServices(mocks) {
   if (mocks.deleteTrainingSession) deleteTrainingSession = mocks.deleteTrainingSession;
   if (mocks.computeTrainingStats)  computeTrainingStats  = mocks.computeTrainingStats;
   if (mocks.getCurrentUser)        getCurrentUser        = mocks.getCurrentUser;
-  if (mocks.signOut)               signOut               = mocks.signOut;
   if (mocks.deleteAccount)         deleteAccount         = mocks.deleteAccount;
   if (mocks.apiKeysList)           apiKeysList           = mocks.apiKeysList;
   if (mocks.apiKeysCreate)         apiKeysCreate         = mocks.apiKeysCreate;
@@ -244,7 +238,6 @@ function showDetailModal(climb) {
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
 
-  const gradeClass = gradeBadgeClass(climb.difficulty);
   const sendClass  = SEND_CLASSES[climb.sendType] ?? 'send-proj';
 
   let html = `
@@ -455,7 +448,7 @@ export function renderUserChip(user) {
 
 // ---------- Count badges ----------
 
-function updateCountBadges(filtered, all) {
+function updateCountBadges(filtered) {
   const badgeAll      = document.getElementById('badge-all');
   const badgeProjects = document.getElementById('badge-projects');
   const badgeSent     = document.getElementById('badge-sent');
@@ -484,7 +477,7 @@ function bindFilterHandlers(initialClimbs) {
 
     // Update badges from search/filter result BEFORE applying the view filter
     // so "All Climbs" count stays stable regardless of which view is active
-    updateCountBadges(filtered, _allClimbs);
+    updateCountBadges(filtered);
 
     // Apply sidebar view filter on top
     if (activeView === 'projects') filtered = filtered.filter(c => !!c.isProject);
@@ -537,7 +530,7 @@ function bindFilterHandlers(initialClimbs) {
   document.getElementById('view-sent')?.addEventListener('click', e => { e.preventDefault(); setActiveView('sent'); });
 
   // Initial badge update
-  updateCountBadges(_allClimbs, _allClimbs);
+  updateCountBadges(_allClimbs);
 }
 
 // ---------- Modal close handlers ----------

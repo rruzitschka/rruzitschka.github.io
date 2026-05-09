@@ -302,7 +302,7 @@ const MOCK_API_KEYS = [
 //   "papi"  → Papichulo           crag "pal"    → Sector Pal
 //   "dream" → Dreamtime, Dream    crag "cre"    → Cresciano
 //   "la"    → La Dura Dura, etc.
-let MOCK_ROUTES = [
+const MOCK_ROUTES = [
   { id: 'r-01', name: 'Biographie',          climbingArea: 'Ceüse',         crag: 'La Face',              grade: '9a',  routeType: 'Sport',   sendCount: 42,  projectCount: 18, attemptCount: 380, isOrphaned: false, createdBy: 'user-other' },
   { id: 'r-02', name: 'Nouveau Monde',        climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8c+', routeType: 'Sport',   sendCount: 28,  projectCount: 11, attemptCount: 210, isOrphaned: false, createdBy: 'user-other' },
   { id: 'r-03', name: 'Bronx',               climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8a',  routeType: 'Sport',   sendCount: 87,  projectCount: 5,  attemptCount: 430, isOrphaned: false, createdBy: 'user-other' },

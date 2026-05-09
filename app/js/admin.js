@@ -203,7 +203,7 @@ function renderAdminSearch() {
 
     searchRoutes(name.length >= 2 ? name : '', crag || null, getPreferredGradeSystem(), 40)
       .then(routes => {
-        let filtered = orphaned ? routes.filter(r => r.isOrphaned) : routes;
+        const filtered = orphaned ? routes.filter(r => r.isOrphaned) : routes;
         if (!filtered.length) {
           resultsEl.innerHTML = '<p style="color:#94a3b8;font-size:0.875rem">No routes found.</p>';
           return;
