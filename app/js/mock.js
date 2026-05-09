@@ -142,11 +142,84 @@ export async function apiKeysRevoke(keyId) {
   console.log('[Mock] revoked API key', keyId);
 }
 
-// ── Routes (stub — search hits no real Firestore in mock mode) ─────────────
+// ── Routes ────────────────────────────────────────────────────────────────
+// Full in-memory implementation — mirrors firebase-routes.js searchRoutes()
+// so partial-crag matching and all UI behaviour can be tested without Firestore.
 
-export async function searchRoutes() { return []; }
-export async function createCentralRoute() { return 'mock-route-' + Date.now(); }
-export function updateCentralRoute() {}
+function foldedForSearch(str) {
+  return (str || '').toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+}
+
+const FRENCH_MOCK = ['3b','3c','4a','4b','4c','5a','5b','5b+','5c','5c+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c'];
+const YDS_MOCK    = ['5.3','5.4','5.5','5.6','5.7','5.8','5.9','5.9+','5.10a','5.10a+','5.10b','5.10c','5.10d','5.11a','5.11b','5.11c','5.11d','5.12a','5.12b','5.12c','5.12d','5.13a','5.13b','5.13c','5.13d','5.14a','5.14b','5.14c','5.14d','5.15a','5.15b','5.15c','5.15d'];
+const UIAA_MOCK   = ['3','3+','4-','4','4+','5','6-','6-/6','6','6/6+','6+','7-','7','7+','8-','8','8+','9-','9','9+','10-','10','10+','11-','11','11+','12-','12','12+','13-','13','13+','14-'];
+
+function mockConvertFromFrench(frenchGrade, targetSystem) {
+  if (!targetSystem || targetSystem === 'French') return frenchGrade;
+  const target = { YDS: YDS_MOCK, UIAA: UIAA_MOCK }[targetSystem];
+  if (!target) return frenchGrade;
+  const idx = FRENCH_MOCK.indexOf(frenchGrade);
+  if (idx === -1) return frenchGrade;
+  return target[Math.min(idx, target.length - 1)];
+}
+
+export async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'French', maxResults = 20) {
+  const normalized     = foldedForSearch(namePrefix);
+  const normalizedCrag = foldedForSearch(cragFilter);
+
+  // Mirror iOS: require >= 2 chars in name OR crag
+  if (normalized.length < 2 && normalizedCrag.length < 2) return [];
+
+  let results;
+
+  if (normalized.length < 2) {
+    // Crag-only: contains match (mirrors the real firebase-routes.js client-side filter)
+    results = MOCK_ROUTES.filter(r => foldedForSearch(r.crag).includes(normalizedCrag));
+  } else {
+    // Name prefix match
+    results = MOCK_ROUTES.filter(r => foldedForSearch(r.name).startsWith(normalized));
+    // Combined: narrow by crag contains
+    if (normalizedCrag.length >= 2) {
+      results = results.filter(r => foldedForSearch(r.crag).includes(normalizedCrag));
+    }
+  }
+
+  // Simulate network latency so the spinner is visible
+  await new Promise(resolve => setTimeout(resolve, 400));
+
+  return results.slice(0, maxResults).map(r => ({
+    ...r,
+    displayGrade: mockConvertFromFrench(r.grade, displaySystem),
+  }));
+}
+
+export async function createCentralRoute({ name, climbingArea, crag, grade, routeType }) {
+  const id = 'mock-route-' + Date.now();
+  MOCK_ROUTES.push({
+    id, name,
+    climbingArea: climbingArea ?? '',
+    crag: crag ?? '',
+    grade: grade ?? '6a',
+    displayGrade: grade ?? '6a',
+    routeType: routeType ?? 'Sport',
+    sendCount: 0,
+    projectCount: 0,
+    attemptCount: 0,
+    isOrphaned: false,
+    createdBy: MOCK_USER.uid,
+  });
+  console.log('[Mock] created central route', id, name);
+  return id;
+}
+
+export function updateCentralRoute(routeID, fields) {
+  const idx = MOCK_ROUTES.findIndex(r => r.id === routeID);
+  if (idx !== -1) Object.assign(MOCK_ROUTES[idx], fields);
+  console.log('[Mock] updated central route', routeID);
+}
+
 export async function checkAdminStatus() { return false; }
 export function incrementSendCount() {}
 export function incrementProjectCount() {}
@@ -219,4 +292,37 @@ const MOCK_SESSIONS = [
 const MOCK_API_KEYS = [
   { id: 'mock-key-001', label: 'Home Dashboard',          scopes: ['climbs:read', 'training:read'], createdAt: '2026-03-15T10:30:00.000Z', lastUsedAt: '2026-04-28T08:12:00.000Z' },
   { id: 'mock-key-002', label: 'Training Tracker Script', scopes: ['training:read'],                createdAt: '2026-04-01T14:00:00.000Z', lastUsedAt: null },
+];
+
+// Sample central route database — covers variety of crags, areas, grades and route types.
+// Designed so partial-crag search is testable, e.g.:
+//   "bio"  → Biographie           crag "La Fa"  → La Face routes
+//   "bat"  → Bat Route            crag "Gours"  → Les Gours Noirs routes
+//   "action" → Action Directe     crag "wald"   → Waldkopf
+//   "papi"  → Papichulo           crag "pal"    → Sector Pal
+//   "dream" → Dreamtime, Dream    crag "cre"    → Cresciano
+//   "la"    → La Dura Dura, etc.
+let MOCK_ROUTES = [
+  { id: 'r-01', name: 'Biographie',          climbingArea: 'Ceüse',         crag: 'La Face',              grade: '9a',  routeType: 'Sport',   sendCount: 42,  projectCount: 18, attemptCount: 380, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-02', name: 'Nouveau Monde',        climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8c+', routeType: 'Sport',   sendCount: 28,  projectCount: 11, attemptCount: 210, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-03', name: 'Bronx',               climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8a',  routeType: 'Sport',   sendCount: 87,  projectCount: 5,  attemptCount: 430, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-04', name: 'Bat Route',           climbingArea: 'Buoux',         crag: 'Les Gours Noirs',      grade: '8c',  routeType: 'Sport',   sendCount: 19,  projectCount: 9,  attemptCount: 175, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-05', name: 'Bain de Sang',        climbingArea: 'Buoux',         crag: 'Les Gours Noirs',      grade: '7a',  routeType: 'Sport',   sendCount: 156, projectCount: 3,  attemptCount: 520, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-06', name: 'La Dura Dura',        climbingArea: 'Oliana',        crag: 'Sector Pal',           grade: '9a+', routeType: 'Sport',   sendCount: 6,   projectCount: 22, attemptCount: 290, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-07', name: 'Papichulo',           climbingArea: 'Oliana',        crag: 'Sector Pal',           grade: '8c',  routeType: 'Sport',   sendCount: 55,  projectCount: 14, attemptCount: 340, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-08', name: 'Action Directe',      climbingArea: 'Frankenjura',   crag: 'Waldkopf',             grade: '9a',  routeType: 'Sport',   sendCount: 33,  projectCount: 27, attemptCount: 500, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-09', name: 'Rotpunkt Classic',    climbingArea: 'Frankenjura',   crag: 'Bärenschlucht',        grade: '7c',  routeType: 'Sport',   sendCount: 74,  projectCount: 2,  attemptCount: 210, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-10', name: 'Dreamtime',           climbingArea: 'Cresciano',     crag: 'Dreamtime Block',      grade: '8b',  routeType: 'Boulder', sendCount: 48,  projectCount: 20, attemptCount: 600, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-11', name: 'Dream Catcher',       climbingArea: 'Magic Wood',    crag: 'Hauptwand',            grade: '7c',  routeType: 'Boulder', sendCount: 61,  projectCount: 7,  attemptCount: 280, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-12', name: 'Hubble',              climbingArea: 'Raven Tor',     crag: 'Main Wall',            grade: '8b+', routeType: 'Sport',   sendCount: 24,  projectCount: 10, attemptCount: 190, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-13', name: 'Planta de Shiva',     climbingArea: 'Siurana',       crag: 'El Pati',              grade: '7b+', routeType: 'Sport',   sendCount: 110, projectCount: 4,  attemptCount: 350, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-14', name: 'Golpe de Estado',     climbingArea: 'Siurana',       crag: 'El Pati',              grade: '8a',  routeType: 'Sport',   sendCount: 82,  projectCount: 6,  attemptCount: 300, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-15', name: 'Era Vella',           climbingArea: 'Margalef',      crag: 'Finestres',            grade: '7c',  routeType: 'Sport',   sendCount: 93,  projectCount: 3,  attemptCount: 270, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-16', name: 'Super Crackinette',   climbingArea: 'Saint-Léger',   crag: 'Falaise Principale',   grade: '8b+', routeType: 'Sport',   sendCount: 37,  projectCount: 12, attemptCount: 220, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-17', name: 'Le Bombé',            climbingArea: 'Fontainebleau', crag: 'Cuvier Rempart',       grade: '7a',  routeType: 'Sport',   sendCount: 205, projectCount: 1,  attemptCount: 800, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-18', name: 'La Nuit des Temps',   climbingArea: 'Orgon',         crag: 'Falaise Sud',          grade: '7b',  routeType: 'Sport',   sendCount: 68,  projectCount: 5,  attemptCount: 240, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-19', name: 'Move',               climbingArea: 'Magic Wood',    crag: 'Hauptwand',            grade: '7c+', routeType: 'Boulder', sendCount: 44,  projectCount: 8,  attemptCount: 310, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-20', name: 'La Rose et le Vampire', climbingArea: 'Buoux',       crag: 'La Dalle aux Plaques', grade: '7c',  routeType: 'Sport',   sendCount: 58,  projectCount: 4,  attemptCount: 195, isOrphaned: false, createdBy: 'user-other' },
+  // Route owned by the mock user — shows 👤 indicator
+  { id: 'r-21', name: 'Biographie Direct',   climbingArea: 'Ceüse',         crag: 'La Face',              grade: '9b',  routeType: 'Sport',   sendCount: 2,   projectCount: 5,  attemptCount: 40,  isOrphaned: false, createdBy: 'mock-user-001' },
 ];

@@ -1014,7 +1014,7 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
       <div style="padding:12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
         <input type="text" id="route-search-name" placeholder="Route name…"
                class="form-input" autocomplete="off" />
-        <input type="text" id="route-search-crag" placeholder="Crag (optional filter)"
+        <input type="text" id="route-search-crag" placeholder="Crag (search standalone or combine)"
                class="form-input" autocomplete="off" />
       </div>
       <div id="route-search-results" style="overflow-y:auto;flex:1;padding:0 12px 12px;">
@@ -1041,12 +1041,17 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
     createBtn.style.display = name.length >= 2 ? 'block' : 'none';
     createBtn.textContent = `+ Create "${name}"`;
 
-    if (name.length < 2) {
-      resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">Type at least 2 characters to search.</p>';
+    // Mirror iOS RouteSearchView: trigger as soon as name >= 2 OR crag >= 2
+    if (name.length < 2 && crag.length < 2) {
+      resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">Type at least 2 characters in route name or crag to search.</p>';
       return;
     }
 
-    resultsEl.innerHTML = '<p class="text-muted" style="font-size:13px;">Searching…</p>';
+    resultsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:var(--text-muted,#94a3b8);font-size:13px;">
+        <div style="width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:var(--accent-color,#3b82f6);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
+        Searching…
+      </div>`;
 
     searchRoutes(name, crag || null, displaySystem, 20).then(routes => {
       if (!routes.length) {
@@ -1119,9 +1124,11 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
     };
 
     if (hasDupes) {
-      if (confirm(`Similar routes exist at this crag. Create "${name}" as a new entry anyway?`)) {
-        proceed();
-      }
+      // Mirror iOS RouteSearchView: show a proper modal instead of a browser confirm()
+      showConfirmDialog(
+        'Route Already Exists?',
+        `Similar routes were found at this crag. Create \u201c${name}\u201d as a new entry anyway?`
+      ).then(ok => { if (ok) proceed(); });
     } else {
       proceed();
     }
@@ -1443,9 +1450,10 @@ function bindSendOverlayHandlers() {
       document.getElementById('so-ascent-notes').value = '';
       document.getElementById('so-ascent-form').classList.add('hidden');
       document.getElementById('so-ascent-toggle').textContent = '+ Add';
-      const climb = _allClimbs.find(c => c.recordName === climbRecordName);
-      if (climb) renderAscentsList(climb);
       await loadData();
+      // Re-render ascent list from fresh _allClimbs data (includes the new ascent)
+      const freshClimb = _allClimbs.find(c => c.recordName === climbRecordName);
+      if (freshClimb) renderAscentsList(freshClimb);
     } catch (err) {
       alert('Add ascent failed: ' + (err.message ?? err));
     }

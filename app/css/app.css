@@ -2262,3 +2262,8 @@ body {
   .stats-chart-container { height: 160px; }
   .stats-chart-container--small { height: 110px; }
 }
+
+/* Spinner animation — used by route search loading state */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

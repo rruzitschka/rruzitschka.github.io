@@ -14,6 +14,7 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
   limit,
   runTransaction,
   serverTimestamp,
@@ -63,20 +64,35 @@ function foldedForSearch(str) {
 // ── Firestore search ───────────────────────────────────────────────────────
 
 export async function searchRoutes(namePrefix, cragFilter = null, displaySystem = 'French', maxResults = 20) {
-  const normalized = foldedForSearch(namePrefix);
-  if (normalized.length < 2) return [];
+  const normalized     = foldedForSearch(namePrefix);
+  const normalizedCrag = foldedForSearch(cragFilter);
 
-  const constraints = [
-    where('nameSearch', '>=', normalized),
-    where('nameSearch', '<',  normalized + '\uf8ff'),
-    limit(maxResults),
-  ];
-  if (cragFilter && cragFilter.trim()) {
-    constraints.push(where('cragSearch', '==', foldedForSearch(cragFilter)));
+  // Mirror iOS RouteRepository.search(): require >= 2 chars in name OR crag
+  if (normalized.length < 2 && normalizedCrag.length < 2) return [];
+
+  let snapshot;
+
+  if (normalized.length < 2) {
+    // Crag-only: Firestore can't do substring (contains) search natively,
+    // so fetch a broad ordered batch and filter client-side with includes().
+    // This matches the UX intent: typing "gou" finds "Les Gours Noirs",
+    // "pal" finds "Sector Pal", "face" finds "La Face", etc.
+    snapshot = await getDocs(query(
+      collection(db, 'routes'),
+      orderBy('cragSearch'),
+      limit(200),
+    ));
+  } else {
+    // Name prefix path: Firestore prefix query on nameSearch
+    snapshot = await getDocs(query(
+      collection(db, 'routes'),
+      where('nameSearch', '>=', normalized),
+      where('nameSearch', '<',  normalized + '\uf8ff'),
+      limit(maxResults),
+    ));
   }
 
-  const snapshot = await getDocs(query(collection(db, 'routes'), ...constraints));
-  return snapshot.docs.map(routeDoc => {
+  let routes = snapshot.docs.map(routeDoc => {
     const d = routeDoc.data();
     return {
       id:            d.id ?? routeDoc.id,
@@ -94,6 +110,15 @@ export async function searchRoutes(namePrefix, cragFilter = null, displaySystem 
       createdBy:     d.createdBy ?? null,
     };
   });
+
+  // Apply client-side crag contains filter in both paths:
+  // - crag-only: the Firestore fetch is unfiltered, so this does all the work
+  // - combined:  Firestore filtered by name prefix, crag narrows further
+  if (normalizedCrag.length >= 2) {
+    routes = routes.filter(r => foldedForSearch(r.crag).includes(normalizedCrag));
+  }
+
+  return routes.slice(0, maxResults);
 }
 
 export async function createCentralRoute({ name, climbingArea, crag, grade, gradeSystem, routeType }) {
