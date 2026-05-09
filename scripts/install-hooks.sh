@@ -28,8 +28,6 @@ cat > "$HOOKS_DIR/pre-commit" << 'HOOK'
 #!/bin/sh
 # pre-commit: run ESLint on staged JS files before every commit.
 
-set -e
-
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
@@ -48,6 +46,14 @@ fi
 
 # shellcheck disable=SC2086
 npx eslint $STAGED_JS
+ESLINT_EXIT=$?
+
+if [ $ESLINT_EXIT -ne 0 ]; then
+  echo ""
+  echo "❌  ESLint found errors. Fix them before committing."
+  echo "    Run 'npm run lint:fix' to auto-fix what's possible."
+  exit $ESLINT_EXIT
+fi
 
 echo "✅  ESLint passed."
 HOOK
