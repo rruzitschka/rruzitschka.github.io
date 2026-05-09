@@ -118,6 +118,8 @@ let _centralRouteCrag = '';
 let _centralRouteArea = '';
 let _centralRouteCreatedBy = null;
 let _pendingNewCentralRoute = null;
+let _previousReportedRating = 0;    // reportedRating when edit overlay was opened
+let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
 
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
@@ -1186,6 +1188,9 @@ function showEditSendOverlay(climb) {
   document.getElementById('send-overlay-delete').classList.remove('hidden');
   renderAscentsList(climb);
 
+  _previousReportedRating = climb.reportedRating ?? 0;
+  _originalCentralRouteID = climb.centralRouteID ?? null;
+
   if (climb.centralRouteID) {
     _centralRouteID        = climb.centralRouteID;
     _centralRouteName      = climb.route || '';
@@ -1269,6 +1274,8 @@ function bindSendOverlayHandlers() {
     _centralRouteArea = '';
     _centralRouteCreatedBy = null;
     _pendingNewCentralRoute = null;
+    _previousReportedRating = 0;
+    _originalCentralRouteID = null;
     const btn = document.getElementById('find-route-btn-send');
     setFindRouteUnlinked(btn.id);
   }
@@ -1465,6 +1472,8 @@ function bindProjectOverlayHandlers() {
     _centralRouteArea = '';
     _centralRouteCreatedBy = null;
     _pendingNewCentralRoute = null;
+    _previousReportedRating = 0;
+    _originalCentralRouteID = null;
     const btn = document.getElementById('find-route-btn-project');
     setFindRouteUnlinked(btn.id);
   }
