@@ -103,11 +103,16 @@ export async function searchRoutes(namePrefix, cragFilter = null, displaySystem 
       displayGrade:  convertFromFrench(d.grade ?? '', displaySystem),
       createdGrade:  d.createdGrade ?? d.grade ?? '',
       routeType:     d.routeType ?? 'Sport',
-      sendCount:     d.sendCount ?? 0,
-      projectCount:  d.projectCount ?? 0,
-      attemptCount:  d.attemptCount ?? 0,
-      isOrphaned:    d.isOrphaned ?? false,
-      createdBy:     d.createdBy ?? null,
+      sendCount:      d.sendCount    ?? 0,
+      projectCount:   d.projectCount ?? 0,
+      attemptCount:   d.attemptCount ?? 0,
+      isOrphaned:     d.isOrphaned   ?? false,
+      createdBy:      d.createdBy    ?? null,
+      ratingSum:      d.ratingSum    ?? 0,
+      ratingCount:    d.ratingCount  ?? 0,
+      communityRating: (d.ratingCount ?? 0) > 0
+        ? (d.ratingSum ?? 0) / (d.ratingCount ?? 0)
+        : null,
     };
   });
 
@@ -140,9 +145,11 @@ export async function createCentralRoute({ name, climbingArea, crag, grade, grad
     createdGradeSystem: gradeSystem ?? system,
     routeType: routeType ?? 'Sport',
     length: null,
-    sendCount: 0,
+    sendCount:   0,
     attemptCount: 0,
     projectCount: 0,
+    ratingSum:    0,
+    ratingCount:  0,
     createdAt: now,
     updatedAt: now,
     createdBy: user.uid,
@@ -324,9 +331,14 @@ export async function getRoute(routeID) {
     createdGrade:          d.createdGrade ?? d.grade ?? '',
     createdGradeSystem:    d.createdGradeSystem ?? 'French',
     routeType:             d.routeType ?? 'Sport',
-    sendCount:             d.sendCount ?? 0,
-    projectCount:          d.projectCount ?? 0,
-    isOrphaned:            d.isOrphaned ?? false,
+    sendCount:       d.sendCount    ?? 0,
+    projectCount:    d.projectCount ?? 0,
+    isOrphaned:      d.isOrphaned   ?? false,
+    ratingSum:       d.ratingSum    ?? 0,
+    ratingCount:     d.ratingCount  ?? 0,
+    communityRating: (d.ratingCount ?? 0) > 0
+      ? (d.ratingSum ?? 0) / (d.ratingCount ?? 0)
+      : null,
     createdBy:             d.createdBy ?? null,
     updatedBy:             d.updatedBy ?? null,
     updatedAt:             d.updatedAt?.toDate() ?? null,
