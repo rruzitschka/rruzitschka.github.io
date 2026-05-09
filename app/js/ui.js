@@ -790,6 +790,46 @@ function bindApiKeyHandlers() {
   });
 }
 
+// ---------- Community rating bootstrap ----------
+
+async function bootstrapCommunityRatings(climbs) {
+  if (localStorage.getItem('hasBootstrappedCommunityRatings') === 'true') return;
+
+  const toReport = climbs.filter(c =>
+    c.centralRouteID &&
+    !c.isProject &&
+    (c.rating ?? 0) > 0 &&
+    (c.reportedRating ?? 0) === 0
+  );
+
+  if (toReport.length === 0) {
+    localStorage.setItem('hasBootstrappedCommunityRatings', 'true');
+    return;
+  }
+
+  for (const c of toReport) {
+    reportRating(c.centralRouteID, c.rating, 0);        // fire-and-forget
+    await saveClimbNote({                               // persist reportedRating
+      recordName:     c.recordName,
+      id:             c.id ?? c.recordName,
+      route:          c.route,
+      climbingArea:   c.climbingArea,
+      crag:           c.crag,
+      difficulty:     c.difficulty,
+      sendType:       c.sendType,
+      routeType:      c.routeType,
+      rating:         c.rating,
+      reportedRating: c.rating,
+      noteText:       c.noteText,
+      date:           c.date,
+      centralRouteID: c.centralRouteID,
+    }).catch(err => console.warn('bootstrap saveClimbNote failed:', err));
+  }
+
+  localStorage.setItem('hasBootstrappedCommunityRatings', 'true');
+  console.log(`[Community Rating] Bootstrapped ${toReport.length} send(s).`);
+}
+
 // ---------- loadData ----------
 
 export async function loadData() {
@@ -826,6 +866,11 @@ export async function loadData() {
           .catch(() => {});
       }
     }
+
+    // One-time bootstrap: report ratings for sends linked before this feature existed
+    bootstrapCommunityRatings(climbs).catch(err =>
+      console.warn('bootstrapCommunityRatings failed:', err)
+    );
   } catch (err) {
     showLoading(false);
     showToast('Failed to load climbs. Please try again.', 'error');
