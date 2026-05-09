@@ -34,6 +34,7 @@ import {
   updateCentralRoute as $updateCentralRoute,
   shouldClearSoftLink as $shouldClearSoftLink,
   checkAdminStatus as $checkAdminStatus,
+  getRoute as $getRoute,
   incrementSendCount as $incrementSendCount,
   incrementProjectCount as $incrementProjectCount,
   decrementProjectCount as $decrementProjectCount,
@@ -72,6 +73,7 @@ let createCentralRoute  = $createCentralRoute;
 let updateCentralRoute  = $updateCentralRoute;
 const shouldClearSoftLink = $shouldClearSoftLink;
 let checkAdminStatus    = $checkAdminStatus;
+const getRoute          = $getRoute;
 const incrementSendCount  = $incrementSendCount;
 const incrementProjectCount = $incrementProjectCount;
 const decrementProjectCount = $decrementProjectCount;
@@ -279,7 +281,7 @@ function showDetailModal(climb) {
       </tr>
       <tr>
         <td style="padding:0.35rem 0;color:#64748b">Rating</td>
-        <td style="padding:0.35rem 0">${renderStars(climb.rating)}</td>
+        <td style="padding:0.35rem 0">${renderStars(climb.rating)}<span id="detail-community-rating" style="font-size:0.8rem;color:#94a3b8;margin-left:4px;"></span></td>
       </tr>
     </table>
   `;
@@ -339,16 +341,19 @@ function showDetailModal(climb) {
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // Async: fetch central route ownership and update chip
+  // Async: fetch central route — updates ownership chip and community rating
   if (climb.centralRouteID) {
-    getDoc(doc(db, 'routes', climb.centralRouteID)).then(routeSnap => {
+    getRoute(climb.centralRouteID).then(route => {
+      if (!route) return;
       const chip = document.getElementById('detail-central-route-chip');
-      if (!chip || !routeSnap.exists()) return;
-      const createdBy = routeSnap.data().createdBy;
-      if (createdBy && createdBy === auth.currentUser?.uid) {
+      if (chip && route.createdBy === auth.currentUser?.uid) {
         chip.innerHTML = '☁ In community database <span title="You created this route">👤</span>';
       }
-    }).catch(() => {}); // silently ignore — chip stays without 👤
+      const ratingSpan = document.getElementById('detail-community-rating');
+      if (ratingSpan && route.communityRating != null) {
+        ratingSpan.textContent = `(${route.communityRating.toFixed(1)})`;
+      }
+    }).catch(() => {});
   }
 
   // Async photo load
