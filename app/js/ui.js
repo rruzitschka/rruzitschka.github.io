@@ -39,6 +39,7 @@ import {
   decrementProjectCount as $decrementProjectCount,
   completedProject as $completedProject,
   reportRating as $reportRating,
+  fetchCommunityRatings as $fetchCommunityRatings,
 } from './firebase-routes.js';
 import { showAdminView } from './admin.js';
 
@@ -76,6 +77,7 @@ const incrementProjectCount = $incrementProjectCount;
 const decrementProjectCount = $decrementProjectCount;
 const completedProject    = $completedProject;
 const reportRating        = $reportRating;
+const fetchCommunityRatings = $fetchCommunityRatings;
 
 /**
  * Override service bindings for mock mode.
@@ -122,6 +124,7 @@ let _centralRouteCreatedBy = null;
 let _pendingNewCentralRoute = null;
 let _previousReportedRating = 0;    // reportedRating when edit overlay was opened
 let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
+let _communityRatings = new Map();  // routeID -> communityRating; fetched once per session
 
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
@@ -206,7 +209,10 @@ function renderClimbsTable(climbs) {
       <td><span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span></td>
       <td>${formatDate(climb.date)}</td>
       <td><span class="badge ${sendClass}">${escapeHtml(climb.sendType || '—')}</span></td>
-      <td>${renderStars(climb.rating)}</td>
+      <td>${renderStars(climb.rating)}${
+        climb.centralRouteID && _communityRatings.has(climb.centralRouteID)
+          ? `<small style="color:#94a3b8;margin-left:3px;">(${_communityRatings.get(climb.centralRouteID).toFixed(1)})</small>`
+          : ''}</td>
     `;
     tr.addEventListener('click', () => showDetailModal(climb));
     tbody.appendChild(tr);
@@ -801,6 +807,20 @@ export async function loadData() {
     checkAdminStatus().then(isAdmin => {
       document.getElementById('view-admin')?.classList.toggle('hidden', !isAdmin);
     });
+
+    // Fetch community ratings once per session and re-render table with them
+    // Mirrors SendLogsView.task { guard communityRatings.isEmpty else { return } } in iOS
+    if (_communityRatings.size === 0) {
+      const linkedIDs = [...new Set(climbs.map(c => c.centralRouteID).filter(Boolean))];
+      if (linkedIDs.length > 0) {
+        fetchCommunityRatings(linkedIDs)
+          .then(map => {
+            _communityRatings = map;
+            if (_currentRefresh) _currentRefresh();
+          })
+          .catch(() => {});
+      }
+    }
   } catch (err) {
     showLoading(false);
     showToast('Failed to load climbs. Please try again.', 'error');

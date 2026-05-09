@@ -7,6 +7,7 @@ import {
   collection,
   collectionGroup,
   doc,
+  documentId,
   getDoc,
   getDocs,
   setDoc,
@@ -358,6 +359,39 @@ export async function getRoute(routeID) {
 }
 
 // ── Soft link drift detection ──────────────────────────────────────────────
+
+/**
+ * Batch-fetch communityRating for a list of route IDs.
+ * Returns a Map<routeID, number> - only routes with ratingCount > 0 are included,
+ * matching iOS RouteRepository.fetchCommunityRatings() exactly.
+ * Uses where(documentId(), 'in', batch) in chunks of 30, mirroring iOS
+ * whereField(FieldPath.documentID(), in: batch).
+ * Network errors per-batch are swallowed; callers receive a partial or empty Map.
+ */
+export async function fetchCommunityRatings(routeIDs) {
+  const map = new Map();
+  const unique = [...new Set((routeIDs ?? []).filter(Boolean))];
+  if (unique.length === 0) return map;
+
+  const CHUNK = 30;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const batch = unique.slice(i, i + CHUNK);
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'routes'), where(documentId(), 'in', batch))
+      );
+      snap.docs.forEach(d => {
+        const data  = d.data();
+        const sum   = data.ratingSum   ?? 0;
+        const count = data.ratingCount ?? 0;
+        if (count > 0) map.set(d.id, sum / count);
+      });
+    } catch (err) {
+      console.warn('fetchCommunityRatings batch failed:', err);
+    }
+  }
+  return map;
+}
 
 export function shouldClearSoftLink(original, current) {
   return original.name !== current.name
