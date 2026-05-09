@@ -3,107 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms &amp; Privacy Policy - SendLog</title>
+    <title>Terms &amp; Privacy — SendLog</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; max-width: 800px; }
-        h1, h2, h3 { color: #333; }
-        p, li { color: #555; }
-        a { color: #2563eb; }
-        hr { border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
-        nav.toc a { display: block; color: #2563eb; text-decoration: none; margin: 0.25rem 0; }
-        nav.toc a:hover { text-decoration: underline; }
+        .policy-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0.8rem 1.5rem 3rem;
+        }
+
+        .policy-page h1 {
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            text-shadow: none;
+            text-align: center;
+            margin: 1.2rem 0 0.3rem;
+        }
+
+        .policy-page .meta {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-soft);
+            margin-bottom: 1.5rem;
+        }
+
+        .policy-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .policy-card h2 {
+            margin-top: 0;
+        }
+
+        .policy-card h3 {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            margin: 1.1rem 0 0.4rem;
+        }
+
+        .policy-card p,
+        .policy-card li {
+            font-size: 0.88rem;
+            color: var(--text-mid);
+        }
+
+        .policy-card ul {
+            padding-left: 1.3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .policy-card li { margin-bottom: 0.35rem; }
+
+        .policy-card a { color: var(--primary-color); }
+
+        .policy-card strong { color: var(--text-dark); }
+
+        .toc-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toc-links a {
+            color: var(--primary-color);
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.3rem 0.8rem;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .toc-links a:hover {
+            border-color: var(--primary-color);
+            background: rgba(88, 166, 255, 0.08);
+            text-decoration: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        thead tr { background: #1c2128; }
+
+        th {
+            text-align: left;
+            padding: 0.45rem 0.7rem;
+            border: 1px solid var(--border-color);
+            color: var(--text-mid);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        td {
+            padding: 0.45rem 0.7rem;
+            border: 1px solid var(--border-color);
+            color: var(--text-mid);
+            vertical-align: top;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-home a {
+            display: inline-block;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.55rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .back-home a:hover {
+            background: rgba(88, 166, 255, 0.1);
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
-    <h1>Legal</h1>
-    <p><em>Last updated: April 1, 2026</em></p>
-    <p>SendLog is operated by Robert Ruzitschka, Vienna, Austria. Contact: <a href="mailto:support@sendlog.at">support@sendlog.at</a></p>
 
-    <nav class="toc">
-        <a href="#tos">→ Terms of Service</a>
-        <a href="#privacy">→ Privacy Policy</a>
+<header>
+    <img src="../images/NewHeader.jpg" alt="SendLog climbing header" class="header-img subpage">
+    <div class="header-overlay">
+        <img src="../images/sendlog.png" alt="SendLog icon" class="header-logo sm">
+        <div class="header-text">
+            <h1>Terms &amp; Privacy</h1>
+        </div>
+    </div>
+</header>
+
+<div class="nav-container">
+    <nav>
+        <a href="../index.html">Home</a>
+        <a href="manual.html">User Manual</a>
+        <a href="policy.html" class="active">Terms &amp; Privacy</a>
+        <a href="../app/login.html" class="nav-app-link">🌐 Web App</a>
     </nav>
+</div>
 
-    <hr>
+<div class="policy-page">
 
-    <h2 id="tos">Terms of Service</h2>
+    <h1>Legal</h1>
+    <p class="meta">Last updated: April 1, 2026 &nbsp;·&nbsp; SendLog is operated by Robert Ruzitschka, Vienna, Austria &nbsp;·&nbsp; <a href="mailto:support@sendlog.at">support@sendlog.at</a></p>
 
-    <p>By using <strong>SendLog</strong> ("the App") you agree to these Terms.</p>
+    <div class="toc-links">
+        <a href="#tos">Terms of Service</a>
+        <a href="#privacy">Privacy Policy</a>
+    </div>
 
-    <h3>The Service</h3>
-    <p>SendLog is a rock climbing tracking tool for logging climbs, training, and projects. Additional features may be added over time.</p>
+    <!-- Terms of Service -->
+    <div class="policy-card" id="tos">
+        <h2>Terms of Service</h2>
+        <p>By using <strong>SendLog</strong> ("the App") you agree to these Terms.</p>
 
-    <h3>Account</h3>
-    <p>Cloud sync requires Apple Sign-In. You may delete your account at any time (see Privacy Policy). The App works fully offline without signing in.</p>
+        <h3>The Service</h3>
+        <p>SendLog is a rock climbing tracking tool for logging climbs, training, and projects. Additional features may be added over time.</p>
 
-    <h3>Acceptable Use</h3>
-    <p>Do not use the App for unlawful purposes, attempt unauthorized access to our systems or other users' data, or upload malicious or infringing content.</p>
+        <h3>Account</h3>
+        <p>Cloud sync requires Apple Sign-In. You may delete your account at any time (see Privacy Policy). The App works fully offline without signing in.</p>
 
-    <h3>User-Generated Content</h3>
-    <p>When you contribute content (route information, photos, descriptions):</p>
-    <ul>
-        <li>You retain ownership</li>
-        <li>You grant us a non-exclusive, royalty-free license to display your contributions to other users</li>
-        <li>You must not upload copyrighted material from guidebooks or other protected sources</li>
-        <li>We may remove content at our discretion</li>
-    </ul>
+        <h3>Acceptable Use</h3>
+        <p>Do not use the App for unlawful purposes, attempt unauthorized access to our systems or other users' data, or upload malicious or infringing content.</p>
 
-    <h3>Disclaimer</h3>
-    <p>The App is provided "as is" without warranties. <strong>Climbing is inherently dangerous.</strong> SendLog is a logging tool only — never rely on it for safety decisions. Always verify conditions independently.</p>
+        <h3>User-Generated Content</h3>
+        <p>When you contribute content (route information, photos, descriptions):</p>
+        <ul>
+            <li>You retain ownership</li>
+            <li>You grant us a non-exclusive, royalty-free license to display your contributions to other users</li>
+            <li>You must not upload copyrighted material from guidebooks or other protected sources</li>
+            <li>We may remove content at our discretion</li>
+        </ul>
 
-    <h3>Liability</h3>
-    <p>To the maximum extent permitted by Austrian law, our liability is limited to the amount you have paid for the App (currently zero).</p>
+        <h3>Disclaimer</h3>
+        <p>The App is provided "as is" without warranties. <strong>Climbing is inherently dangerous.</strong> SendLog is a logging tool only — never rely on it for safety decisions. Always verify conditions independently.</p>
 
-    <h3>Changes</h3>
-    <p>We may update these Terms. The App will prompt you to review and accept any new version before continuing to use cloud sync.</p>
+        <h3>Liability</h3>
+        <p>To the maximum extent permitted by Austrian law, our liability is limited to the amount you have paid for the App (currently zero).</p>
 
-    <h3>Governing Law</h3>
-    <p>These Terms are governed by Austrian law. Disputes shall be resolved in the courts of Vienna, Austria.</p>
+        <h3>Changes</h3>
+        <p>We may update these Terms. The App will prompt you to review and accept any new version before continuing to use cloud sync.</p>
 
-    <hr>
+        <h3>Governing Law</h3>
+        <p>These Terms are governed by Austrian law. Disputes shall be resolved in the courts of Vienna, Austria.</p>
+    </div>
 
-    <h2 id="privacy">Privacy Policy</h2>
+    <!-- Privacy Policy -->
+    <div class="policy-card" id="privacy">
+        <h2>Privacy Policy</h2>
 
-    <h3>What We Collect and Why</h3>
-    <table style="border-collapse:collapse;width:100%;font-size:0.95rem">
-        <thead>
-            <tr style="background:#f3f4f6">
-                <th style="text-align:left;padding:0.4rem 0.6rem;border:1px solid #e5e7eb">Data</th>
-                <th style="text-align:left;padding:0.4rem 0.6rem;border:1px solid #e5e7eb">Purpose</th>
-                <th style="text-align:left;padding:0.4rem 0.6rem;border:1px solid #e5e7eb">Legal Basis (GDPR)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Apple Sign-In identifier, name, email (if shared)</td>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Authentication</td>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Contract performance (Art. 6(1)(b))</td>
-            </tr>
-            <tr>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Climbing logs, training logs, projects</td>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Core app functionality</td>
-                <td style="padding:0.4rem 0.6rem;border:1px solid #e5e7eb;color:#555">Contract performance (Art. 6(1)(b))</td>
-            </tr>
-        </tbody>
-    </table>
-    <p>We do not collect analytics, advertising identifiers, crash data, or use cookies or tracking.</p>
+        <h3>What We Collect and Why</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Purpose</th>
+                    <th>Legal Basis (GDPR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Apple Sign-In identifier, name, email (if shared)</td>
+                    <td>Authentication</td>
+                    <td>Contract performance (Art. 6(1)(b))</td>
+                </tr>
+                <tr>
+                    <td>Climbing logs, training logs, projects</td>
+                    <td>Core app functionality</td>
+                    <td>Contract performance (Art. 6(1)(b))</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>We do not collect analytics, advertising identifiers, crash data, or use cookies or tracking.</p>
 
-    <h3>Data Processing and Storage</h3>
-    <p>Your data is processed by Google LLC (Firebase / Google Cloud) as our data processor under a Data Processing Agreement. All data is stored in the EU (europe-west1), encrypted in transit and at rest. We do not sell your data.</p>
+        <h3>Data Processing and Storage</h3>
+        <p>Your data is processed by Google LLC (Firebase / Google Cloud) as our data processor under a Data Processing Agreement. All data is stored in the EU (europe-west1), encrypted in transit and at rest. We do not sell your data.</p>
 
-    <h3>Your Rights</h3>
-    <p>Under GDPR you may access, rectify, erase, port, restrict, or object to processing of your data. Use the in-app features ("Export CSV", "Delete My Account") or contact us at <a href="mailto:support@sendlog.at">support@sendlog.at</a>.</p>
-    <p>You may lodge a complaint with the Austrian Data Protection Authority (<a href="https://www.dsb.gv.at" target="_blank" rel="noopener">www.dsb.gv.at</a>).</p>
+        <h3>Your Rights</h3>
+        <p>Under GDPR you may access, rectify, erase, port, restrict, or object to processing of your data. Use the in-app features ("Export CSV", "Delete My Account") or contact us at <a href="mailto:support@sendlog.at">support@sendlog.at</a>.</p>
+        <p>You may lodge a complaint with the Austrian Data Protection Authority (<a href="https://www.dsb.gv.at" target="_blank" rel="noopener">www.dsb.gv.at</a>).</p>
 
-    <h3>Account Deletion</h3>
-    <p><strong>iOS:</strong> Server-side data is permanently deleted. Local data remains on your device and the app continues in local-only mode. Uninstall the app to remove local data.</p>
-    <p><strong>Web:</strong> Server-side data is permanently deleted. You are signed out.</p>
+        <h3>Account Deletion</h3>
+        <p><strong>iOS:</strong> Server-side data is permanently deleted. Local data remains on your device and the app continues in local-only mode. Uninstall the app to remove local data.</p>
+        <p><strong>Web:</strong> Server-side data is permanently deleted. You are signed out.</p>
 
-    <h3>Changes</h3>
-    <p>We may update this policy. The App will prompt you to review and accept any new version before continuing to use cloud sync.</p>
+        <h3>Changes</h3>
+        <p>We may update this policy. The App will prompt you to review and accept any new version before continuing to use cloud sync.</p>
 
-    <p>This app requires Apple Sign-In for cloud sync and is not directed at children under 14.</p>
+        <p>This app requires Apple Sign-In for cloud sync and is not directed at children under 14.</p>
+    </div>
 
-    <p style="margin-top:2rem"><a href="../index.html">← Back to SendLog</a></p>
+    <div class="back-home">
+        <a href="../index.html">← Back to SendLog</a>
+    </div>
+
+</div>
+
+<footer>
+    &copy; 2026 SendLog App
+</footer>
+
 </body>
 </html>

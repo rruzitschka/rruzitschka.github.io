@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .user-manual {
-            padding: 2rem;
+            padding: 0.8rem 1.5rem;
             max-width: 1000px;
             margin: 0 auto;
         }
@@ -20,6 +20,8 @@
         .user-manual h1 {
             text-align: center;
             margin-bottom: 2rem;
+            color: var(--text-dark);
+            text-shadow: none;
         }
 
         .user-manual h2 {
@@ -33,10 +35,10 @@
         }
 
         .toc {
-            background-color: white;
-            border-radius: 8px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             padding: 1.5rem 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
         }
 
@@ -45,14 +47,12 @@
             padding-left: 1.5rem;
         }
 
-        .toc li {
-            margin-bottom: 0.5rem;
-        }
+        .toc li { margin-bottom: 0.5rem; }
 
         .toc a {
             color: var(--primary-color);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: color 0.2s;
         }
 
         .toc a:hover {
@@ -61,11 +61,11 @@
         }
 
         .section {
-            background-color: white;
-            border-radius: 8px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
 
         ul, ol {
@@ -73,30 +73,26 @@
             margin-bottom: 1rem;
         }
 
-        li {
-            margin-bottom: 0.5rem;
-        }
+        li { margin-bottom: 0.5rem; }
 
         .back-to-home {
             text-align: center;
-            margin: 3rem 0 1rem;
+            margin: 2rem 0 1rem;
         }
 
         .back-to-home a {
             display: inline-block;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.7rem 1.5rem;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.6rem 1.5rem;
             text-decoration: none;
-            border-radius: 50px;
+            border-radius: 4px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background 0.2s;
         }
 
         .back-to-home a:hover {
-            background-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: rgba(88, 166, 255, 0.1);
         }
 
         .back-to-toc a {
@@ -105,9 +101,7 @@
             text-decoration: none;
         }
 
-        .back-to-toc a:hover {
-            text-decoration: underline;
-        }
+        .back-to-toc a:hover { text-decoration: underline; }
 
         .back-to-toc {
             margin-top: 1.5rem;
@@ -117,14 +111,15 @@
         .last-updated {
             text-align: right;
             font-style: italic;
-            color: #666;
-            margin-top: 3rem;
+            color: var(--text-soft);
+            margin-top: 2rem;
+            font-size: 0.85rem;
         }
 
         .new-badge {
             display: inline-block;
             background-color: var(--accent-color);
-            color: white;
+            color: var(--dark-bg);
             font-size: 0.7rem;
             font-weight: 700;
             padding: 0.1rem 0.4rem;
@@ -137,8 +132,12 @@
 </head>
 <body>
 <header>
-    <div class="header-content">
-        <h1>SendLog - User Manual</h1>
+    <img src="../images/NewHeader.jpg" alt="SendLog climbing header" class="header-img subpage">
+    <div class="header-overlay">
+        <img src="../images/sendlog.png" alt="SendLog icon" class="header-logo sm">
+        <div class="header-text">
+            <h1>User Manual</h1>
+        </div>
     </div>
 </header>
 
@@ -147,6 +146,7 @@
         <a href="../index.html">Home</a>
         <a href="manual.html" class="active">Manual</a>
         <a href="policy.html">Terms &amp; Privacy</a>
+        <a href="../app/login.html" class="nav-app-link">🌐 Web App</a>
     </nav>
 </div>
 
