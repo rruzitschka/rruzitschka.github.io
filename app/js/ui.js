@@ -38,6 +38,7 @@ import {
   incrementProjectCount as $incrementProjectCount,
   decrementProjectCount as $decrementProjectCount,
   completedProject as $completedProject,
+  reportRating as $reportRating,
 } from './firebase-routes.js';
 import { showAdminView } from './admin.js';
 
@@ -74,6 +75,7 @@ const incrementSendCount  = $incrementSendCount;
 const incrementProjectCount = $incrementProjectCount;
 const decrementProjectCount = $decrementProjectCount;
 const completedProject    = $completedProject;
+const reportRating        = $reportRating;
 
 /**
  * Override service bindings for mock mode.
@@ -1368,9 +1370,15 @@ function bindSendOverlayHandlers() {
         sendType:       document.getElementById('so-sendtype').value,
         routeType:      document.getElementById('so-routetype').value,
         rating:         currentStarRating,
+        reportedRating: (centralID && currentStarRating > 0) ? currentStarRating : 0,
         noteText:       document.getElementById('so-notes').value.trim() || null,
         centralRouteID: centralID ?? null,
       });
+
+      // Community rating — new sends always have previousRating = 0
+      if (centralID && currentStarRating > 0 && !recordName) {
+        reportRating(centralID, currentStarRating, 0);
+      }
 
       // Propagate edits back to central route if current user is the creator
       if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
