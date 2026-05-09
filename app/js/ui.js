@@ -1087,7 +1087,7 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
             ${escapeHtml(r.crag)}${r.climbingArea ? ' · ' + escapeHtml(r.climbingArea) : ''} · ${escapeHtml(r.routeType)}
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
-            ✓ ${r.sendCount} sends · ${r.projectCount} projecting
+            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating != null ? ` · ★ ${r.communityRating.toFixed(1)}` : ''}
           </div>
         </div>
       `).join('');
