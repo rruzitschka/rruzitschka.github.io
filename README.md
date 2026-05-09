@@ -1,6 +1,6 @@
 # SendLog Web App
 
-A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-based view of your climbing logbook with full CRUD support for climb notes, ascents, training sessions, and the shared central route database.
+A companion web dashboard for the ClimbingNotes iOS app. Provides a browser-based view of your climbing logbook with full CRUD support for climb notes, ascents, training sessions, and the shared central route database — including community average ratings contributed by all users across iOS and web.
 
 ## Tech Stack
 
@@ -119,6 +119,17 @@ A shared, global Firestore collection (`routes/`) that lives outside the per-use
 
 When viewing the detail modal for a climb that is linked to a central route, a **☁ In community database** chip appears below the area/crag line. If the signed-in user is the creator of that route, a **👤** icon is appended to the chip (resolved asynchronously on modal open).
 
+### Community average rating
+
+Every send linked to a central route can contribute a star rating (1–5) to a shared community average. The average is stored as `ratingSum` / `ratingCount` on the `routes/` document and computed client-side.
+
+- **Climbs list:** a `(X.X)` suffix appears next to the personal stars for any climb linked to a rated route. Ratings are batch-fetched once per session using `fetchCommunityRatings()` and cached in memory — no extra reads on re-render.
+- **Detail modal:** `(X.X)` appears next to the personal star rating, fetched asynchronously via `getRoute()` on modal open.
+- **Route search overlay:** rated routes show `· ★ X.X` in their send/project count line.
+- **Delta writes:** edits use a delta strategy (`ratingDeltas()`) so only the change is written — no read-modify-write cycle. Link clears retract the previous contribution.
+- **`reportedRating` field:** stored on each `climbNote` document to track what was last reported, preventing double-counting across devices and sessions. Cross-platform compatible — iOS writes the same field via `FirestoreSyncManager`.
+- **One-time bootstrap:** on first load, any existing linked sends with `rating > 0` and `reportedRating == 0` are retroactively reported and their `reportedRating` persisted. Gated by a `localStorage` flag so it never runs twice.
+
 ### Drift detection
 
 If the user edits the name, crag, or area fields after linking a route:
@@ -148,6 +159,8 @@ When the route creator edits a linked climb's identity fields (name, area, crag,
 | `sendCount` | number | Atomic counter — incremented/decremented on save/delete |
 | `projectCount` | number | Atomic counter — incremented/decremented when saved as Project |
 | `attemptCount` | number | Atomic counter — incremented on attempt log |
+| `ratingSum` | number | Running sum of all reported star ratings (1–5) across all contributors |
+| `ratingCount` | number | Number of sends that have contributed a rating |
 | `createdBy` | string | UID of the user who created the route |
 | `createdAt` | timestamp | Server timestamp at creation |
 | `updatedAt` | timestamp | Server timestamp of last write |
@@ -173,7 +186,10 @@ When the route creator edits a linked climb's identity fields (name, area, crag,
 | `checkAdminStatus()` | Async; returns `true` if current user is in the `admins` collection. Cached per session. |
 | `adminSaveRoute(routeID, fields)` | Admin: update any route including `createdBy` and `isOrphaned`; writes audit trail via transaction |
 | `adminDeleteRoute(routeID)` | Admin: hard-delete a route document |
-| `getRoute(routeID)` | Fetch a single route document with all fields including `recentEdits` and `lastOwnershipTransfer` |
+| `getRoute(routeID)` | Fetch a single route document with all fields including `recentEdits`, `lastOwnershipTransfer`, and computed `communityRating` |
+| `fetchCommunityRatings(routeIDs)` | Batch-fetch community ratings for a list of route IDs; returns `Map<id, number>`; chunks of 30 using `documentId()` — mirrors iOS `RouteRepository.fetchCommunityRatings()` |
+| `ratingDeltas(newRating, previousRating)` | Pure helper — returns `{sumDelta, countDelta}` or `null` (no-op); mirrors iOS `ratingDeltas(newRating:previousRating:)` |
+| `reportRating(routeID, newRating, previousRating)` | Fire-and-forget delta write to `ratingSum`/`ratingCount` using `increment()` |
 
 Grade normalization: all grades are stored as canonical French in the `grade` field. YDS and UIAA input is detected and converted automatically. The `displayGrade` in search results is converted back to the user's preferred system at query time.
 
