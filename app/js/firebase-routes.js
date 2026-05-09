@@ -186,6 +186,40 @@ export function completedProject(routeID) {
   }).catch(err => console.warn('completedProject counters failed:', err));
 }
 
+// ── Community rating ────────────────────────────────────────────────────────
+
+/**
+ * Compute the increment deltas needed to update ratingSum / ratingCount.
+ * Returns null when no write is needed (no-op case).
+ * Mirrors RouteRepository.ratingDeltas(newRating:previousRating:) in iOS.
+ */
+export function ratingDeltas(newRating, previousRating) {
+  const n = newRating      ?? 0;
+  const p = previousRating ?? 0;
+  if (n === p) return null;                              // unchanged — no-op
+
+  if (p === 0 && n > 0) return { sumDelta: n,     countDelta:  1 };  // first rating
+  if (n === 0 && p > 0) return { sumDelta: -p,    countDelta: -1 };  // rating removed
+  return                        { sumDelta: n - p, countDelta:  0 };  // changed
+}
+
+/**
+ * Report a rating change to the central route document.
+ * Fire-and-forget — never throws or blocks the caller.
+ * Mirrors RouteRepository.reportRating(routeID:newRating:previousRating:) in iOS.
+ */
+export function reportRating(routeID, newRating, previousRating) {
+  const deltas = ratingDeltas(newRating, previousRating);
+  if (!deltas) return;
+
+  const fields = { updatedAt: serverTimestamp() };
+  if (deltas.sumDelta   !== 0) fields.ratingSum   = increment(deltas.sumDelta);
+  if (deltas.countDelta !== 0) fields.ratingCount = increment(deltas.countDelta);
+
+  updateDoc(doc(db, 'routes', routeID), fields)
+    .catch(err => console.warn('reportRating failed:', err));
+}
+
 // ── Owner update ───────────────────────────────────────────────────────────
 
 export function updateCentralRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType }) {
