@@ -827,7 +827,7 @@ async function bootstrapCommunityRatings(climbs) {
   }
 
   localStorage.setItem('hasBootstrappedCommunityRatings', 'true');
-  console.log(`[Community Rating] Bootstrapped ${toReport.length} send(s).`);
+  console.warn(`[Community Rating] Bootstrapped ${toReport.length} send(s).`);
 }
 
 // ---------- loadData ----------
