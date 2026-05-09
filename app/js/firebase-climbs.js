@@ -86,6 +86,7 @@ export async function fetchClimbs() {
           projectNotes:    d.projectNotes ?? null,
           highPoint:       d.highPoint ?? null,
           centralRouteID:  d.centralRouteID ?? null,
+          reportedRating:  d.reportedRating ?? 0,
           ascents,
         };
       })
@@ -107,6 +108,7 @@ export async function saveClimbNote(note) {
     routeType:    note.routeType ?? 'Sport',
     noteText:     note.noteText ?? '',
     rating:       note.rating ?? 0,
+    reportedRating: note.reportedRating ?? 0,
     attemptCount: note.attemptCount ?? 0,
     updatedAt:    serverTimestamp(),
   };
