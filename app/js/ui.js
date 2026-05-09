@@ -1375,9 +1375,25 @@ function bindSendOverlayHandlers() {
         centralRouteID: centralID ?? null,
       });
 
-      // Community rating — new sends always have previousRating = 0
-      if (centralID && currentStarRating > 0 && !recordName) {
-        reportRating(centralID, currentStarRating, 0);
+      // Community rating — new sends (previousRating = 0) handled in block above;
+      // edits use delta logic based on link state
+      if (recordName) {
+        const sameRoute   = centralID && centralID === _originalCentralRouteID;
+        const linkCleared = !centralID && !!_originalCentralRouteID;
+        const newLink     = !!centralID && !sameRoute;
+
+        if (sameRoute) {
+          reportRating(centralID, currentStarRating, _previousReportedRating);
+        } else if (linkCleared) {
+          if (_previousReportedRating > 0) {
+            reportRating(_originalCentralRouteID, 0, _previousReportedRating);
+          }
+        } else if (newLink) {
+          if (_originalCentralRouteID && _previousReportedRating > 0) {
+            reportRating(_originalCentralRouteID, 0, _previousReportedRating);
+          }
+          reportRating(centralID, currentStarRating, 0);
+        }
       }
 
       // Propagate edits back to central route if current user is the creator
@@ -1573,7 +1589,14 @@ function bindProjectOverlayHandlers() {
         projectStatus:    document.getElementById('po-status').value,
         noteText:         document.getElementById('po-notes').value.trim() || null,
         centralRouteID:   centralID ?? null,
+        reportedRating:   0, // projects never contribute to community rating
       });
+
+      // Community rating — retract if a previously linked send had reported a rating
+      // (can happen when converting a send to a project via edit)
+      if (_previousReportedRating > 0 && _originalCentralRouteID) {
+        reportRating(_originalCentralRouteID, 0, _previousReportedRating);
+      }
 
       // Propagate edits back to central route if current user is the creator
       if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
