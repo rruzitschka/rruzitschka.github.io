@@ -1379,8 +1379,8 @@ function bindSendOverlayHandlers() {
       // edits use delta logic based on link state
       if (recordName) {
         const sameRoute   = centralID && centralID === _originalCentralRouteID;
-        const linkCleared = !centralID && !!_originalCentralRouteID;
-        const newLink     = !!centralID && !sameRoute;
+        const linkCleared = !centralID && Boolean(_originalCentralRouteID);
+        const newLink     = Boolean(centralID) && !sameRoute;
 
         if (sameRoute) {
           reportRating(centralID, currentStarRating, _previousReportedRating);
