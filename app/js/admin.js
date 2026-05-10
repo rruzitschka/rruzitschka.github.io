@@ -562,7 +562,9 @@ function renderAdminEditForm(route) {
   });
 
   // ── GPS section ───────────────────────────────────────────────────────────
-  initAdminGPSMap(route);
+  // Defer map init so the browser has time to lay out #admin-gps-map before
+  // Leaflet measures its dimensions (initialising on a zero-size div = blank map).
+  setTimeout(() => initAdminGPSMap(route), 0);
 
   document.getElementById('admin-gps-save-btn').addEventListener('click', async () => {
     const lat     = parseFloat(document.getElementById('admin-gps-lat').value);
