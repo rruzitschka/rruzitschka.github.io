@@ -41,6 +41,7 @@ import {
   completedProject as $completedProject,
   reportRating as $reportRating,
   fetchCommunityRatings as $fetchCommunityRatings,
+  fetchRouteGPSData as $fetchRouteGPSData,
 } from './firebase-routes.js';
 import { showAdminView } from './admin.js';
 
@@ -80,6 +81,7 @@ const decrementProjectCount = $decrementProjectCount;
 const completedProject    = $completedProject;
 const reportRating        = $reportRating;
 const fetchCommunityRatings = $fetchCommunityRatings;
+let fetchRouteGPSData       = $fetchRouteGPSData;
 
 /**
  * Override service bindings for mock mode.
@@ -127,6 +129,7 @@ let _pendingNewCentralRoute = null;
 let _previousReportedRating = 0;    // reportedRating when edit overlay was opened
 let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
 let _communityRatings = new Map();  // routeID -> communityRating; fetched once per session
+let _gpsData          = new Map();  // routeID -> {latitude, longitude, country}
 
 const SEND_CLASSES = {
   'Redpoint':  'send-rp',
@@ -205,7 +208,7 @@ function renderClimbsTable(climbs) {
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
     tr.innerHTML = `
-      <td><strong>${escapeHtml(climb.route || '—')}</strong></td>
+      <td><strong>${escapeHtml(climb.route || '—')}</strong>${climb.centralRouteID && _gpsData.has(climb.centralRouteID) ? ' <span title="Route start GPS available" style="font-size:0.8rem">📍</span>' : ''}</td>
       <td>${escapeHtml(climb.climbingArea || '—')}${climb.crag ? ` <small style="color:#64748b">/ ${escapeHtml(climb.crag)}</small>` : ''}</td>
       <td><span class="type-badge">${escapeHtml(climb.routeType || '—')}</span></td>
       <td><span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || '—')}</span></td>
@@ -855,16 +858,22 @@ export async function loadData() {
 
     // Fetch community ratings once per session and re-render table with them
     // Mirrors SendLogsView.task { guard communityRatings.isEmpty else { return } } in iOS
-    if (_communityRatings.size === 0) {
-      const linkedIDs = [...new Set(climbs.map(c => c.centralRouteID).filter(Boolean))];
-      if (linkedIDs.length > 0) {
-        fetchCommunityRatings(linkedIDs)
-          .then(map => {
-            _communityRatings = map;
-            if (_currentRefresh) _currentRefresh();
-          })
-          .catch(() => {});
-      }
+    const linkedIDs = [...new Set(climbs.map(c => c.centralRouteID).filter(Boolean))];
+    if (_communityRatings.size === 0 && linkedIDs.length > 0) {
+      fetchCommunityRatings(linkedIDs)
+        .then(map => {
+          _communityRatings = map;
+          if (_currentRefresh) _currentRefresh();
+        })
+        .catch(() => {});
+    }
+    if (_gpsData.size === 0 && linkedIDs.length > 0) {
+      fetchRouteGPSData(linkedIDs)
+        .then(map => {
+          _gpsData = map;
+          if (_currentRefresh) _currentRefresh();
+        })
+        .catch(() => {});
     }
 
     // One-time bootstrap: report ratings for sends linked before this feature existed

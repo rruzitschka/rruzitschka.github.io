@@ -448,4 +448,38 @@ export function shouldClearSoftLink(original, current) {
 
 // ── Admin stats helpers (used by admin.js) ────────────────────────────────
 // Re-export Firestore primitives needed by admin.js for count queries
+/**
+ * Batch-fetch GPS data (latitude, longitude, country) for a list of route IDs.
+ * Returns a Map<routeID, {latitude, longitude, country}> — only routes with GPS set are included.
+ * Uses the same chunked in-query pattern as fetchCommunityRatings.
+ */
+export async function fetchRouteGPSData(routeIDs) {
+  const map = new Map();
+  const unique = [...new Set((routeIDs ?? []).filter(Boolean))];
+  if (unique.length === 0) return map;
+
+  const CHUNK = 30;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const batch = unique.slice(i, i + CHUNK);
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'routes'), where(documentId(), 'in', batch))
+      );
+      snap.docs.forEach(d => {
+        const data = d.data();
+        if (data.latitude != null && data.longitude != null) {
+          map.set(d.id, {
+            latitude:  data.latitude,
+            longitude: data.longitude,
+            country:   data.country ?? null,
+          });
+        }
+      });
+    } catch (err) {
+      console.warn('fetchRouteGPSData batch failed:', err);
+    }
+  }
+  return map;
+}
+
 export { collection, collectionGroup, query, where, getDocs };
