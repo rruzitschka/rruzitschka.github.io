@@ -81,7 +81,7 @@ const decrementProjectCount = $decrementProjectCount;
 const completedProject    = $completedProject;
 const reportRating        = $reportRating;
 const fetchCommunityRatings = $fetchCommunityRatings;
-let fetchRouteGPSData       = $fetchRouteGPSData;
+const fetchRouteGPSData       = $fetchRouteGPSData;
 
 /**
  * Override service bindings for mock mode.
