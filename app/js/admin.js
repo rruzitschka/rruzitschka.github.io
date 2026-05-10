@@ -11,6 +11,8 @@ import {
   searchRoutes,
   adminSaveRoute,
   adminDeleteRoute,
+  adminSetGPS,
+  adminClearGPS,
   getRoute,
   convertFromFrench,
   collection,
@@ -271,6 +273,71 @@ async function openAdminEditForm(routeID) {
 
 // ── Edit form render ───────────────────────────────────────────────────────
 
+// ── GPS map initializer ──────────────────────────────────────────────────────
+
+/**
+ * Initialise the Leaflet map inside #admin-gps-map.
+ * Requires Leaflet to be loaded as a global (window.L) before this is called.
+ * Places a draggable marker at the route's current GPS pin (or at the centre of
+ * Europe when no pin exists). Map clicks and marker drags both sync back to the
+ * lat/lon inputs so the admin can fine-tune the position numerically.
+ */
+function initAdminGPSMap(route) {
+  const mapEl = document.getElementById('admin-gps-map');
+  if (!mapEl || !window.L) return;
+
+  const hasGPS = route.latitude != null && route.longitude != null;
+  const initialView = hasGPS
+    ? [route.latitude, route.longitude]
+    : [47.0, 14.0]; // centre of Europe fallback
+  const initialZoom = hasGPS ? 14 : 4;
+
+  const map = window.L.map(mapEl).setView(initialView, initialZoom);
+  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const latInput = document.getElementById('admin-gps-lat');
+  const lonInput = document.getElementById('admin-gps-lon');
+
+  function syncInputs(latlng) {
+    latInput.value = latlng.lat.toFixed(6);
+    lonInput.value = latlng.lng.toFixed(6);
+  }
+
+  let marker = null;
+  function placeMarker(latlng) {
+    if (marker) {
+      marker.setLatLng(latlng);
+    } else {
+      marker = window.L.marker(latlng, { draggable: true }).addTo(map);
+      marker.on('dragend', e => syncInputs(e.target.getLatLng()));
+    }
+    syncInputs(latlng);
+  }
+
+  if (hasGPS) placeMarker([route.latitude, route.longitude]);
+
+  map.on('click', e => {
+    placeMarker(e.latlng);
+  });
+
+  // Typing in lat/lon inputs moves the marker
+  function onInputChange() {
+    const lat = parseFloat(latInput.value);
+    const lon = parseFloat(lonInput.value);
+    if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+      placeMarker([lat, lon]);
+      map.setView([lat, lon], Math.max(map.getZoom(), 12));
+    }
+  }
+  latInput.addEventListener('change', onInputChange);
+  lonInput.addEventListener('change', onInputChange);
+}
+
+// ── Edit form render ──────────────────────────────────────────────────────
+
 function renderAdminEditForm(route) {
   const currentUID = auth.currentUser?.uid ?? '';
 
@@ -366,6 +433,50 @@ function renderAdminEditForm(route) {
       </div>
 
       <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
+        <div style="font-size:0.75rem;font-weight:600;color:#3b82f6;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
+          📍 GPS &amp; Location
+        </div>
+        ${route.latitude != null ? `
+          <p style="font-size:0.825rem;color:#64748b;margin-bottom:0.5rem">
+            Current pin: <strong>${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</strong>
+            ${route.country ? `&nbsp;·&nbsp;<span style="font-size:0.8rem">${escapeHtml(route.country)}</span>` : ''}
+          </p>
+        ` : `
+          <p style="font-size:0.825rem;color:#94a3b8;margin-bottom:0.5rem">No GPS coordinates set for this route.</p>
+        `}
+        <div id="admin-gps-map" style="height:220px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:0.75rem;background:#f1f5f9"></div>
+        <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:0.75rem">
+          ${route.latitude != null
+            ? 'Drag the pin or click the map to reposition it, then press “Save GPS Pin”.'
+            : 'Click the map or drag the pin to place it, then press “Save GPS Pin”.'}
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:0.75rem;align-items:end">
+          <div class="form-group" style="margin:0">
+            <label class="form-label" style="font-size:0.75rem">Latitude</label>
+            <input type="number" id="admin-gps-lat" class="form-input" step="any"
+                   value="${route.latitude ?? ''}" placeholder="e.g. 47.0512" />
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label" style="font-size:0.75rem">Longitude</label>
+            <input type="number" id="admin-gps-lon" class="form-input" step="any"
+                   value="${route.longitude ?? ''}" placeholder="e.g. 15.4414" />
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label" style="font-size:0.75rem">Country</label>
+            <input type="text" id="admin-gps-country" class="form-input" maxlength="2"
+                   value="${escapeHtml(route.country ?? '')}" placeholder="AT" style="text-transform:uppercase" />
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="admin-gps-save-btn" class="btn btn-primary btn-sm">📍 Save GPS Pin</button>
+          ${route.latitude != null
+            ? '<button id="admin-gps-clear-btn" class="btn btn-danger btn-sm">✕ Remove GPS</button>'
+            : ''}
+        </div>
+        <div id="admin-gps-status" style="margin-top:0.5rem;font-size:0.825rem;min-height:1.2em"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
         <div style="font-size:0.75rem;font-weight:600;color:#64748b;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
           Audit Trail
         </div>
@@ -413,6 +524,7 @@ function renderAdminEditForm(route) {
         routeType:    document.getElementById('admin-f-routetype').value,
         createdBy:    document.getElementById('admin-f-createdby').value.trim(),
         isOrphaned:   document.getElementById('admin-f-orphaned').checked,
+        country:      null, // GPS country managed separately via adminSetGPS
       });
       status.style.color = 'var(--success-color, #16a34a)';
       status.textContent = '✓ Saved successfully';
@@ -444,6 +556,55 @@ function renderAdminEditForm(route) {
       status.style.color = '#ef4444';
       status.textContent = '✗ Delete failed: ' + (err.message ?? err);
       btn.disabled = false; btn.textContent = 'Delete Route';
+    }
+  });
+
+  // ── GPS section ───────────────────────────────────────────────────────────
+  initAdminGPSMap(route);
+
+  document.getElementById('admin-gps-save-btn').addEventListener('click', async () => {
+    const lat     = parseFloat(document.getElementById('admin-gps-lat').value);
+    const lon     = parseFloat(document.getElementById('admin-gps-lon').value);
+    const country = document.getElementById('admin-gps-country').value.trim().toUpperCase() || null;
+    const status  = document.getElementById('admin-gps-status');
+    const btn     = document.getElementById('admin-gps-save-btn');
+
+    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      status.style.color = '#ef4444';
+      status.textContent = '✗ Enter valid coordinates (lat ±90°, lon ±180°).';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    status.textContent = '';
+    try {
+      await adminSetGPS(route.id, lat, lon, country);
+      status.style.color = 'var(--success-color, #16a34a)';
+      status.textContent = '\u2713 GPS pin saved.';
+      setTimeout(() => openAdminEditForm(route.id), 800);
+    } catch (err) {
+      console.error('adminSetGPS failed:', err);
+      status.style.color = '#ef4444';
+      status.textContent = '\u2717 Save failed: ' + (err.message ?? err);
+      btn.disabled = false; btn.textContent = '\ud83d\udccd Save GPS Pin';
+    }
+  });
+
+  document.getElementById('admin-gps-clear-btn')?.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog(
+      'Remove GPS?',
+      'This will delete the route start coordinates for all users. This cannot be undone.'
+    );
+    if (!confirmed) return;
+    const status = document.getElementById('admin-gps-status');
+    try {
+      await adminClearGPS(route.id);
+      status.style.color = 'var(--success-color, #16a34a)';
+      status.textContent = '\u2713 GPS removed.';
+      setTimeout(() => openAdminEditForm(route.id), 800);
+    } catch (err) {
+      console.error('adminClearGPS failed:', err);
+      status.style.color = '#ef4444';
+      status.textContent = '\u2717 Remove failed: ' + (err.message ?? err);
     }
   });
 }

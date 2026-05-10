@@ -114,6 +114,9 @@ export async function searchRoutes(namePrefix, cragFilter = null, displaySystem 
       communityRating: (d.ratingCount ?? 0) > 0
         ? (d.ratingSum ?? 0) / (d.ratingCount ?? 0)
         : null,
+      latitude:      d.latitude  ?? null,
+      longitude:     d.longitude ?? null,
+      country:       d.country   ?? null,
     };
   });
 
@@ -273,7 +276,7 @@ export async function checkAdminStatus() {
   return _adminStatusCache;
 }
 
-export async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned }) {
+export async function adminSaveRoute(routeID, { name, climbingArea, crag, grade, gradeSystem, routeType, createdBy, isOrphaned, country }) {
   const uid    = auth.currentUser?.uid ?? 'unknown';
   const french = normalizeToFrench(grade);
   const ref    = doc(db, 'routes', routeID);
@@ -301,6 +304,10 @@ export async function adminSaveRoute(routeID, { name, climbingArea, crag, grade,
       updatedAt:          serverTimestamp(),
       recentEdits:        next,
     };
+    // country: empty string → remove field; null → leave untouched; value → set
+    if (country !== null && country !== undefined) {
+      fields.country = country.trim() || null;
+    }
 
     if (createdBy && createdBy !== data.createdBy) {
       fields.lastOwnershipTransfer = {
@@ -317,6 +324,43 @@ export async function adminSaveRoute(routeID, { name, climbingArea, crag, grade,
 
 export async function adminDeleteRoute(routeID) {
   await deleteDoc(doc(db, 'routes', routeID));
+}
+
+/**
+ * Set (or overwrite) the GPS pin on a route.
+ * Admin privilege — bypasses the iOS first-sender/creator permission check.
+ * @param {string} routeID
+ * @param {number} latitude   WGS-84 latitude
+ * @param {number} longitude  WGS-84 longitude
+ * @param {string|null} country  ISO 3166-1 alpha-2, or null to leave auto-derived value
+ */
+export async function adminSetGPS(routeID, latitude, longitude, country) {
+  const uid = auth.currentUser?.uid ?? 'unknown';
+  const fields = {
+    latitude,
+    longitude,
+    updatedBy: uid,
+    updatedAt: serverTimestamp(),
+  };
+  if (country !== null && country !== undefined) {
+    fields.country = country.trim() || null;
+  }
+  await updateDoc(doc(db, 'routes', routeID), fields);
+}
+
+/**
+ * Remove the GPS pin from a route (sets latitude, longitude, country to null).
+ * Admin privilege.
+ */
+export async function adminClearGPS(routeID) {
+  const uid = auth.currentUser?.uid ?? 'unknown';
+  await updateDoc(doc(db, 'routes', routeID), {
+    latitude:  null,
+    longitude: null,
+    country:   null,
+    updatedBy: uid,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function getRoute(routeID) {
@@ -343,6 +387,9 @@ export async function getRoute(routeID) {
     createdBy:             d.createdBy ?? null,
     updatedBy:             d.updatedBy ?? null,
     updatedAt:             d.updatedAt?.toDate() ?? null,
+    latitude:              d.latitude  ?? null,
+    longitude:             d.longitude ?? null,
+    country:               d.country   ?? null,
     recentEdits: (d.recentEdits ?? []).map(e => ({
       editedAt: e.editedAt?.toDate ? e.editedAt.toDate() : new Date(e.editedAt),
       editedBy: e.editedBy,
