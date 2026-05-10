@@ -308,13 +308,15 @@ function initAdminGPSMap(route) {
 
   let marker = null;
   function placeMarker(latlng) {
+    // Normalise array [lat, lng] → object so syncInputs can use .lat/.lng
+    const ll = Array.isArray(latlng) ? { lat: latlng[0], lng: latlng[1] } : latlng;
     if (marker) {
-      marker.setLatLng(latlng);
+      marker.setLatLng(ll);
     } else {
-      marker = window.L.marker(latlng, { draggable: true }).addTo(map);
+      marker = window.L.marker(ll, { draggable: true }).addTo(map);
       marker.on('dragend', e => syncInputs(e.target.getLatLng()));
     }
-    syncInputs(latlng);
+    syncInputs(ll);
   }
 
   if (hasGPS) placeMarker([route.latitude, route.longitude]);
