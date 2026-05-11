@@ -2233,9 +2233,12 @@ function bindTrainingOverlayHandlers() {
 				const recordName =
 					document.getElementById("to-record-name").value || undefined;
 				const dateVal = document.getElementById("to-date").value;
-				const activeIntensityBtn = document.querySelector(
+				const activeIntensityBtns = document.querySelectorAll(
 					".intensity-btn.active",
 				);
+				const activeIntensityBtn = activeIntensityBtns.length
+					? activeIntensityBtns[activeIntensityBtns.length - 1]
+					: null;
 				await saveTrainingSession({
 					recordName,
 					id: recordName ? undefined : crypto.randomUUID(),
