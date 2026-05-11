@@ -40,8 +40,7 @@ import {
 	decrementProjectCount as $decrementProjectCount,
 	completedProject as $completedProject,
 	reportRating as $reportRating,
-	fetchCommunityRatings as $fetchCommunityRatings,
-	fetchRouteGPSData as $fetchRouteGPSData,
+	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
 
@@ -80,8 +79,7 @@ const incrementProjectCount = $incrementProjectCount;
 const decrementProjectCount = $decrementProjectCount;
 const completedProject = $completedProject;
 const reportRating = $reportRating;
-const fetchCommunityRatings = $fetchCommunityRatings;
-const fetchRouteGPSData = $fetchRouteGPSData;
+let fetchRouteData = $fetchRouteData;
 
 /**
  * Override service bindings for mock mode.
@@ -397,11 +395,17 @@ function showDetailModal(climb) {
 				if (route.latitude != null && route.longitude != null) {
 					const gpsContainer = document.getElementById("detail-gps-row");
 					if (gpsContainer) {
-						const mapsURL = `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climb.route || 'Route start')}`;
-						const flag = route.country ? String.fromCodePoint(...[...route.country.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0))) : '';
+						const mapsURL = `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climb.route || "Route start")}`;
+						const flag = route.country
+							? String.fromCodePoint(
+									...[...route.country.toUpperCase()].map(
+										(c) => 0x1f1e6 - 65 + c.charCodeAt(0),
+									),
+								)
+							: "";
 						gpsContainer.innerHTML = `
 							<div style="margin-bottom:1.25rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
-								<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;">📍 Route Start${flag ? ' ' + flag : ''}</div>
+								<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;">📍 Route Start${flag ? " " + flag : ""}</div>
 								<div style="font-size:0.85rem;font-family:monospace;margin-bottom:0.4rem;">${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</div>
 								<a href="${escapeHtml(mapsURL)}" target="_blank" rel="noopener" style="font-size:0.82rem;color:var(--accent-color,#6366f1);">Open in Maps ↗</a>
 							</div>`;
@@ -1040,18 +1044,14 @@ export async function loadData() {
 		const linkedIDs = [
 			...new Set(climbs.map((c) => c.centralRouteID).filter(Boolean)),
 		];
-		if (_communityRatings.size === 0 && linkedIDs.length > 0) {
-			fetchCommunityRatings(linkedIDs)
-				.then((map) => {
-					_communityRatings = map;
-					if (_currentRefresh) _currentRefresh();
-				})
-				.catch(() => {});
-		}
-		if (_gpsData.size === 0 && linkedIDs.length > 0) {
-			fetchRouteGPSData(linkedIDs)
-				.then((map) => {
-					_gpsData = map;
+		if (
+			(_communityRatings.size === 0 || _gpsData.size === 0) &&
+			linkedIDs.length > 0
+		) {
+			fetchRouteData(linkedIDs)
+				.then(({ ratings, gps }) => {
+					_communityRatings = ratings;
+					_gpsData = gps;
 					if (_currentRefresh) _currentRefresh();
 				})
 				.catch(() => {});
@@ -1343,7 +1343,7 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
             ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)}
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
-            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating != null ? ` · ★ ${r.communityRating.toFixed(1)}` : ""}${r.latitude != null ? ' · 📍' : ''}
+            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating != null ? ` · ★ ${r.communityRating.toFixed(1)}` : ""}${r.latitude != null ? " · 📍" : ""}
           </div>
         </div>
       `,

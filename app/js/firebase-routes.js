@@ -559,12 +559,60 @@ export async function getRoute(routeID) {
 // ── Soft link drift detection ──────────────────────────────────────────────
 
 /**
+ * Batch-fetch route metadata (ratings, GPS, createdBy) for a list of route IDs
+ * in a single pass over the `routes` collection.
+ *
+ * Returns:
+ *   ratings   — Map<routeID, number>  (only routes with ratingCount > 0)
+ *   gps       — Map<routeID, {latitude, longitude, country}>  (only routes with GPS)
+ *   createdBy — Map<routeID, string|null>
+ *
+ * Replaces the separate fetchCommunityRatings() + fetchRouteGPSData() calls,
+ * halving the number of Firestore round-trips on every page load.
+ * Network errors per-batch are swallowed; callers receive partial maps.
+ */
+export async function fetchRouteData(routeIDs) {
+	const ratings = new Map();
+	const gps = new Map();
+	const createdBy = new Map();
+	const unique = [...new Set((routeIDs ?? []).filter(Boolean))];
+	if (unique.length === 0) return { ratings, gps, createdBy };
+
+	const CHUNK = 30;
+	for (let i = 0; i < unique.length; i += CHUNK) {
+		const batch = unique.slice(i, i + CHUNK);
+		try {
+			const snap = await getDocs(
+				query(collection(db, "routes"), where(documentId(), "in", batch)),
+			);
+			snap.docs.forEach((d) => {
+				const data = d.data();
+				// ratings
+				const sum = data.ratingSum ?? 0;
+				const count = data.ratingCount ?? 0;
+				if (count > 0) ratings.set(d.id, sum / count);
+				// GPS
+				if (data.latitude != null && data.longitude != null) {
+					gps.set(d.id, {
+						latitude: data.latitude,
+						longitude: data.longitude,
+						country: data.country ?? null,
+					});
+				}
+				// createdBy
+				createdBy.set(d.id, data.createdBy ?? null);
+			});
+		} catch (err) {
+			console.warn("fetchRouteData batch failed:", err);
+		}
+	}
+	return { ratings, gps, createdBy };
+}
+
+/**
+ * @deprecated Use fetchRouteData() instead — kept for compatibility.
  * Batch-fetch communityRating for a list of route IDs.
- * Returns a Map<routeID, number> - only routes with ratingCount > 0 are included,
- * matching iOS RouteRepository.fetchCommunityRatings() exactly.
- * Uses where(documentId(), 'in', batch) in chunks of 30, mirroring iOS
- * whereField(FieldPath.documentID(), in: batch).
- * Network errors per-batch are swallowed; callers receive a partial or empty Map.
+ * Returns a Map<routeID, number> - only routes with ratingCount > 0 are included.
  */
 export async function fetchCommunityRatings(routeIDs) {
 	const map = new Map();
