@@ -103,6 +103,43 @@ export async function fetchAscents(noteId) {
 		});
 }
 
+/**
+ * Bulk-fetch ascents for every climb in parallel.
+ * Mutates each climb object's `ascents` array in place.
+ * Called once in loadData() so stats, heatmap, and other
+ * views always have complete ascent data.
+ */
+export async function fetchAllClimbAscents(climbs) {
+	const user = getCurrentUser();
+	if (!user || !climbs.length) return;
+	await Promise.all(
+		climbs.map(async (climb) => {
+			const snap = await getDocs(
+				query(
+					collection(
+						db,
+						`users/${user.uid}/climbNotes/${climb.recordName}/ascents`,
+					),
+					orderBy("date", "desc"),
+				),
+			);
+			climb.ascents = snap.docs
+				.filter((d) => !d.data().deletedAt)
+				.map((d) => {
+					const ad = d.data();
+					return {
+						recordName: `${climb.recordName}/${d.id}`,
+						id: ad.id ?? d.id,
+						date: ad.date?.toDate() ?? null,
+						sendType: normalizeSendType(ad.sendType),
+						notes: ad.notes ?? null,
+						climbNoteRecordName: climb.recordName,
+					};
+				});
+		}),
+	);
+}
+
 export async function saveClimbNote(note) {
 	const user = getCurrentUser();
 	if (!user) throw new Error("Not signed in");

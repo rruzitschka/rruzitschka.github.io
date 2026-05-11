@@ -10,6 +10,7 @@ import {
 	saveAscent as $saveAscent,
 	deleteAscent as $deleteAscent,
 	fetchPhotos as $fetchPhotos,
+	fetchAllClimbAscents as $fetchAllClimbAscents,
 	computeStats as $computeStats,
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
@@ -54,6 +55,7 @@ const initGradePicker = (...a) => window.initGradePicker(...a);
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
 let fetchAscents = $fetchAscents;
+let fetchAllClimbAscents = $fetchAllClimbAscents;
 let saveClimbNote = $saveClimbNote;
 let deleteClimbNote = $deleteClimbNote;
 let saveAscent = $saveAscent;
@@ -90,6 +92,7 @@ const fetchRouteData = $fetchRouteData;
 export function setMockServices(mocks) {
 	if (mocks.fetchClimbs) fetchClimbs = mocks.fetchClimbs;
 	if (mocks.fetchAscents) fetchAscents = mocks.fetchAscents;
+	if (mocks.fetchAllClimbAscents) fetchAllClimbAscents = mocks.fetchAllClimbAscents;
 	if (mocks.saveClimbNote) saveClimbNote = mocks.saveClimbNote;
 	if (mocks.deleteClimbNote) deleteClimbNote = mocks.deleteClimbNote;
 	if (mocks.saveAscent) saveAscent = mocks.saveAscent;
@@ -1034,6 +1037,7 @@ export async function loadData() {
 	showLoading(true);
 	try {
 		const climbs = await fetchClimbs();
+		await fetchAllClimbAscents(climbs);
 		showLoading(false);
 		_allClimbs = climbs;
 		window.allClimbs = climbs;
