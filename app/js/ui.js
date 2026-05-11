@@ -4,6 +4,7 @@ import { db, auth } from "./firebase-config.js";
 import { doc, getDoc } from "firebase/firestore";
 import {
 	fetchClimbs as $fetchClimbs,
+	fetchAscents as $fetchAscents,
 	saveClimbNote as $saveClimbNote,
 	deleteClimbNote as $deleteClimbNote,
 	saveAscent as $saveAscent,
@@ -52,6 +53,7 @@ const initGradePicker = (...a) => window.initGradePicker(...a);
 
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
+let fetchAscents = $fetchAscents;
 let saveClimbNote = $saveClimbNote;
 let deleteClimbNote = $deleteClimbNote;
 let saveAscent = $saveAscent;
@@ -87,6 +89,7 @@ const fetchRouteData = $fetchRouteData;
  */
 export function setMockServices(mocks) {
 	if (mocks.fetchClimbs) fetchClimbs = mocks.fetchClimbs;
+	if (mocks.fetchAscents) fetchAscents = mocks.fetchAscents;
 	if (mocks.saveClimbNote) saveClimbNote = mocks.saveClimbNote;
 	if (mocks.deleteClimbNote) deleteClimbNote = mocks.deleteClimbNote;
 	if (mocks.saveAscent) saveAscent = mocks.saveAscent;
@@ -132,6 +135,8 @@ let _previousReportedRating = 0; // reportedRating when edit overlay was opened
 let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
 let _communityRatings = new Map(); // routeID -> communityRating; fetched once per session
 let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
+/** @type {Map<string, Array>} */
+const _ascentCache = new Map(); // noteId -> ascents[]; populated lazily on detail modal open
 
 const SEND_CLASSES = {
 	Redpoint: "send-rp",
@@ -334,36 +339,8 @@ function showDetailModal(climb) {
     `;
 	}
 
-	const detailAscents = climb.ascents ?? [];
-	if (detailAscents.length > 0) {
-		html += `
-      <div style="margin-bottom:1.25rem">
-        <div style="font-weight:600;margin-bottom:0.5rem">Repeat Ascents</div>
-        <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
-          ${detailAscents
-						.map((a, i) => {
-							const d = a.date
-								? new Date(a.date).toLocaleDateString("en-US", {
-										month: "short",
-										day: "numeric",
-										year: "numeric",
-									})
-								: "—";
-							const border =
-								i < detailAscents.length - 1
-									? "border-bottom:1px solid #f1f5f9;"
-									: "";
-							return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;${border}">
-              <span style="color:#64748b;min-width:90px;font-size:0.82rem">${d}</span>
-              <span style="flex:1">${escapeHtml(a.sendType ?? "Redpoint")}</span>
-              ${a.notes ? `<span style="color:#64748b;font-size:0.85rem;font-style:italic">${escapeHtml(a.notes)}</span>` : ""}
-            </div>`;
-						})
-						.join("")}
-        </div>
-      </div>
-    `;
-	}
+	// Ascents placeholder — filled asynchronously from _ascentCache
+	html += `<div id="detail-ascents-container"></div>`;
 
 	// Photos section: async-loaded from Firestore sub-collection
 	html += `<div id="detail-gps-row"></div>`;
@@ -411,6 +388,43 @@ function showDetailModal(climb) {
 							</div>`;
 					}
 				}
+			})
+			.catch(() => {});
+	}
+
+	// Async: lazy-load ascents for the detail modal view
+	if (climb.recordName) {
+		_getAscentsCached(climb.recordName)
+			.then((ascents) => {
+				if (ascents.length === 0) return;
+				const container = document.getElementById("detail-ascents-container");
+				if (!container) return;
+				container.innerHTML = `
+					<div style="margin-bottom:1.25rem">
+						<div style="font-weight:600;margin-bottom:0.5rem">Repeat Ascents</div>
+						<div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+							${ascents
+								.map((a, i) => {
+									const d = a.date
+										? new Date(a.date).toLocaleDateString("en-US", {
+												month: "short",
+												day: "numeric",
+												year: "numeric",
+											})
+										: "\u2014";
+									const border =
+										i < ascents.length - 1
+											? "border-bottom:1px solid #f1f5f9;"
+											: "";
+									return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;${border}">
+										<span style="color:#64748b;min-width:90px;font-size:0.82rem">${d}</span>
+										<span style="flex:1">${escapeHtml(a.sendType ?? "Redpoint")}</span>
+										${a.notes ? `<span style="color:#64748b;font-size:0.85rem;font-style:italic">${escapeHtml(a.notes)}</span>` : ""}
+									</div>`;
+								})
+								.join("")}
+						</div>
+					</div>`;
 			})
 			.catch(() => {});
 	}
@@ -1844,12 +1858,9 @@ function bindSendOverlayHandlers() {
 				document.getElementById("so-ascent-notes").value = "";
 				document.getElementById("so-ascent-form").classList.add("hidden");
 				document.getElementById("so-ascent-toggle").textContent = "+ Add";
+				_ascentCache.delete(climbRecordName); // invalidate so renderAscentsList re-fetches
 				await loadData();
-				// Re-render ascent list from fresh _allClimbs data (includes the new ascent)
-				const freshClimb = _allClimbs.find(
-					(c) => c.recordName === climbRecordName,
-				);
-				if (freshClimb) renderAscentsList(freshClimb);
+				await renderAscentsList({ recordName: climbRecordName });
 			} catch (err) {
 				alert("Add ascent failed: " + (err.message ?? err));
 			}
@@ -2378,9 +2389,9 @@ function bindPeriodTabs() {
 
 // ---------- Ascent list ----------
 
-function renderAscentsList(climb) {
+async function renderAscentsList(climb) {
 	const container = document.getElementById("so-ascents-list");
-	const ascents = climb.ascents ?? [];
+	const ascents = await _getAscentsCached(climb.recordName);
 	container.innerHTML = ascents
 		.map((a) => {
 			const d = a.date
@@ -2389,7 +2400,7 @@ function renderAscentsList(climb) {
 						day: "numeric",
 						year: "numeric",
 					})
-				: "—";
+				: "\u2014";
 			return `<div class="ascent-row">
       <span class="ascent-date">${d}</span>
       <span class="ascent-type">${escapeHtml(a.sendType ?? "Redpoint")}</span>
@@ -2407,10 +2418,19 @@ function renderAscentsList(climb) {
 			);
 			if (!confirmed) return;
 			await deleteAscent(btn.dataset.record);
-			climb.ascents = (climb.ascents ?? []).filter(
-				(a) => a.recordName !== btn.dataset.record,
-			);
-			renderAscentsList(climb);
+			_ascentCache.delete(climb.recordName); // invalidate so next open re-fetches
+			await renderAscentsList(climb);
 		});
 	});
+}
+
+/**
+ * Returns cached ascents for a note, fetching from Firestore on first access.
+ */
+async function _getAscentsCached(noteId) {
+	if (!noteId) return [];
+	if (_ascentCache.has(noteId)) return _ascentCache.get(noteId);
+	const ascents = await fetchAscents(noteId);
+	_ascentCache.set(noteId, ascents);
+	return ascents;
 }
