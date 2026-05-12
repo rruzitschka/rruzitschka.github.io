@@ -187,7 +187,7 @@ export async function saveAscent(ascent) {
 	const user = getCurrentUser();
 	if (!user) throw new Error("Not signed in");
 	const noteId = ascent.climbNoteRecordName ?? ascent.noteId;
-	const id = ascent.id ?? crypto.randomUUID();
+	const id = (ascent.id ?? crypto.randomUUID()).toUpperCase();
 	await setDoc(
 		doc(db, `users/${user.uid}/climbNotes/${noteId}/ascents/${id}`),
 		{

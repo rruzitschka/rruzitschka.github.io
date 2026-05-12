@@ -56,7 +56,7 @@ export async function fetchTrainingSessions() {
 export async function saveTrainingSession(session) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not signed in');
-  const id = session.id ?? session.recordName ?? crypto.randomUUID();
+  const id = session.recordName ?? (session.id ?? crypto.randomUUID()).toUpperCase();
   const docData = {
     id,
     type:      session.type ?? 'Gym Session',
