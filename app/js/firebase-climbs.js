@@ -51,6 +51,22 @@ function canonicalizeSendType(raw) {
 	return SEND_TYPE_CANONICAL[raw] ?? raw?.toLowerCase() ?? "redpoint";
 }
 
+// Canonical Firestore format for projectStatus (lowercase, iOS-native).
+// Web uses different vocabulary (Working/Close/Abandoned); this maps to iOS values.
+const PROJECT_STATUS_CANONICAL = {
+	Working: "active",
+	Close: "active",   // "Close to send" has no iOS equivalent — treat as still active
+	Abandoned: "abandoned",
+	// Pass through iOS-native values unchanged
+	active: "active",
+	completed: "completed",
+	abandoned: "abandoned",
+};
+/** Convert a display-facing projectStatus to the canonical value stored in Firestore. */
+function canonicalizeProjectStatus(raw) {
+	return PROJECT_STATUS_CANONICAL[raw] ?? raw?.toLowerCase() ?? null;
+}
+
 export async function fetchClimbs() {
 	const user = getCurrentUser();
 	if (!user) return [];
@@ -179,7 +195,7 @@ export async function saveClimbNote(note) {
 		docData.lastAttemptDate = Timestamp.fromDate(
 			new Date(note.lastAttemptDate),
 		);
-	if (note.projectStatus) docData.projectStatus = note.projectStatus;
+	if (note.projectStatus) docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
 	if (note.projectNotes) docData.projectNotes = note.projectNotes;
 	if (note.highPoint) docData.highPoint = note.highPoint;
 	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
