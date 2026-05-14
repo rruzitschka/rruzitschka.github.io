@@ -92,7 +92,8 @@ const fetchRouteData = $fetchRouteData;
 export function setMockServices(mocks) {
 	if (mocks.fetchClimbs) fetchClimbs = mocks.fetchClimbs;
 	if (mocks.fetchAscents) fetchAscents = mocks.fetchAscents;
-	if (mocks.fetchAllClimbAscents) fetchAllClimbAscents = mocks.fetchAllClimbAscents;
+	if (mocks.fetchAllClimbAscents)
+		fetchAllClimbAscents = mocks.fetchAllClimbAscents;
 	if (mocks.saveClimbNote) saveClimbNote = mocks.saveClimbNote;
 	if (mocks.deleteClimbNote) deleteClimbNote = mocks.deleteClimbNote;
 	if (mocks.saveAscent) saveAscent = mocks.saveAscent;
@@ -332,7 +333,7 @@ function showDetailModal(climb) {
       <div style="background:#f1f5f9;border-radius:8px;padding:1rem;margin-bottom:1rem">
         <div style="font-weight:600;margin-bottom:0.5rem">Project Details</div>
         <table style="width:100%;border-collapse:collapse;font-size:0.93rem">
-          ${climb.projectStatus ? `<tr><td style="padding:0.3rem 0;color:#64748b;width:40%">Status</td><td>${escapeHtml(climb.projectStatus)}</td></tr>` : ""}
+          ${climb.projectStatus ? `<tr><td style="padding:0.3rem 0;color:#64748b;width:40%">Status</td><td>${escapeHtml(climb.projectStatus.charAt(0).toUpperCase() + climb.projectStatus.slice(1))}</td></tr>` : ""}
           ${climb.highPoint ? `<tr><td style="padding:0.3rem 0;color:#64748b">High Point</td><td>${escapeHtml(String(climb.highPoint))}</td></tr>` : ""}
           ${climb.lastAttemptDate ? `<tr><td style="padding:0.3rem 0;color:#64748b">Last Attempt</td><td>${formatDate(climb.lastAttemptDate)}</td></tr>` : ""}
           ${climb.attemptCount ? `<tr><td style="padding:0.3rem 0;color:#64748b">Attempts</td><td>${climb.attemptCount}</td></tr>` : ""}
@@ -1550,7 +1551,7 @@ function showAddProjectOverlay() {
 	document.getElementById("po-attempts").value = "0";
 	document.getElementById("po-last-attempt-date").value = "";
 	document.getElementById("po-highpoint").value = "";
-	document.getElementById("po-status").value = "Working";
+	document.getElementById("po-status").value = "active";
 	document.getElementById("po-notes").value = "";
 	document.getElementById("po-mark-sent-section").classList.add("hidden");
 	document.getElementById("project-overlay-delete").classList.add("hidden");
@@ -1576,7 +1577,7 @@ function showEditProjectOverlay(climb) {
 		? climb.lastAttemptDate.toISOString().slice(0, 10)
 		: "";
 	document.getElementById("po-highpoint").value = climb.highPoint ?? "";
-	document.getElementById("po-status").value = climb.projectStatus ?? "Working";
+	document.getElementById("po-status").value = climb.projectStatus ?? "active";
 	document.getElementById("po-notes").value = climb.noteText ?? "";
 	document.getElementById("po-mark-sent-section").classList.remove("hidden");
 	document.getElementById("project-overlay-delete").classList.remove("hidden");
@@ -2044,7 +2045,7 @@ function bindProjectOverlayHandlers() {
 					const projectStatus = document.getElementById("po-status").value;
 					if (isNew) {
 						incrementProjectCount(centralID);
-					} else if (projectStatus === "Abandoned") {
+					} else if (projectStatus === "abandoned") {
 						decrementProjectCount(centralID);
 					}
 				}
