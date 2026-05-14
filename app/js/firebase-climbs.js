@@ -19,7 +19,9 @@ import { getCurrentUser } from "./firebase-auth.js";
 // recordName for ascents is encoded as "noteId/ascentId" so deleteAscent
 // can reconstruct the Firestore sub-collection path without a noteId parameter.
 
-// iOS stores sendType as lowercase; web UI expects Title Case
+// iOS stores sendType as lowercase; web UI expects Title Case.
+// Firestore canonical format is lowercase (iOS-native). The web normalises
+// Title Case → lowercase before every write so both clients stay consistent.
 const SEND_TYPE_NORMALIZE = {
 	redpoint: "Redpoint",
 	onsight: "On Sight",
@@ -33,6 +35,20 @@ const SEND_TYPE_NORMALIZE = {
 };
 function normalizeSendType(raw) {
 	return SEND_TYPE_NORMALIZE[raw?.toLowerCase()] ?? raw ?? "Redpoint";
+}
+
+// Canonical Firestore format (lowercase, iOS-native).
+const SEND_TYPE_CANONICAL = {
+	Redpoint: "redpoint",
+	"On Sight": "on sight",
+	"Top Rope": "top rope",
+	"All Free": "all free",
+	Project: "project",
+	Pinkpoint: "pinkpoint",
+};
+/** Convert a display-facing Title Case sendType to the lowercase value stored in Firestore. */
+function canonicalizeSendType(raw) {
+	return SEND_TYPE_CANONICAL[raw] ?? raw?.toLowerCase() ?? "redpoint";
 }
 
 export async function fetchClimbs() {
@@ -150,7 +166,7 @@ export async function saveClimbNote(note) {
 		climbingArea: note.climbingArea ?? "",
 		crag: note.crag ?? "",
 		difficulty: note.difficulty ?? "",
-		sendType: note.sendType ?? "redpoint",
+		sendType: canonicalizeSendType(note.sendType ?? "redpoint"),
 		routeType: note.routeType ?? "Sport",
 		noteText: note.noteText ?? "",
 		rating: note.rating ?? 0,
@@ -192,7 +208,7 @@ export async function saveAscent(ascent) {
 		doc(db, `users/${user.uid}/climbNotes/${noteId}/ascents/${id}`),
 		{
 			id,
-			sendType: ascent.sendType ?? "redpoint",
+			sendType: canonicalizeSendType(ascent.sendType ?? "redpoint"),
 			notes: ascent.notes ?? "",
 			date: ascent.date
 				? Timestamp.fromDate(new Date(ascent.date))
