@@ -188,7 +188,7 @@
     <div class="section" id="introduction">
         <h2>1. Introduction</h2>
         <p>SendLog is an iOS app designed specifically for climbers to log, track, and analyze their climbing achievements. Whether you're documenting sent routes, working on projects, or tracking your progress over time, SendLog provides all the tools you need to enhance your climbing journey.</p>
-        <p>Version 3.9.0 introduced optional Cloud Sync powered by Firebase, photo attachments for climbs, a companion Web App at <a href="https://sendlog.at/app" target="_blank">sendlog.at/app</a>, expanded grade ranges, the ability to quickly duplicate a send, and the Central Route Database — a community-shared collection of routes you can search and link when logging sends and projects. Version 3.10.0 adds community ratings for routes in the Central Route Database.</p>
+        <p>Version 3.9.0 introduced optional Cloud Sync, photo attachments, the Web App, expanded grade ranges, duplicate send, and the Central Route Database. Version 3.10.0 adds community ratings. Version 3.11.0 moves training statistics to the Stats tab, adds a Training session detail view, and introduces a filter chip strip on the Stats tab.</p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
@@ -442,12 +442,19 @@
 
         <p>The Statistics tab provides comprehensive insights into your climbing journey.</p>
 
-        <h3>Viewing Modes</h3>
-        <p>A toggle at the top of the Statistics tab switches between two modes:</p>
+        <h3>Filter Chips <span class="new-badge">Updated in 3.11</span></h3>
+        <p>Three filter chips sit below the title:</p>
         <ul>
-            <li><strong>Unique Routes Only</strong>: Counts each route once (first send). Best for tracking personal bests and grade progression.</li>
-            <li><strong>All Climbs (Including Repeats)</strong>: Counts every ascent. Best for tracking volume and training consistency.</li>
+            <li><strong>Period chip</strong> &mdash; always shown filled; tap to choose <em>Week</em>, <em>Month</em>, <em>Year</em>, <em>All Time</em>, or <em>Custom Range</em>. All statistics and charts update instantly.</li>
+            <li><strong>All Climbs / Unique Only chip</strong> &mdash; switches counting mode:
+                <ul>
+                    <li><em>All Climbs (Including Repeats)</em>: counts every ascent &mdash; best for volume and consistency tracking.</li>
+                    <li><em>Unique Only</em>: counts each route once (first send) &mdash; best for personal bests and grade progression.</li>
+                </ul>
+            </li>
+            <li><strong>Incl. Training / Excl. Training chip</strong> &mdash; controls whether training sessions count toward the Weekly Streak and Active Days. The dedicated Training stats section always shows your full training data regardless of this setting. Preference is remembered between sessions.</li>
         </ul>
+        <p>Tap the <strong>?</strong> button next to the title for explanations of each metric.</p>
 
         <h3>Key Statistics</h3>
         <ul>
@@ -456,27 +463,20 @@
             <li><strong>Repeat Rate</strong>: Percentage of climbs that are repeats</li>
             <li><strong>Highest Grade Achieved</strong>: Your personal best</li>
             <li><strong>Average Route Rating</strong>: Mean of your star ratings</li>
-            <li><strong>Top Climbing Area</strong>: Most visited location</li>
+            <li><strong>Top Climbing Area</strong>: Most visited location (counts repeat ascent days)</li>
             <li><strong>Unique Climbing Days</strong>: Days with at least one ascent</li>
-            <li><strong>Average Climbs per Day</strong>: Total climbs ÷ climbing days</li>
+            <li><strong>Average Climbs per Day</strong>: Total climbs &divide; climbing days</li>
         </ul>
 
         <h3>Charts</h3>
         <ul>
-            <li><strong>Grade Distribution</strong>: Bar chart across the full grade range (French 3b–10b, UIAA 3–15−, YDS 5.3–5.16c), updated for the selected viewing mode</li>
-            <li><strong>Route Type Distribution</strong>: Sport / Boulder / Multi-Pitch breakdown</li>
-            <li><strong>Calendar Heatmap</strong>: Daily climbing activity; darker cells = more climbs on that day</li>
+            <li><strong>Grade Distribution</strong>: Bar chart across the full grade range (French 3b&ndash;10b, UIAA 3&ndash;15&minus;, YDS 5.3&ndash;5.16c). Shows a &ldquo;No climbs in this period&rdquo; placeholder when empty.</li>
+            <li><strong>Route Type Distribution</strong>: Sport / Boulder / Multi-Pitch breakdown. Also shows a placeholder when the period has no data.</li>
+            <li><strong>Calendar Heatmap</strong>: Daily activity over the last 6 months. Blue cells = climbing days (darker = more climbs); orange cells = training-only days.</li>
         </ul>
 
-        <h3>Time Period Filtering</h3>
-        <ol>
-            <li>At the top of the Statistics tab, select a time period: <em>Week</em>, <em>Month</em>, <em>Year</em>, <em>Custom</em>, or <em>All Time</em></li>
-            <li>All statistics and charts update to reflect only that period</li>
-            <li>Works with both viewing modes</li>
-        </ol>
-
-        <h3>Help</h3>
-        <p>Tap the <strong>?</strong> button in the Statistics tab for explanations of each metric and the difference between viewing modes.</p>
+        <h3>Training Stats Section <span class="new-badge">NEW in 3.11</span></h3>
+        <p>A dedicated Training section appears below the Route Types chart, showing stats for the active period: Sessions, Total Time, Training Days, Avg&thinsp;/&thinsp;Week, and a by-type bar chart. Hidden only when no training sessions have ever been logged.</p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
@@ -517,9 +517,51 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
     </div>
 
-    <!-- 9. Photos -->
+    <!-- 9. Training Log -->
+    <div class="section" id="training-log">
+        <h2>9. Training Log <span class="new-badge">Updated in 3.11</span></h2>
+
+        <p>The Training tab lets you record non-climbing training activities &mdash; hangboard, campus board, gym sessions, yoga, cardio, and more &mdash; and track your training stats alongside your climbing data.</p>
+
+        <h3>Logging a Session</h3>
+        <ol>
+            <li>Tap the <strong>Training</strong> tab</li>
+            <li>Tap <strong>+</strong> in the top-right corner</li>
+            <li>Fill in the session details:
+                <ul>
+                    <li><strong>Date</strong> &mdash; defaults to today</li>
+                    <li><strong>Type</strong> &mdash; Hangboard, Campus Board, System Wall, Gym Session, Yoga, Cardio, or Other</li>
+                    <li><strong>Duration</strong> &mdash; adjust in 15-minute steps (15&ndash;300 min)</li>
+                    <li><strong>Intensity</strong> &mdash; rate 1&ndash;5</li>
+                    <li><strong>Notes</strong> &mdash; optional free text</li>
+                </ul>
+            </li>
+            <li>Tap <strong>Save Session</strong></li>
+        </ol>
+
+        <h3>Viewing Session Details <span class="new-badge">NEW in 3.11</span></h3>
+        <p>Tap any session row to open a full detail view &mdash; the same push-navigation pattern as climb logs. The detail view shows Type, Date, Duration, Intensity and Notes in a two-column layout. From there:</p>
+        <ul>
+            <li>Tap the <strong>pencil icon</strong> to edit all fields in an overlay matching the climb edit style</li>
+            <li>Tap the <strong>trash icon</strong> to delete, with confirmation</li>
+            <li>Swipe left on a row in the list for quick delete without opening the detail view</li>
+        </ul>
+
+        <h3>Training Stats</h3>
+        <p>Training statistics appear on the <strong>Statistics tab</strong> in a dedicated section (see <a href="#statistics-and-progress-analysis">Statistics &rarr; Training Stats Section</a>). The Training tab itself is a pure session log.</p>
+
+        <h3>Training Days in the Calendar Heatmap</h3>
+        <p>Training sessions appear as <strong>orange cells</strong> in the Stats tab heatmap, distinct from blue climbing cells. Days with both climbing and training show blue.</p>
+
+        <h3>Cloud Sync</h3>
+        <p>Training sessions sync automatically alongside climbs when Cloud Sync is enabled, and are viewable and editable from the Web App at <a href="https://sendlog.at/app" target="_blank">sendlog.at/app</a>.</p>
+
+        <div class="back-to-toc"><a href="#top">&uarr; Back to Top</a></div>
+    </div>
+
+    <!-- 10. Photos -->
     <div class="section" id="photos">
-        <h2>9. Photos <span class="new-badge">NEW in 3.7</span></h2>
+        <h2>10. Photos <span class="new-badge">NEW in 3.7</span></h2>
 
         <h3>Attaching Photos to a Climb</h3>
         <ol>
@@ -551,7 +593,7 @@
 
     <!-- 9. Voice Notes -->
     <div class="section" id="voice-notes">
-        <h2>10. Voice Notes</h2>
+        <h2>11. Voice Notes</h2>
 
         <h3>Recording a Voice Note</h3>
         <ol>
@@ -573,7 +615,7 @@
 
     <!-- 10. Sharing Your Achievements -->
     <div class="section" id="sharing-your-achievements">
-        <h2>11. Sharing Your Achievements</h2>
+        <h2>12. Sharing Your Achievements</h2>
 
         <h3>Creating a Share Card</h3>
         <ol>
@@ -602,7 +644,7 @@
 
     <!-- 11. Cloud Sync & Web App -->
     <div class="section" id="cloud-sync-and-web-dashboard">
-        <h2>12. Cloud Sync &amp; Web App <span class="new-badge">NEW in 3.7</span></h2>
+        <h2>13. Cloud Sync &amp; Web App <span class="new-badge">NEW in 3.7</span></h2>
 
         <p><strong>Cloud Sync is an optional feature available exclusively to iOS users.</strong> The app works fully offline without it — all your climbs, projects and statistics are always stored locally on your device. Cloud Sync uploads your data in the background whenever a connection is available, and unlocks the SendLog Web App.</p>
 
@@ -680,7 +722,7 @@
 
     <!-- 12. Data Management -->
     <div class="section" id="data-management">
-        <h2>13. Data Management</h2>
+        <h2>14. Data Management</h2>
 
         <h3>Exporting Your Data</h3>
         <ol>
@@ -720,7 +762,7 @@
 
     <!-- 13. Settings and Preferences -->
     <div class="section" id="settings-and-preferences">
-        <h2>14. Settings and Preferences</h2>
+        <h2>15. Settings and Preferences</h2>
 
         <h3>Grade System</h3>
         <p>Choose your preferred climbing grade system:</p>
@@ -744,7 +786,7 @@
 
     <!-- 14. App Performance -->
     <div class="section" id="app-performance">
-        <h2>15. App Performance</h2>
+        <h2>16. App Performance</h2>
 
         <h3>v3.10.0 Improvements</h3>
         <ul>
@@ -781,7 +823,7 @@
 
     <!-- Partner API Keys -->
     <div class="section" id="api-keys">
-        <h2>16. Partner API Keys <span class="new-badge">NEW in 3.9</span></h2>
+        <h2>17. Partner API Keys <span class="new-badge">NEW in 3.9</span></h2>
 
         <p>Partner API Keys let you give a third-party app or script read-only access to your SendLog data — for example a home dashboard, a spreadsheet that tracks your progress, or a custom training analysis tool — without sharing your password.</p>
 
