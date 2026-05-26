@@ -55,7 +55,7 @@ function canonicalizeSendType(raw) {
 // Web uses different vocabulary (Working/Close/Abandoned); this maps to iOS values.
 const PROJECT_STATUS_CANONICAL = {
 	Working: "active",
-	Close: "active",   // "Close to send" has no iOS equivalent — treat as still active
+	Close: "active", // "Close to send" has no iOS equivalent — treat as still active
 	Abandoned: "abandoned",
 	// Pass through iOS-native values unchanged
 	active: "active",
@@ -195,7 +195,8 @@ export async function saveClimbNote(note) {
 		docData.lastAttemptDate = Timestamp.fromDate(
 			new Date(note.lastAttemptDate),
 		);
-	if (note.projectStatus) docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
+	if (note.projectStatus)
+		docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
 	if (note.projectNotes) docData.projectNotes = note.projectNotes;
 	if (note.highPoint) docData.highPoint = note.highPoint;
 	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
