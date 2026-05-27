@@ -182,7 +182,7 @@
             color: var(--accent-color);
           "
         >
-          Version 3.10.0
+          Version 3.12.0
         </p>
 
         <div class="toc">
@@ -242,9 +242,10 @@
         <p>
           Version 3.9.0 introduced optional Cloud Sync, photo attachments, the
           Web App, expanded grade ranges, duplicate send, and the Central Route
-          Database. Version 3.10.0 adds community ratings. Version 3.11.0 moves
+          Database. Version 3.10.0 adds community ratings. Version 3.12.0 moves
           training statistics to the Stats tab, adds a Training session detail
-          view, and introduces a filter chip strip on the Stats tab.
+          view, an Include Training filter toggle, training days in the heatmap,
+          and a compact filter chip strip.
         </p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
@@ -1327,6 +1328,35 @@
       <div class="section" id="app-performance">
         <h2>16. App Performance</h2>
 
+        <h3>v3.12.0 Improvements</h3>
+        <ul>
+          <li>
+            <strong>Training stats on Stats page</strong>: Sessions, total time,
+            training days, average per week, and a by-type chart now appear as a
+            dedicated section on the Stats page.
+          </li>
+          <li>
+            <strong>Include Training toggle</strong>: A filter chip controls
+            whether training session days count toward Climbing Days and the
+            Weekly Streak. Preference is persisted.
+          </li>
+          <li>
+            <strong>Stats filter chip strip</strong>: Period, Unique Only / All
+            Climbs, and Incl. / Excl. Training are now a compact horizontal chip
+            strip instead of stacked buttons.
+          </li>
+          <li>
+            <strong>Training session detail view</strong>: Tapping a training
+            row opens a detail view with Type, Date, Duration, Intensity, and
+            Notes. Edit and Delete actions sit in the header.
+          </li>
+          <li>
+            <strong>Training days in heatmap</strong>: Training-only days appear
+            orange in the calendar heatmap; days with both climbing and training
+            show blue.
+          </li>
+        </ul>
+
         <h3>v3.10.0 Improvements</h3>
         <ul>
           <li>
@@ -1459,7 +1489,7 @@
         <a href="../index.html">Return to Home Page</a>
       </div>
 
-      <p class="last-updated">Last Updated: May 2026 · Version 3.10.0</p>
+      <p class="last-updated">Last Updated: May 2026 · Version 3.12.0</p>
     </div>
 
     <footer>&copy; 2026 SendLog App</footer>

@@ -1,34 +1,44 @@
 <!-- index.html - Landing Page -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SendLog - Climbing Notes App</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=4">
-</head>
-<body>
-<header>
-    <img src="images/NewHeader.jpg" alt="SendLog climbing header" class="header-img">
-    <div class="header-overlay">
-        <img src="images/sendlog.png" alt="SendLog icon" class="header-logo">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css?v=4" />
+  </head>
+  <body>
+    <header>
+      <img
+        src="images/NewHeader.jpg"
+        alt="SendLog climbing header"
+        class="header-img"
+      />
+      <div class="header-overlay">
+        <img src="images/sendlog.png" alt="SendLog icon" class="header-logo" />
         <div class="header-text">
-            <h1>SendLog</h1>
-            <p class="tagline">Climbing Notes &amp; Logbook</p>
+          <h1>SendLog</h1>
+          <p class="tagline">Climbing Notes &amp; Logbook</p>
         </div>
-        <a href="https://apps.apple.com/at/app/sendlog/id6745050437" class="header-download">
-            <img src="images/black.svg" alt="Download on the App Store">
+        <a
+          href="https://apps.apple.com/at/app/sendlog/id6745050437"
+          class="header-download"
+        >
+          <img src="images/black.svg" alt="Download on the App Store" />
         </a>
-    </div>
-</header>
+      </div>
+    </header>
 
-<div class="nav-container">
-    <nav>
+    <div class="nav-container">
+      <nav>
         <a href="#whats-new">What's New</a>
         <a href="#screenshots">Screenshots</a>
         <a href="#faq">FAQ</a>
@@ -37,383 +47,633 @@
         <a href="pages/api.html">API</a>
         <a href="pages/policy.html">Terms &amp; Privacy</a>
         <a href="app/login.html" class="nav-app-link">🌐 Web App</a>
-    </nav>
-</div>
-
-<section>
-    <div class="intro" id="about">
-        <p>SendLog is an iOS app designed specifically for rock climbers to easily log, track, and analyze their climbing activities. Quickly record your achievements, access detailed statistics, and keep personalized notes for each climb. Free, and offline-first.</p>
+      </nav>
     </div>
 
-    <h2 id="screenshots">Screenshots</h2>
-    <div class="screenshots">
-        <div class="screenshot-container">
-            <img src="images/screenshot1_thumb.png" alt="Screenshot 1" onclick="showLightbox('images/screenshot1.png', 0)">
-        </div>
-        <div class="screenshot-container">
-            <img src="images/screenshot2_thumb.png" alt="Screenshot 2" onclick="showLightbox('images/screenshot2.png', 1)">
-        </div>
-        <div class="screenshot-container">
-            <img src="images/screenshot3_thumb.png" alt="Screenshot 3" onclick="showLightbox('images/screenshot3.png', 2)">
-        </div>
-        <div class="screenshot-container">
-            <img src="images/screenshot4_thumb.png" alt="Screenshot 4" onclick="showLightbox('images/screenshot4.png', 3)">
-        </div>
-        <div class="screenshot-container">
-            <img src="images/screenshot5_thumb.png" alt="Screenshot 5" onclick="showLightbox('images/screenshot5.png', 4)">
-        </div>
-        <div class="screenshot-container">
-            <img src="images/screenshot6_thumb.png" alt="Screenshot 6" onclick="showLightbox('images/screenshot6.png', 5)">
-        </div>
-    </div>
+    <section>
+      <div class="intro" id="about">
+        <p>
+          SendLog is an iOS app designed specifically for rock climbers to
+          easily log, track, and analyze their climbing activities. Quickly
+          record your achievements, access detailed statistics, and keep
+          personalized notes for each climb. Free, and offline-first.
+        </p>
+      </div>
 
-    <div class="lightbox" id="lightbox" onclick="hideLightbox()">
+      <h2 id="screenshots">Screenshots</h2>
+      <div class="screenshots">
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot1_thumb.png"
+            alt="Screenshot 1"
+            onclick="showLightbox('images/screenshot1.png', 0)"
+          />
+        </div>
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot2_thumb.png"
+            alt="Screenshot 2"
+            onclick="showLightbox('images/screenshot2.png', 1)"
+          />
+        </div>
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot3_thumb.png"
+            alt="Screenshot 3"
+            onclick="showLightbox('images/screenshot3.png', 2)"
+          />
+        </div>
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot4_thumb.png"
+            alt="Screenshot 4"
+            onclick="showLightbox('images/screenshot4.png', 3)"
+          />
+        </div>
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot5_thumb.png"
+            alt="Screenshot 5"
+            onclick="showLightbox('images/screenshot5.png', 4)"
+          />
+        </div>
+        <div class="screenshot-container">
+          <img
+            src="images/screenshot6_thumb.png"
+            alt="Screenshot 6"
+            onclick="showLightbox('images/screenshot6.png', 5)"
+          />
+        </div>
+      </div>
+
+      <div class="lightbox" id="lightbox" onclick="hideLightbox()">
         <button class="lightbox-close" onclick="hideLightbox()">&times;</button>
         <div class="lightbox-controls">
-            <button class="lightbox-btn" id="prev-btn" onclick="event.stopPropagation(); navigateLightbox(-1)">&lt;</button>
-            <button class="lightbox-btn" id="next-btn" onclick="event.stopPropagation(); navigateLightbox(1)">&gt;</button>
+          <button
+            class="lightbox-btn"
+            id="prev-btn"
+            onclick="
+              event.stopPropagation();
+              navigateLightbox(-1);
+            "
+          >
+            &lt;
+          </button>
+          <button
+            class="lightbox-btn"
+            id="next-btn"
+            onclick="
+              event.stopPropagation();
+              navigateLightbox(1);
+            "
+          >
+            &gt;
+          </button>
         </div>
-        <img id="lightbox-img" src="" alt="Enlarged Screenshot">
-    </div>
-    
-    <h2 id="features">App Features</h2>
-    <div class="feature-grid">
-        <div class="feature-card">
-            <h3>Log Climbing Routes</h3>
-            <p>Route name, area, date, grade, send type, personal rating and notes — all in one quick form.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Photo Attachments</h3>
-            <p>Attach photos to any climb. Stored locally and synced to the cloud if enabled.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Training Session Tracking</h3>
-            <p>Log gym and training sessions separately from route logs. Track duration, type, and consistency over time.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Project Tracking</h3>
-            <p>Track attempts, record high points, and manage active, completed, and abandoned projects. Converts to a send automatically when you finish.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Voice Notes</h3>
-            <p>Dictate notes hands-free. Speech recognition in English, German, French, and Spanish.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Enhanced Sharing</h3>
-            <p>Generate achievement cards with route, grade, and send type for sharing on social media.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Comprehensive Statistics</h3>
-            <p>Grade distribution, calendar heatmap, unique vs total climbs, and time-period filtering.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Multi-Pitch & Route Types</h3>
-            <p>Sport, Boulder, and Multi-Pitch — colour-coded, filterable, and tracked separately.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Data Import & Export</h3>
-            <p>Export all logs as a CSV/ZIP archive. Import on any device with full backward compatibility.</p>
-        </div>
-        <div class="feature-card">
-            <h3>☁️ Cloud Sync</h3>
-            <p>Optional cross-device sync via Firebase. Sign in with Apple. Fully offline by default.</p>
-        </div>
-        <div class="feature-card">
-            <h3>🌐 Web Dashboard</h3>
-            <p>Full logbook access from any browser once Cloud Sync is enabled.</p>
-            <a href="app/login.html" class="btn-web-app">Open Web App →</a>
-        </div>
-        <div class="feature-card">
-            <h3>🔑 Partner API</h3>
-            <p>Read-only API keys for dashboards and spreadsheets. <a href="pages/api.html">API docs →</a></p>
-        </div>
-        <div class="feature-card">
-            <h3>🗺️ Central Route Database</h3>
-            <p>Search a shared route database to pre-fill details. See send counts and community ratings from other climbers.</p>
-        </div>
-    </div>
+        <img id="lightbox-img" src="" alt="Enlarged Screenshot" />
+      </div>
 
-    <h2 id="whats-new">What's New</h2>
+      <h2 id="features">App Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Log Climbing Routes</h3>
+          <p>
+            Route name, area, date, grade, send type, personal rating and notes
+            — all in one quick form.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Photo Attachments</h3>
+          <p>
+            Attach photos to any climb. Stored locally and synced to the cloud
+            if enabled.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Training Session Tracking</h3>
+          <p>
+            Log gym and training sessions separately from route logs. Track
+            duration, type, and consistency over time.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Project Tracking</h3>
+          <p>
+            Track attempts, record high points, and manage active, completed,
+            and abandoned projects. Converts to a send automatically when you
+            finish.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Voice Notes</h3>
+          <p>
+            Dictate notes hands-free. Speech recognition in English, German,
+            French, and Spanish.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Enhanced Sharing</h3>
+          <p>
+            Generate achievement cards with route, grade, and send type for
+            sharing on social media.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Comprehensive Statistics</h3>
+          <p>
+            Grade distribution, calendar heatmap, unique vs total climbs, and
+            time-period filtering.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Multi-Pitch & Route Types</h3>
+          <p>
+            Sport, Boulder, and Multi-Pitch — colour-coded, filterable, and
+            tracked separately.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Data Import & Export</h3>
+          <p>
+            Export all logs as a CSV/ZIP archive. Import on any device with full
+            backward compatibility.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>☁️ Cloud Sync</h3>
+          <p>
+            Optional cross-device sync via Firebase. Sign in with Apple. Fully
+            offline by default.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>🌐 Web Dashboard</h3>
+          <p>
+            Full logbook access from any browser once Cloud Sync is enabled.
+          </p>
+          <a href="app/login.html" class="btn-web-app">Open Web App →</a>
+        </div>
+        <div class="feature-card">
+          <h3>🔑 Partner API</h3>
+          <p>
+            Read-only API keys for dashboards and spreadsheets.
+            <a href="pages/api.html">API docs →</a>
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>🗺️ Central Route Database</h3>
+          <p>
+            Search a shared route database to pre-fill details. See send counts
+            and community ratings from other climbers.
+          </p>
+        </div>
+      </div>
 
-    <h3>Version 3.10 (May 2026)</h3>
-    <div class="whats-new-list">
+      <h2 id="whats-new">What's New</h2>
+
+      <h3>Version 3.12 (May 2026)</h3>
+      <div class="whats-new-list">
         <ul>
-            <li><strong>Community Ratings:</strong> Routes in the Central Route Database now show a community star rating — the average of all individual ratings contributed by climbers who have logged that route. The rating appears in search results and in the route detail view, so you can see how the community rates a climb before you get on it.</li>
+          <li>
+            <strong>Training Stats on Stats Page:</strong> Sessions, total time,
+            training days, average per week, and a by-type breakdown chart now
+            appear as a dedicated section on the Statistics page.
+          </li>
+          <li>
+            <strong>Include Training Toggle:</strong> A new filter chip lets you
+            control whether training session days count toward your Climbing
+            Days and Weekly Streak. Your preference is remembered.
+          </li>
+          <li>
+            <strong>Stats Filter Chips:</strong> Period, Unique Only / All
+            Climbs, and Incl. / Excl. Training are now a compact horizontal chip
+            strip instead of stacked buttons — faster to switch and easier to
+            read at a glance.
+          </li>
+          <li>
+            <strong>Training Session Detail View:</strong> Tap any training row
+            to open a full detail view with Type, Date, Duration, Intensity, and
+            Notes. Edit or Delete straight from the header — same pattern as
+            climb details.
+          </li>
+          <li>
+            <strong>Training in Heatmap:</strong> Training-only days now appear
+            in orange on the calendar heatmap. Days with both climbing and
+            training show in blue.
+          </li>
         </ul>
-    </div>
+      </div>
 
-    <h3>Version 3.9 (April 2026)</h3>
-    <div class="whats-new-list">
+      <h3>Version 3.10 (May 2026)</h3>
+      <div class="whats-new-list">
         <ul>
-            <li><strong>Goals — Full Feature:</strong> Edit and delete goals at any time. Achieved grade goals are kept permanently as a milestone history. A confetti animation plays when a goal is first reached. Grade goals only count actual sends — a route sitting in your projects does not count.</li>
-            <li><strong>Goals Cloud Sync:</strong> Goals now sync across all your devices via Cloud Sync.</li>
-            <li><strong>Partner API Keys:</strong> Generate personal read-only API keys in the Web App (My Account → API Keys) to connect your SendLog data to custom dashboards and spreadsheets. Full documentation at <a href="pages/api.html">sendlog.at/docs/api</a>.</li>
-            <li><strong>Bug Fixes:</strong> Resolved sync issues, training session edge cases, and statistics calculation inconsistencies.</li>
+          <li>
+            <strong>Community Ratings:</strong> Routes in the Central Route
+            Database now show a community star rating — the average of all
+            individual ratings contributed by climbers who have logged that
+            route. The rating appears in search results and in the route detail
+            view, so you can see how the community rates a climb before you get
+            on it.
+          </li>
         </ul>
-    </div>
+      </div>
 
-    <h3>Version 3.8 (April 2026)</h3>
-    <div class="whats-new-list">
+      <h3>Version 3.9 (April 2026)</h3>
+      <div class="whats-new-list">
         <ul>
-            <li><strong>Central Route Database:</strong> Search a shared community route database when logging sends and projects. Routes are auto-linked with send/project counters updated automatically. Own your routes with the 👤 ownership indicator.</li>
-            <li><strong>Route Search Overlay:</strong> New 🔍 icon next to the Route Name field opens an instant search overlay. Select a route to pre-fill name, crag, area, and grade — or create a new route if it doesn't exist yet.</li>
-            <li><strong>Web App CRUD:</strong> Full create, read, update, and delete support for climb notes and projects directly from the browser.</li>
+          <li>
+            <strong>Goals — Full Feature:</strong> Edit and delete goals at any
+            time. Achieved grade goals are kept permanently as a milestone
+            history. A confetti animation plays when a goal is first reached.
+            Grade goals only count actual sends — a route sitting in your
+            projects does not count.
+          </li>
+          <li>
+            <strong>Goals Cloud Sync:</strong> Goals now sync across all your
+            devices via Cloud Sync.
+          </li>
+          <li>
+            <strong>Partner API Keys:</strong> Generate personal read-only API
+            keys in the Web App (My Account → API Keys) to connect your SendLog
+            data to custom dashboards and spreadsheets. Full documentation at
+            <a href="pages/api.html">sendlog.at/docs/api</a>.
+          </li>
+          <li>
+            <strong>Bug Fixes:</strong> Resolved sync issues, training session
+            edge cases, and statistics calculation inconsistencies.
+          </li>
         </ul>
-    </div>
+      </div>
 
-    <h3>Version 3.7 (April 2026)</h3>
-    <div class="whats-new-list">
+      <h3>Version 3.8 (April 2026)</h3>
+      <div class="whats-new-list">
         <ul>
-            <li><strong>Cloud Sync:</strong> Optional Firebase-powered backup and cross-device sync for climbs, ascents, and photos. Sign in with Apple — app stays fully offline by default</li>
-            <li><strong>Grade Expansion:</strong> French 5b+ and 5c+ added as intermediate grades; UIAA mappings corrected from 5a onwards to match international standards</li>
-            <li><strong>Duplicate Send:</strong> New ⧉ button in the send detail view — opens a pre-filled form with the same area, crag, grade, and type so logging similar routes is instant</li>
-            <li><strong>Account Deletion:</strong> Delete your cloud account directly from Settings — local data is preserved and the app continues in offline mode</li>
-            <li><strong>Legal &amp; Compliance:</strong> Terms of Service and Privacy Policy acceptance gate before first sign-in; accessible at any time from Settings</li>
+          <li>
+            <strong>Central Route Database:</strong> Search a shared community
+            route database when logging sends and projects. Routes are
+            auto-linked with send/project counters updated automatically. Own
+            your routes with the 👤 ownership indicator.
+          </li>
+          <li>
+            <strong>Route Search Overlay:</strong> New 🔍 icon next to the Route
+            Name field opens an instant search overlay. Select a route to
+            pre-fill name, crag, area, and grade — or create a new route if it
+            doesn't exist yet.
+          </li>
+          <li>
+            <strong>Web App CRUD:</strong> Full create, read, update, and delete
+            support for climb notes and projects directly from the browser.
+          </li>
         </ul>
-    </div>
+      </div>
 
-    <h3>Version 3.6 (March 2026)</h3>
-    <div class="whats-new-list">
+      <h3>Version 3.7 (April 2026)</h3>
+      <div class="whats-new-list">
         <ul>
-            <li><strong>Photo Attachments:</strong> Attach photos to your climbing routes to capture beta, document achievements, or remember memorable climbs</li>
-            <li><strong>Training Session Tracking:</strong> Dedicated training log to track your gym sessions, training duration, and consistency</li>
-            <li><strong>Goals:</strong> Set personal climbing goals (climbing days per week/month, target grade by date, training sessions per week) and track your progress in real time on the Statistics tab</li>
-            <li><strong>Performance Improvements:</strong> General refactoring to improve app stability and performance across all features</li>
+          <li>
+            <strong>Cloud Sync:</strong> Optional Firebase-powered backup and
+            cross-device sync for climbs, ascents, and photos. Sign in with
+            Apple — app stays fully offline by default
+          </li>
+          <li>
+            <strong>Grade Expansion:</strong> French 5b+ and 5c+ added as
+            intermediate grades; UIAA mappings corrected from 5a onwards to
+            match international standards
+          </li>
+          <li>
+            <strong>Duplicate Send:</strong> New ⧉ button in the send detail
+            view — opens a pre-filled form with the same area, crag, grade, and
+            type so logging similar routes is instant
+          </li>
+          <li>
+            <strong>Account Deletion:</strong> Delete your cloud account
+            directly from Settings — local data is preserved and the app
+            continues in offline mode
+          </li>
+          <li>
+            <strong>Legal &amp; Compliance:</strong> Terms of Service and
+            Privacy Policy acceptance gate before first sign-in; accessible at
+            any time from Settings
+          </li>
         </ul>
-    </div>
-    
-    <h3>Version 3.0 (May 2025)</h3>
-    <div class="whats-new-list">
-        <ul>
-            <li>Added the possibility to distinguish between Sport, Multi-Pitch and Boulder routes</li>
-            <li>Added filtering for climb type with interactive area filters</li>
-            <li>Revamped statistics page with the possibility to select reporting time period</li>
-            <li>Expanded grade ranges for all grade systems to include easier grades</li>
-            <li>Improved climbing project management with dedicated input flow</li>
-            <li>Top grade calculation now excludes projects for accuracy</li>
-            <li>New layout for sharing image with better structure and more info</li>
-            <li>Added user manual to web site</li>
-            <li>Bug fixes</li>
-        </ul>
-    </div>
+      </div>
 
-    <div class="download">
+      <h3>Version 3.6 (March 2026)</h3>
+      <div class="whats-new-list">
+        <ul>
+          <li>
+            <strong>Photo Attachments:</strong> Attach photos to your climbing
+            routes to capture beta, document achievements, or remember memorable
+            climbs
+          </li>
+          <li>
+            <strong>Training Session Tracking:</strong> Dedicated training log
+            to track your gym sessions, training duration, and consistency
+          </li>
+          <li>
+            <strong>Goals:</strong> Set personal climbing goals (climbing days
+            per week/month, target grade by date, training sessions per week)
+            and track your progress in real time on the Statistics tab
+          </li>
+          <li>
+            <strong>Performance Improvements:</strong> General refactoring to
+            improve app stability and performance across all features
+          </li>
+        </ul>
+      </div>
+
+      <h3>Version 3.0 (May 2025)</h3>
+      <div class="whats-new-list">
+        <ul>
+          <li>
+            Added the possibility to distinguish between Sport, Multi-Pitch and
+            Boulder routes
+          </li>
+          <li>Added filtering for climb type with interactive area filters</li>
+          <li>
+            Revamped statistics page with the possibility to select reporting
+            time period
+          </li>
+          <li>
+            Expanded grade ranges for all grade systems to include easier grades
+          </li>
+          <li>
+            Improved climbing project management with dedicated input flow
+          </li>
+          <li>Top grade calculation now excludes projects for accuracy</li>
+          <li>
+            New layout for sharing image with better structure and more info
+          </li>
+          <li>Added user manual to web site</li>
+          <li>Bug fixes</li>
+        </ul>
+      </div>
+
+      <div class="download">
         <a href="https://apps.apple.com/at/app/sendlog/id6745050437">
-            <img src="images/black.svg" alt="Download on the App Store">
+          <img src="images/black.svg" alt="Download on the App Store" />
         </a>
-    </div>
+      </div>
 
-    <h2 id="faq">Frequently Asked Questions</h2>
-    <div class="faq-container">
-
+      <h2 id="faq">Frequently Asked Questions</h2>
+      <div class="faq-container">
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Can I add photos to my climbing routes?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. You can attach photos directly to each climb from your photo library or take a new one in the app. Photos are stored on-device and shown in the climb's detail view. If Cloud Sync is enabled, they are automatically uploaded and viewable in the Web App at sendlog.at/app.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I add photos to my climbing routes?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. You can attach photos directly to each climb from your photo
+            library or take a new one in the app. Photos are stored on-device
+            and shown in the climb's detail view. If Cloud Sync is enabled, they
+            are automatically uploaded and viewable in the Web App at
+            sendlog.at/app.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Can I track training sessions separately from route logs?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. SendLog includes a dedicated Training tab where you can log gym sessions, hangboard sessions, and other training types, track duration and intensity, and monitor your training consistency over time.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I track training sessions separately from route logs?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. SendLog includes a dedicated Training tab where you can log gym
+            sessions, hangboard sessions, and other training types, track
+            duration and intensity, and monitor your training consistency over
+            time.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Is my data secure?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                By default, all your data is stored locally on your device and never leaves it. If you choose to enable Cloud Sync, your data is stored in Firebase (Google Cloud) and protected by Sign in with Apple — no password is ever created or stored.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Is my data secure?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            By default, all your data is stored locally on your device and never
+            leaves it. If you choose to enable Cloud Sync, your data is stored
+            in Firebase (Google Cloud) and protected by Sign in with Apple — no
+            password is ever created or stored.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                How does Cloud Sync work?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Cloud Sync is entirely optional. Turn it on in Settings &rarr; Cloud Sync and sign in with Apple. Your climbs, ascents, and photos are then backed up and accessible across all your devices. The app continues to work fully offline at all times — Cloud Sync only runs when a connection is available.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            How does Cloud Sync work?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Cloud Sync is entirely optional. Turn it on in Settings &rarr; Cloud
+            Sync and sign in with Apple. Your climbs, ascents, and photos are
+            then backed up and accessible across all your devices. The app
+            continues to work fully offline at all times — Cloud Sync only runs
+            when a connection is available.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Can I delete my cloud account?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. Go to Settings &rarr; Delete My Account in the app, or to My Account &rarr; Danger Zone in the Web App. All server-side data is permanently deleted, while your local climbing history on the device is preserved. The app switches back to offline-only mode automatically.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I delete my cloud account?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Go to Settings &rarr; Delete My Account in the app, or to My
+            Account &rarr; Danger Zone in the Web App. All server-side data is
+            permanently deleted, while your local climbing history on the device
+            is preserved. The app switches back to offline-only mode
+            automatically.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Can I export my data?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. From Settings you can export all your climbs and ascents as a CSV file inside a ZIP archive. This works whether or not Cloud Sync is enabled and gives you a portable backup you can open in any spreadsheet app. You can also export directly from the Web App.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I export my data?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. From Settings you can export all your climbs and ascents as a
+            CSV file inside a ZIP archive. This works whether or not Cloud Sync
+            is enabled and gives you a portable backup you can open in any
+            spreadsheet app. You can also export directly from the Web App.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Can I track climbing projects separately from completed routes?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. SendLog has a dedicated Projects tab where you can manage active, completed, and abandoned projects independently from your send log. Log individual attempts with notes and high points, and when you finally send it the project converts to a send automatically.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I track climbing projects separately from completed routes?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. SendLog has a dedicated Projects tab where you can manage
+            active, completed, and abandoned projects independently from your
+            send log. Log individual attempts with notes and high points, and
+            when you finally send it the project converts to a send
+            automatically.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Does SendLog require an internet connection?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                No. SendLog works entirely offline — all your climbing logs and statistics are always available, even at the crag. An internet connection is only needed if you choose to enable the optional Cloud Sync feature.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Does SendLog require an internet connection?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            No. SendLog works entirely offline — all your climbing logs and
+            statistics are always available, even at the crag. An internet
+            connection is only needed if you choose to enable the optional Cloud
+            Sync feature.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Is historical data from older versions supported?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. SendLog fully supports importing data from previous versions, ensuring continuity and preservation of your climbing history across updates.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Is historical data from older versions supported?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. SendLog fully supports importing data from previous versions,
+            ensuring continuity and preservation of your climbing history across
+            updates.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                How is the top climbing grade determined?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                The app automatically calculates your highest grade based on successfully completed (sent) routes only — projects are excluded. This gives you a clear and honest view of your climbing progression over time.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            How is the top climbing grade determined?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            The app automatically calculates your highest grade based on
+            successfully completed (sent) routes only — projects are excluded.
+            This gives you a clear and honest view of your climbing progression
+            over time.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                What is the Central Route Database?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                The Central Route Database is a shared community collection of climbing routes. When logging a send or project, tap the &#128269; icon next to the Route Name field to search for the route. Selecting it pre-fills the form and links your log to the shared route record — so you can see how many other SendLog users have sent or projected the same route, and the community star rating.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            What is the Central Route Database?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            The Central Route Database is a shared community collection of
+            climbing routes. When logging a send or project, tap the &#128269;
+            icon next to the Route Name field to search for the route. Selecting
+            it pre-fills the form and links your log to the shared route record
+            — so you can see how many other SendLog users have sent or projected
+            the same route, and the community star rating.
+          </div>
         </div>
 
         <div class="faq">
-            <button class="faq-question" onclick="toggleFaq(this)">
-                Is there an API available?
-                <span class="faq-chevron">&#9660;</span>
-            </button>
-            <div class="faq-answer">
-                Yes. Once Cloud Sync is enabled, you can generate personal read-only API keys in the Web App under My Account &rarr; API Keys. Keys give third-party tools — dashboards and spreadsheets — scoped access to your climbs, training, and goals data. Full documentation is at <a href="pages/api.html">sendlog.at/docs/api</a>.
-            </div>
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Is there an API available?
+            <span class="faq-chevron">&#9660;</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Once Cloud Sync is enabled, you can generate personal read-only
+            API keys in the Web App under My Account &rarr; API Keys. Keys give
+            third-party tools — dashboards and spreadsheets — scoped access to
+            your climbs, training, and goals data. Full documentation is at
+            <a href="pages/api.html">sendlog.at/docs/api</a>.
+          </div>
         </div>
+      </div>
 
-    </div>
-
-    <div class="about-me" id="about-me">
+      <div class="about-me" id="about-me">
         <h2>About Me</h2>
-        <p>Hi! I'm Robert, the developer behind SendLog. I created this app as a passionate climber who wanted a simple yet powerful way to track climbing progress. I'm constantly working to improve the app based on user feedback and my own climbing experiences.</p>
-        <p>Have suggestions or feature requests? Reach out to me on Bluesky: <a href="https://bsky.app/profile/ruzitschka.at">@ruzitschka.at</a> or send a mail to <a href="mailto:support@sendlog.at">support@sendlog.at</a> </p>
-    </div>
-</section>
+        <p>
+          Hi! I'm Robert, the developer behind SendLog. I created this app as a
+          passionate climber who wanted a simple yet powerful way to track
+          climbing progress. I'm constantly working to improve the app based on
+          user feedback and my own climbing experiences.
+        </p>
+        <p>
+          Have suggestions or feature requests? Reach out to me on Bluesky:
+          <a href="https://bsky.app/profile/ruzitschka.at">@ruzitschka.at</a> or
+          send a mail to
+          <a href="mailto:support@sendlog.at">support@sendlog.at</a>
+        </p>
+      </div>
+    </section>
 
-<footer>
-    &copy; 2026 SendLog App
-</footer>
+    <footer>&copy; 2026 SendLog App</footer>
 
-<script>
-    function toggleFaq(btn) {
+    <script>
+      function toggleFaq(btn) {
         const answer = btn.nextElementSibling;
-        const isOpen = btn.classList.contains('open');
-        document.querySelectorAll('.faq-question.open').forEach(b => {
-            b.classList.remove('open');
-            b.nextElementSibling.classList.remove('open');
+        const isOpen = btn.classList.contains("open");
+        document.querySelectorAll(".faq-question.open").forEach((b) => {
+          b.classList.remove("open");
+          b.nextElementSibling.classList.remove("open");
         });
         if (!isOpen) {
-            btn.classList.add('open');
-            answer.classList.add('open');
+          btn.classList.add("open");
+          answer.classList.add("open");
         }
-    }
+      }
 
-    const screenshots = [
-        'images/screenshot1.png',
-        'images/screenshot2.png',
-        'images/screenshot3.png',
-        'images/screenshot4.png',
-        'images/screenshot5.png',
-        'images/screenshot6.png'
-    ];
-    
-    let currentIndex = 0;
-    
-    function showLightbox(src, index) {
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightbox-img');
+      const screenshots = [
+        "images/screenshot1.png",
+        "images/screenshot2.png",
+        "images/screenshot3.png",
+        "images/screenshot4.png",
+        "images/screenshot5.png",
+        "images/screenshot6.png",
+      ];
+
+      let currentIndex = 0;
+
+      function showLightbox(src, index) {
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightbox-img");
         currentIndex = index;
         lightboxImg.src = src;
-        lightbox.style.display = 'flex';
+        lightbox.style.display = "flex";
         event.stopPropagation();
-    }
+      }
 
-    function hideLightbox() {
-        document.getElementById('lightbox').style.display = 'none';
-    }
-    
-    function navigateLightbox(direction) {
-        currentIndex = (currentIndex + direction + screenshots.length) % screenshots.length;
-        document.getElementById('lightbox-img').src = screenshots[currentIndex];
-    }
-    
-    // Close lightbox when pressing Escape
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            hideLightbox();
-        } else if (event.key === 'ArrowRight') {
-            navigateLightbox(1);
-        } else if (event.key === 'ArrowLeft') {
-            navigateLightbox(-1);
+      function hideLightbox() {
+        document.getElementById("lightbox").style.display = "none";
+      }
+
+      function navigateLightbox(direction) {
+        currentIndex =
+          (currentIndex + direction + screenshots.length) % screenshots.length;
+        document.getElementById("lightbox-img").src = screenshots[currentIndex];
+      }
+
+      // Close lightbox when pressing Escape
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          hideLightbox();
+        } else if (event.key === "ArrowRight") {
+          navigateLightbox(1);
+        } else if (event.key === "ArrowLeft") {
+          navigateLightbox(-1);
         }
-    });
-    
-    // Highlight current section in navigation
-    const sections = document.querySelectorAll('section h2');
-    const navLinks = document.querySelectorAll('nav a');
-    
-    window.addEventListener('scroll', () => {
-        let current = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 100;
-            if (scrollY >= sectionTop) {
-                current = section.getAttribute('id');
-            }
+      });
+
+      // Highlight current section in navigation
+      const sections = document.querySelectorAll("section h2");
+      const navLinks = document.querySelectorAll("nav a");
+
+      window.addEventListener("scroll", () => {
+        let current = "";
+        sections.forEach((section) => {
+          const sectionTop = section.offsetTop - 100;
+          if (scrollY >= sectionTop) {
+            current = section.getAttribute("id");
+          }
         });
-        
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').substring(1) === current) {
-                link.classList.add('active');
-            }
+
+        navLinks.forEach((link) => {
+          link.classList.remove("active");
+          if (link.getAttribute("href").substring(1) === current) {
+            link.classList.add("active");
+          }
         });
-    });
-</script>
-    
-</body>
+      });
+    </script>
+  </body>
 </html>
