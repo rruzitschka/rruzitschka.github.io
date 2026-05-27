@@ -4,21 +4,8 @@
 // ==================== Utility: Period filters ====================
 
 function spFilterByPeriod(climbs, period) {
-	const now = new Date();
-	let since;
-	if (period === "week") {
-		// ISO week start = Monday
-		const day = now.getDay() || 7;
-		since = new Date(now);
-		since.setDate(now.getDate() - day + 1);
-		since.setHours(0, 0, 0, 0);
-	} else if (period === "month") {
-		since = new Date(now.getFullYear(), now.getMonth(), 1);
-	} else if (period === "year") {
-		since = new Date(now.getFullYear(), 0, 1);
-	} else {
-		return climbs; // allTime
-	}
+	const since = spSinceDate(period);
+	if (!since) return climbs; // allTime
 	// Include a route if its first send OR any repeat ascent falls in the period
 	return climbs.filter((c) => {
 		if (c.date && new Date(c.date) >= since) return true;
@@ -27,20 +14,8 @@ function spFilterByPeriod(climbs, period) {
 }
 
 function spFilterSessionsByPeriod(sessions, period) {
-	const now = new Date();
-	let since;
-	if (period === "week") {
-		const day = now.getDay() || 7;
-		since = new Date(now);
-		since.setDate(now.getDate() - day + 1);
-		since.setHours(0, 0, 0, 0);
-	} else if (period === "month") {
-		since = new Date(now.getFullYear(), now.getMonth(), 1);
-	} else if (period === "year") {
-		since = new Date(now.getFullYear(), 0, 1);
-	} else {
-		return sessions;
-	}
+	const since = spSinceDate(period);
+	if (!since) return sessions; // allTime
 	return sessions.filter((s) => s.date && new Date(s.date) >= since);
 }
 
@@ -351,6 +326,22 @@ function bindStatsPeriodTabs() {
 
 // ==================== Render: Grade and route type charts ====================
 
+/** Returns a standard Chart.js bar-chart options object. xFontSize defaults to 11. */
+function defaultBarChartOptions(xFontSize = 11) {
+	return {
+		responsive: true,
+		plugins: { legend: { display: false } },
+		scales: {
+			y: {
+				beginAtZero: true,
+				ticks: { stepSize: 1 },
+				grid: { color: "rgba(0,0,0,0.06)" },
+			},
+			x: { ticks: { font: { size: xFontSize } }, grid: { display: false } },
+		},
+	};
+}
+
 let gradeChartInstance = null;
 let typeChartInstance = null;
 
@@ -374,18 +365,7 @@ function renderGradeChart(filteredClimbs, period) {
 				},
 			],
 		},
-		options: {
-			responsive: true,
-			plugins: { legend: { display: false } },
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: { stepSize: 1 },
-					grid: { color: "rgba(0,0,0,0.06)" },
-				},
-				x: { ticks: { font: { size: 11 } }, grid: { display: false } },
-			},
-		},
+		options: defaultBarChartOptions(),
 	});
 }
 
@@ -424,18 +404,7 @@ function renderTypeChart(filteredClimbs, period) {
 				},
 			],
 		},
-		options: {
-			responsive: true,
-			plugins: { legend: { display: false } },
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: { stepSize: 1 },
-					grid: { color: "rgba(0,0,0,0.06)" },
-				},
-				x: { ticks: { font: { size: 12 } }, grid: { display: false } },
-			},
-		},
+		options: defaultBarChartOptions(12),
 	});
 }
 
@@ -536,17 +505,6 @@ function renderTrainingSection(filteredSessions) {
 				},
 			],
 		},
-		options: {
-			responsive: true,
-			plugins: { legend: { display: false } },
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: { stepSize: 1 },
-					grid: { color: "rgba(0,0,0,0.06)" },
-				},
-				x: { ticks: { font: { size: 11 } }, grid: { display: false } },
-			},
-		},
+		options: defaultBarChartOptions(),
 	});
 }

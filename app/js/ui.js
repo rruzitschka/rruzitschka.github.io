@@ -1604,9 +1604,16 @@ function showEditProjectOverlay(climb) {
 	}
 }
 
-function bindSendOverlayHandlers() {
+// ── Overlay shared helpers ──────────────────────────────────────────────────
+
+/**
+ * Shared setup for Send and Project overlays.
+ * Wires close/cancel/backdrop, the "find route" button, and soft-link clearing.
+ * Returns a closeOverlay() function for use in save/delete handlers.
+ */
+function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId }) {
 	function closeOverlay() {
-		document.getElementById("send-overlay").classList.add("hidden");
+		document.getElementById(overlayId).classList.add("hidden");
 		_centralRouteID = null;
 		_centralRouteName = "";
 		_centralRouteCrag = "";
@@ -1615,52 +1622,46 @@ function bindSendOverlayHandlers() {
 		_pendingNewCentralRoute = null;
 		_previousReportedRating = 0;
 		_originalCentralRouteID = null;
-		const btn = document.getElementById("find-route-btn-send");
-		setFindRouteUnlinked(btn.id);
+		setFindRouteUnlinked(findRouteBtnId);
 	}
+
 	document
-		.getElementById("send-overlay-close")
+		.getElementById(`${overlayId}-close`)
 		.addEventListener("click", closeOverlay);
 	document
-		.getElementById("send-overlay-cancel")
+		.getElementById(`${overlayId}-cancel`)
 		.addEventListener("click", closeOverlay);
-	document.getElementById("send-overlay").addEventListener("click", (e) => {
+	document.getElementById(overlayId).addEventListener("click", (e) => {
 		if (e.target === e.currentTarget) closeOverlay();
 	});
 
-	document
-		.getElementById("find-route-btn-send")
-		.addEventListener("click", () => {
-			buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
-				document.getElementById("so-route").value = route.name || "";
-				document.getElementById("so-area").value = route.climbingArea || "";
-				document.getElementById("so-crag").value = route.crag || "";
-				if (route.displayGrade)
-					initGradePicker(
-						document.getElementById("so-difficulty"),
-						route.displayGrade,
-					);
-				if (route.routeType)
-					document.getElementById("so-routetype").value = route.routeType;
-				_centralRouteID = route.id;
-				_centralRouteName = route.name || "";
-				_centralRouteCrag = route.crag || "";
-				_centralRouteArea = route.climbingArea || "";
-				_centralRouteCreatedBy = route.createdBy ?? null;
-				if (isNew) {
-					_pendingNewCentralRoute = route;
-					_centralRouteID = null;
-					_centralRouteCreatedBy = null;
-				}
-				setFindRouteLinked(
-					"find-route-btn-send",
-					route.name,
-					_centralRouteCreatedBy,
+	document.getElementById(findRouteBtnId).addEventListener("click", () => {
+		buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
+			document.getElementById(`${p}-route`).value = route.name || "";
+			document.getElementById(`${p}-area`).value = route.climbingArea || "";
+			document.getElementById(`${p}-crag`).value = route.crag || "";
+			if (route.displayGrade)
+				initGradePicker(
+					document.getElementById(`${p}-difficulty`),
+					route.displayGrade,
 				);
-			});
+			if (route.routeType)
+				document.getElementById(`${p}-routetype`).value = route.routeType;
+			_centralRouteID = route.id;
+			_centralRouteName = route.name || "";
+			_centralRouteCrag = route.crag || "";
+			_centralRouteArea = route.climbingArea || "";
+			_centralRouteCreatedBy = route.createdBy ?? null;
+			if (isNew) {
+				_pendingNewCentralRoute = route;
+				_centralRouteID = null;
+				_centralRouteCreatedBy = null;
+			}
+			setFindRouteLinked(findRouteBtnId, route.name, _centralRouteCreatedBy);
 		});
+	});
 
-	["so-route", "so-crag", "so-area"].forEach((fieldId) => {
+	[`${p}-route`, `${p}-crag`, `${p}-area`].forEach((fieldId) => {
 		document.getElementById(fieldId)?.addEventListener("input", () => {
 			const isOwner =
 				_centralRouteCreatedBy &&
@@ -1675,16 +1676,94 @@ function bindSendOverlayHandlers() {
 						area: _centralRouteArea,
 					},
 					{
-						name: document.getElementById("so-route").value,
-						crag: document.getElementById("so-crag").value,
-						area: document.getElementById("so-area").value,
+						name: document.getElementById(`${p}-route`).value,
+						crag: document.getElementById(`${p}-crag`).value,
+						area: document.getElementById(`${p}-area`).value,
 					},
 				)
 			) {
 				_centralRouteID = null;
-				setFindRouteUnlinked("find-route-btn-send");
+				setFindRouteUnlinked(findRouteBtnId);
 			}
 		});
+	});
+
+	return closeOverlay;
+}
+
+/** Binds the delete button for Send or Project overlays. */
+function bindOverlayDeleteHandler({
+	deleteBtnId,
+	recordFieldId,
+	routeFieldId,
+	label,
+	closeOverlay,
+}) {
+	document
+		.getElementById(deleteBtnId)
+		.addEventListener("click", async function () {
+			const recordName = document.getElementById(recordFieldId).value;
+			const name = document.getElementById(routeFieldId).value;
+			const confirmed = await showConfirmDialog(
+				`Delete ${label}?`,
+				`"${name}" will be permanently deleted.`,
+			);
+			if (!confirmed) return;
+			try {
+				await deleteClimbNote(recordName);
+				closeOverlay();
+				await loadData();
+			} catch (err) {
+				alert("Delete failed: " + (err.message ?? err));
+			}
+		});
+}
+
+/**
+ * Creates a central route if _pendingNewCentralRoute is set.
+ * Returns the resolved centralID (may be unchanged if no pending route).
+ */
+async function _maybeCreateCentralRoute(fieldPrefix, routeVal) {
+	if (!_pendingNewCentralRoute) return _centralRouteID;
+	const p = fieldPrefix;
+	let centralID = _centralRouteID;
+	try {
+		centralID = await createCentralRoute({
+			name: routeVal,
+			climbingArea: document.getElementById(`${p}-area`).value.trim() || "",
+			crag: document.getElementById(`${p}-crag`).value.trim() || "",
+			grade: document.getElementById(`${p}-difficulty`).value || "",
+			gradeSystem: getPreferredGradeSystem(),
+			routeType: document.getElementById(`${p}-routetype`).value,
+		});
+		_centralRouteID = centralID;
+	} catch (err) {
+		console.warn("Failed to create central route:", err);
+		// Don't block save if central route creation fails
+	}
+	_pendingNewCentralRoute = null;
+	return centralID;
+}
+
+/** Propagates overlay field edits back to central route if the current user is the creator. */
+function _maybePropagateToRoute(centralID, fieldPrefix, routeVal) {
+	if (!centralID || _centralRouteCreatedBy !== auth.currentUser?.uid) return;
+	const p = fieldPrefix;
+	updateCentralRoute(centralID, {
+		name: routeVal,
+		climbingArea: document.getElementById(`${p}-area`).value.trim() || "",
+		crag: document.getElementById(`${p}-crag`).value.trim() || "",
+		grade: document.getElementById(`${p}-difficulty`).value || "",
+		gradeSystem: getPreferredGradeSystem(),
+		routeType: document.getElementById(`${p}-routetype`).value,
+	});
+}
+
+function bindSendOverlayHandlers() {
+	const closeOverlay = bindOverlayCommon({
+		overlayId: "send-overlay",
+		fieldPrefix: "so",
+		findRouteBtnId: "find-route-btn-send",
 	});
 
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
@@ -1705,33 +1784,14 @@ function bindSendOverlayHandlers() {
 
 			const btn = this;
 			btn.disabled = true;
-			btn.textContent = "Saving…";
+			btn.textContent = "Saving\u2026";
 			try {
 				const recordName =
 					document.getElementById("so-record-name").value || undefined;
 				const projectRecordName =
 					document.getElementById("send-overlay").dataset.projectRecordName;
 
-				// Create central route if this is a new entry from the search overlay
-				let centralID = _centralRouteID;
-				if (_pendingNewCentralRoute) {
-					try {
-						centralID = await createCentralRoute({
-							name: routeVal,
-							climbingArea:
-								document.getElementById("so-area").value.trim() || "",
-							crag: document.getElementById("so-crag").value.trim() || "",
-							grade: document.getElementById("so-difficulty").value || "",
-							gradeSystem: getPreferredGradeSystem(),
-							routeType: document.getElementById("so-routetype").value,
-						});
-						_centralRouteID = centralID;
-					} catch (err) {
-						console.warn("Failed to create central route:", err);
-						// Don't block save if central route creation fails
-					}
-					_pendingNewCentralRoute = null;
-				}
+				const centralID = await _maybeCreateCentralRoute("so", routeVal);
 
 				await saveClimbNote({
 					recordName,
@@ -1773,17 +1833,7 @@ function bindSendOverlayHandlers() {
 					}
 				}
 
-				// Propagate edits back to central route if current user is the creator
-				if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
-					updateCentralRoute(centralID, {
-						name: routeVal,
-						climbingArea: document.getElementById("so-area").value.trim() || "",
-						crag: document.getElementById("so-crag").value.trim() || "",
-						grade: document.getElementById("so-difficulty").value || "",
-						gradeSystem: getPreferredGradeSystem(),
-						routeType: document.getElementById("so-routetype").value,
-					});
-				}
+				_maybePropagateToRoute(centralID, "so", routeVal);
 
 				if (centralID) {
 					if (projectRecordName) {
@@ -1800,7 +1850,7 @@ function bindSendOverlayHandlers() {
 					} catch (delErr) {
 						console.error("Mark as Sent: project delete failed", delErr);
 						alert(
-							"Send saved, but the original project could not be deleted — please delete it manually.",
+							"Send saved, but the original project could not be deleted \u2014 please delete it manually.",
 						);
 					}
 				}
@@ -1816,31 +1866,20 @@ function bindSendOverlayHandlers() {
 			}
 		});
 
-	document
-		.getElementById("send-overlay-delete")
-		.addEventListener("click", async function () {
-			const recordName = document.getElementById("so-record-name").value;
-			const name = document.getElementById("so-route").value;
-			const confirmed = await showConfirmDialog(
-				"Delete Send?",
-				`"${name}" will be permanently deleted.`,
-			);
-			if (!confirmed) return;
-			try {
-				await deleteClimbNote(recordName);
-				closeOverlay();
-				await loadData();
-			} catch (err) {
-				alert("Delete failed: " + (err.message ?? err));
-			}
-		});
+	bindOverlayDeleteHandler({
+		deleteBtnId: "send-overlay-delete",
+		recordFieldId: "so-record-name",
+		routeFieldId: "so-route",
+		label: "Send",
+		closeOverlay,
+	});
 
 	document
 		.getElementById("so-ascent-toggle")
 		.addEventListener("click", function () {
 			const form = document.getElementById("so-ascent-form");
 			const isHidden = form.classList.toggle("hidden");
-			this.textContent = isHidden ? "+ Add" : "✕";
+			this.textContent = isHidden ? "+ Add" : "\u2715";
 		});
 
 	document
@@ -1878,86 +1917,10 @@ function bindSendOverlayHandlers() {
 }
 
 function bindProjectOverlayHandlers() {
-	function closeOverlay() {
-		document.getElementById("project-overlay").classList.add("hidden");
-		_centralRouteID = null;
-		_centralRouteName = "";
-		_centralRouteCrag = "";
-		_centralRouteArea = "";
-		_centralRouteCreatedBy = null;
-		_pendingNewCentralRoute = null;
-		_previousReportedRating = 0;
-		_originalCentralRouteID = null;
-		const btn = document.getElementById("find-route-btn-project");
-		setFindRouteUnlinked(btn.id);
-	}
-	document
-		.getElementById("project-overlay-close")
-		.addEventListener("click", closeOverlay);
-	document
-		.getElementById("project-overlay-cancel")
-		.addEventListener("click", closeOverlay);
-	document.getElementById("project-overlay").addEventListener("click", (e) => {
-		if (e.target === e.currentTarget) closeOverlay();
-	});
-
-	document
-		.getElementById("find-route-btn-project")
-		.addEventListener("click", () => {
-			buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
-				document.getElementById("po-route").value = route.name || "";
-				document.getElementById("po-area").value = route.climbingArea || "";
-				document.getElementById("po-crag").value = route.crag || "";
-				if (route.displayGrade)
-					initGradePicker(
-						document.getElementById("po-difficulty"),
-						route.displayGrade,
-					);
-				if (route.routeType)
-					document.getElementById("po-routetype").value = route.routeType;
-				_centralRouteID = route.id;
-				_centralRouteName = route.name || "";
-				_centralRouteCrag = route.crag || "";
-				_centralRouteArea = route.climbingArea || "";
-				_centralRouteCreatedBy = route.createdBy ?? null;
-				if (isNew) {
-					_pendingNewCentralRoute = route;
-					_centralRouteID = null;
-					_centralRouteCreatedBy = null;
-				}
-				setFindRouteLinked(
-					"find-route-btn-project",
-					route.name,
-					_centralRouteCreatedBy,
-				);
-			});
-		});
-
-	["po-route", "po-crag", "po-area"].forEach((fieldId) => {
-		document.getElementById(fieldId)?.addEventListener("input", () => {
-			const isOwner =
-				_centralRouteCreatedBy &&
-				_centralRouteCreatedBy === auth.currentUser?.uid;
-			if (
-				_centralRouteID &&
-				!isOwner &&
-				shouldClearSoftLink(
-					{
-						name: _centralRouteName,
-						crag: _centralRouteCrag,
-						area: _centralRouteArea,
-					},
-					{
-						name: document.getElementById("po-route").value,
-						crag: document.getElementById("po-crag").value,
-						area: document.getElementById("po-area").value,
-					},
-				)
-			) {
-				_centralRouteID = null;
-				setFindRouteUnlinked("find-route-btn-project");
-			}
-		});
+	const closeOverlay = bindOverlayCommon({
+		overlayId: "project-overlay",
+		fieldPrefix: "po",
+		findRouteBtnId: "find-route-btn-project",
 	});
 
 	document
@@ -1974,7 +1937,7 @@ function bindProjectOverlayHandlers() {
 
 			const btn = this;
 			btn.disabled = true;
-			btn.textContent = "Saving…";
+			btn.textContent = "Saving\u2026";
 			try {
 				const recordName =
 					document.getElementById("po-record-name").value || undefined;
@@ -1982,25 +1945,7 @@ function bindProjectOverlayHandlers() {
 					"po-last-attempt-date",
 				).value;
 
-				// Create central route if this is a new entry from the search overlay
-				let centralID = _centralRouteID;
-				if (_pendingNewCentralRoute) {
-					try {
-						centralID = await createCentralRoute({
-							name: routeVal,
-							climbingArea:
-								document.getElementById("po-area").value.trim() || "",
-							crag: document.getElementById("po-crag").value.trim() || "",
-							grade: document.getElementById("po-difficulty").value || "",
-							gradeSystem: getPreferredGradeSystem(),
-							routeType: document.getElementById("po-routetype").value,
-						});
-						_centralRouteID = centralID;
-					} catch (err) {
-						console.warn("Failed to create central route:", err);
-					}
-					_pendingNewCentralRoute = null;
-				}
+				const centralID = await _maybeCreateCentralRoute("po", routeVal);
 
 				await saveClimbNote({
 					recordName,
@@ -2028,17 +1973,7 @@ function bindProjectOverlayHandlers() {
 					reportRating(_originalCentralRouteID, 0, _previousReportedRating);
 				}
 
-				// Propagate edits back to central route if current user is the creator
-				if (centralID && _centralRouteCreatedBy === auth.currentUser?.uid) {
-					updateCentralRoute(centralID, {
-						name: routeVal,
-						climbingArea: document.getElementById("po-area").value.trim() || "",
-						crag: document.getElementById("po-crag").value.trim() || "",
-						grade: document.getElementById("po-difficulty").value || "",
-						gradeSystem: getPreferredGradeSystem(),
-						routeType: document.getElementById("po-routetype").value,
-					});
-				}
+				_maybePropagateToRoute(centralID, "po", routeVal);
 
 				if (centralID) {
 					const isNew = !recordName;
@@ -2061,24 +1996,13 @@ function bindProjectOverlayHandlers() {
 			}
 		});
 
-	document
-		.getElementById("project-overlay-delete")
-		.addEventListener("click", async function () {
-			const recordName = document.getElementById("po-record-name").value;
-			const name = document.getElementById("po-route").value;
-			const confirmed = await showConfirmDialog(
-				"Delete Project?",
-				`"${name}" will be permanently deleted.`,
-			);
-			if (!confirmed) return;
-			try {
-				await deleteClimbNote(recordName);
-				closeOverlay();
-				await loadData();
-			} catch (err) {
-				alert("Delete failed: " + (err.message ?? err));
-			}
-		});
+	bindOverlayDeleteHandler({
+		deleteBtnId: "project-overlay-delete",
+		recordFieldId: "po-record-name",
+		routeFieldId: "po-route",
+		label: "Project",
+		closeOverlay,
+	});
 
 	document
 		.getElementById("po-mark-sent")
