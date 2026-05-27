@@ -171,6 +171,79 @@ function adminStatCard(label, value, valueColor) {
   `;
 }
 
+// ── Admin search helpers (lifted to module level to avoid deep nesting) ──────
+
+function bindAdminSearchRowHandlers(resultsEl, filtered) {
+	resultsEl.querySelectorAll(".admin-route-row").forEach((rowEl) => {
+		const route = filtered.find((r) => r.id === rowEl.dataset.id);
+		if (route)
+			rowEl.addEventListener("click", () => openAdminEditForm(route.id));
+	});
+}
+
+async function doSearch() {
+	const name = document.getElementById("admin-search-name").value.trim();
+	const crag = document.getElementById("admin-search-crag").value.trim();
+	const orphaned = document.getElementById("admin-search-orphaned").checked;
+	const resultsEl = document.getElementById("admin-search-results");
+
+	if (name.length < 2 && !orphaned) {
+		resultsEl.innerHTML =
+			'<p style="color:#94a3b8;font-size:0.875rem">Type at least 2 characters to search.</p>';
+		return;
+	}
+
+	resultsEl.innerHTML =
+		'<p style="color:#94a3b8;font-size:0.875rem">Searching…</p>';
+
+	try {
+		const routes = await searchRoutes(
+			name.length >= 2 ? name : "",
+			crag || null,
+			getPreferredGradeSystem(),
+			40,
+		);
+		const filtered = orphaned ? routes.filter((r) => r.isOrphaned) : routes;
+
+		if (!filtered.length) {
+			resultsEl.innerHTML =
+				'<p style="color:#94a3b8;font-size:0.875rem">No routes found.</p>';
+			return;
+		}
+
+		resultsEl.innerHTML = filtered
+			.map(
+				(r) => `
+          <div class="admin-route-row" data-id="${escapeHtml(r.id)}" style="
+            display:flex;justify-content:space-between;align-items:center;
+            padding:10px 12px;border:1px solid var(--border-color);
+            border-radius:8px;margin-bottom:6px;cursor:pointer;
+            background:${r.isOrphaned ? "#fff7ed" : "var(--card-bg, #fff)"}">
+            <div>
+              <div style="font-weight:600;font-size:0.95rem">
+                ${escapeHtml(r.name)}
+                ${r.isOrphaned ? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>' : ""}
+              </div>
+              <div style="font-size:0.8rem;color:#64748b">
+                ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)} · ${escapeHtml(r.displayGrade)}
+              </div>
+            </div>
+            <div style="font-size:0.8rem;color:#94a3b8;text-align:right">
+              ✓ ${r.sendCount} &nbsp; 📌 ${r.projectCount}
+            </div>
+          </div>
+        `,
+			)
+			.join("");
+
+		bindAdminSearchRowHandlers(resultsEl, filtered);
+	} catch (err) {
+		console.error("Admin search error:", err);
+		resultsEl.innerHTML =
+			'<p style="color:#ef4444;font-size:0.875rem">Search failed. Check your connection.</p>';
+	}
+}
+
 function renderAdminSearch() {
 	const el = document.getElementById("admin-tab-content");
 	if (!el) return;
@@ -192,72 +265,6 @@ function renderAdminSearch() {
   `;
 
 	let timer = null;
-
-	function doSearch() {
-		const name = document.getElementById("admin-search-name").value.trim();
-		const crag = document.getElementById("admin-search-crag").value.trim();
-		const orphaned = document.getElementById("admin-search-orphaned").checked;
-		const resultsEl = document.getElementById("admin-search-results");
-
-		if (name.length < 2 && !orphaned) {
-			resultsEl.innerHTML =
-				'<p style="color:#94a3b8;font-size:0.875rem">Type at least 2 characters to search.</p>';
-			return;
-		}
-
-		resultsEl.innerHTML =
-			'<p style="color:#94a3b8;font-size:0.875rem">Searching…</p>';
-
-		searchRoutes(
-			name.length >= 2 ? name : "",
-			crag || null,
-			getPreferredGradeSystem(),
-			40,
-		)
-			.then((routes) => {
-				const filtered = orphaned ? routes.filter((r) => r.isOrphaned) : routes;
-				if (!filtered.length) {
-					resultsEl.innerHTML =
-						'<p style="color:#94a3b8;font-size:0.875rem">No routes found.</p>';
-					return;
-				}
-				resultsEl.innerHTML = filtered
-					.map(
-						(r) => `
-          <div class="admin-route-row" data-id="${escapeHtml(r.id)}" style="
-            display:flex;justify-content:space-between;align-items:center;
-            padding:10px 12px;border:1px solid var(--border-color);
-            border-radius:8px;margin-bottom:6px;cursor:pointer;
-            background:${r.isOrphaned ? "#fff7ed" : "var(--card-bg, #fff)"}">
-            <div>
-              <div style="font-weight:600;font-size:0.95rem">
-                ${escapeHtml(r.name)}
-                ${r.isOrphaned ? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>' : ""}
-              </div>
-              <div style="font-size:0.8rem;color:#64748b">
-                ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)} · ${escapeHtml(r.displayGrade)}
-              </div>
-            </div>
-            <div style="font-size:0.8rem;color:#94a3b8;text-align:right">
-              ✓ ${r.sendCount} &nbsp; 📌 ${r.projectCount}
-            </div>
-          </div>
-        `,
-					)
-					.join("");
-
-				resultsEl.querySelectorAll(".admin-route-row").forEach((rowEl) => {
-					const route = filtered.find((r) => r.id === rowEl.dataset.id);
-					if (route)
-						rowEl.addEventListener("click", () => openAdminEditForm(route.id));
-				});
-			})
-			.catch((err) => {
-				console.error("Admin search error:", err);
-				resultsEl.innerHTML =
-					'<p style="color:#ef4444;font-size:0.875rem">Search failed. Check your connection.</p>';
-			});
-	}
 
 	["admin-search-name", "admin-search-crag"].forEach((id) => {
 		document.getElementById(id).addEventListener("input", () => {
