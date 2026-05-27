@@ -504,13 +504,13 @@ function populateFilters(climbs) {
 
 	const areas = [
 		...new Set(climbs.map((c) => c.climbingArea).filter(Boolean)),
-	].sort();
+	].sort((a, b) => a.localeCompare(b));
 	const years = [
 		...new Set(climbs.filter((c) => c.date).map((c) => c.date.getFullYear())),
 	].sort((a, b) => b - a);
 	const types = [
 		...new Set(climbs.map((c) => c.routeType).filter(Boolean)),
-	].sort();
+	].sort((a, b) => a.localeCompare(b));
 
 	areaSelect.innerHTML = '<option value="">All Areas</option>';
 	for (const area of areas) {
