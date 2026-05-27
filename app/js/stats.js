@@ -1,6 +1,8 @@
 // stats.js — Stats page calculations and rendering
 // Depends on: GRADES, detectGradeSystem (grades.js), escapeHtml (ui.js)
 
+const MS_PER_DAY = 86400000;
+
 // ==================== Utility: Period filters ====================
 
 function spFilterByPeriod(climbs, period) {
@@ -174,22 +176,17 @@ function spCalcHeatmap(allClimbs, allSessions) {
 function spCalcWeeklyStreak(allClimbs, allSessions) {
 	// Collect all ISO week keys with activity
 	const weekSet = new Set();
-	const toWeekKey = (d) => {
-		const dt = new Date(d);
-		const jan4 = new Date(dt.getFullYear(), 0, 4);
-		const week = Math.ceil(((dt - jan4) / 86400000 + jan4.getDay() + 1) / 7);
-		return `${dt.getFullYear()}-W${String(week).padStart(2, "0")}`;
-	};
+	// week-key helper: toIsoWeekKey() defined at module level below
 	allClimbs
 		.filter((c) => !c.isProject)
 		.forEach((c) => {
-			if (c.date) weekSet.add(toWeekKey(c.date));
+			if (c.date) weekSet.add(toIsoWeekKey(c.date));
 			(c.ascents ?? []).forEach((a) => {
-				if (a.date) weekSet.add(toWeekKey(a.date));
+				if (a.date) weekSet.add(toIsoWeekKey(a.date));
 			});
 		});
 	allSessions.forEach((s) => {
-		if (s.date) weekSet.add(toWeekKey(s.date));
+		if (s.date) weekSet.add(toIsoWeekKey(s.date));
 	});
 
 	// Count consecutive weeks back from current
@@ -198,7 +195,7 @@ function spCalcWeeklyStreak(allClimbs, allSessions) {
 	for (let i = 0; i < 104; i++) {
 		const d = new Date(now);
 		d.setDate(now.getDate() - i * 7);
-		if (weekSet.has(toWeekKey(d))) streak++;
+		if (weekSet.has(toIsoWeekKey(d))) streak++;
 		else if (i > 0) break; // gap found (allow current incomplete week)
 	}
 	return streak;
@@ -223,7 +220,7 @@ function spCalcLongestStreak(allClimbs) {
 			return;
 		}
 		const prev = days[i - 1];
-		const diff = (d - prev) / 86400000;
+		const diff = (d - prev) / MS_PER_DAY;
 		current = diff === 1 ? current + 1 : 1;
 		longest = Math.max(longest, current);
 	});
@@ -295,7 +292,7 @@ function renderStatsPage(climbs, sessions) {
 	const topGradeEl = document.getElementById("sp-top-grade");
 	if (topGradeEl)
 		topGradeEl.innerHTML = summary.topGrade
-			? `<div class="sp-top-grade-inline"><span class="sp-top-grade-label">Hardest Send:</span> <span class="sp-top-grade-route">${escapeHtml(summary.topGradeRoute ?? "")}</span><span class="sp-top-grade-sep">,</span> <span class="sp-top-grade-value">${summary.topGrade}</span></div>`
+			? `<div class="sp-top-grade-inline"><span class="sp-top-grade-label">Hardest Send:</span> <span class="sp-top-grade-route">${escapeHtml(summary.topGradeRoute ?? "")}</span><span class="sp-top-grade-sep">,</span> <span class="sp-top-grade-value">${escapeHtml(summary.topGrade)}</span></div>`
 			: `<div class="sp-top-grade-empty">No sends in this period</div>`;
 
 	renderGradeChart(filtered, statsPeriod);
@@ -369,16 +366,16 @@ function renderGradeChart(filteredClimbs, period) {
 	});
 }
 
-const TYPE_COLORS = {
-	Boulder: "rgba(15,23,42,0.75)",
-	Sport: "rgba(15,23,42,0.75)",
-	"Multi-Pitch": "rgba(15,23,42,0.75)",
-};
-const TYPE_BORDER_COLORS = {
-	Boulder: "rgba(15,23,42,0.75)",
-	Sport: "rgba(15,23,42,0.75)",
-	"Multi-Pitch": "rgba(15,23,42,0.75)",
-};
+/** Returns the ISO week key (e.g. "2026-W22") for a given date value. */
+function toIsoWeekKey(d) {
+	const dt = new Date(d);
+	const jan4 = new Date(dt.getFullYear(), 0, 4);
+	const week = Math.ceil(((dt - jan4) / MS_PER_DAY + jan4.getDay() + 1) / 7);
+	return `${dt.getFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+const BAR_COLOR = "rgba(15,23,42,0.75)";
+
 
 function renderTypeChart(filteredClimbs, period) {
 	const canvas = document.getElementById("sp-type-chart");
@@ -393,12 +390,8 @@ function renderTypeChart(filteredClimbs, period) {
 			datasets: [
 				{
 					data: data.map((d) => d.count),
-					backgroundColor: data.map(
-						(d) => TYPE_COLORS[d.type] ?? "rgba(15,23,42,0.75)",
-					),
-					borderColor: data.map(
-						(d) => TYPE_BORDER_COLORS[d.type] ?? "rgba(15,23,42,0.75)",
-					),
+					backgroundColor: BAR_COLOR,
+					borderColor: BAR_COLOR,
 					borderWidth: 1,
 					borderRadius: 4,
 				},
