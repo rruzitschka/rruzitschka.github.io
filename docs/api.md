@@ -110,6 +110,7 @@ List climb notes (sends and projects). Returns results ordered by `date` ascendi
 | `from` | ISO8601 date | Only climbs on or after this date |
 | `to` | ISO8601 date | Only climbs on or before this date |
 | `since` | ISO8601 datetime | Only records updated after this timestamp (for incremental sync). Mutually exclusive with `from`/`to`. |
+| `include` | string | Comma-separated list of optional fields. Currently supported: `gps`. |
 
 **Example request:**
 
@@ -139,6 +140,7 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
       "projectStatus": null,
       "projectNotes": null,
       "highPoint": null,
+      "centralRouteID": "rTeho8rot8CTj9kEvZE4",
       "updatedAt": "2026-08-15T18:30:00.000Z"
     }
   ],
@@ -159,39 +161,99 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
 | `sendType` | string | `Redpoint` · `Pinkpoint` · `On Sight` · `Flash` · `Top Rope` · `All Free` · `Project` |
 | `routeType` | string | `Sport` · `Boulder` · `Multi-Pitch` |
 | `noteText` | string \| null | Free-text notes |
-| `rating` | integer | 0–5 stars |
+| `rating` | integer | 0–5 stars (user's personal rating) |
 | `attemptCount` | integer | Number of attempts |
 | `date` | ISO8601 \| null | Send date (null for active projects) |
 | `lastAttemptDate` | ISO8601 \| null | Last attempt date (projects) |
 | `projectStatus` | string \| null | `Working` · `Close` · `On Hold` (projects) |
 | `projectNotes` | string \| null | Project-specific notes |
 | `highPoint` | string \| null | Highest point reached (projects) |
+| `centralRouteID` | string \| null | ID of the linked entry in the SendLog central route database, or `null` if the route has not been linked |
 | `updatedAt` | ISO8601 \| null | Last modification timestamp |
+
+#### Optional: GPS coordinates (`?include=gps`)
+
+Add `?include=gps` to include GPS coordinates sourced from the SendLog central route database. When requested, each climb object gains a `gps` field:
+
+- **`gps`** is a coordinates object if the linked central route has GPS stored.
+- **`gps`** is `null` if the climb has no `centralRouteID`, or if the central route does not yet have GPS coordinates.
+- Without `?include=gps` the `gps` key is **absent entirely** — existing integrations are unaffected.
+
+GPS coordinates are sourced from the central route, not from the user's own record, so they reflect community-contributed data.
+
+```bash
+curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?include=gps" \
+  -H "X-API-Key: cnl_your_key_here"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "abc123",
+      "route": "Biographie",
+      "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+      "gps": {
+        "latitude": 44.1823,
+        "longitude": 5.9714,
+        "country": "FR"
+      },
+      ...
+    },
+    {
+      "id": "def456",
+      "route": "My Local Project",
+      "centralRouteID": null,
+      "gps": null,
+      ...
+    }
+  ]
+}
+```
+
+**GPS object fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `latitude` | number | WGS84 latitude |
+| `longitude` | number | WGS84 longitude |
+| `country` | string \| null | ISO 3166-1 alpha-2 country code (e.g. `"AT"`, `"FR"`) |
 
 ---
 
 ### GET /v1/climbs/:id
 
-Get a single climb note with its full ascent history.
+Get a single climb note with its full ascent history. Supports the same `?include=gps` option as the list endpoint.
 
 **Required scope:** `climbs:read`
+
+**Query parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `include` | string | Optional fields. `gps` fetches GPS coordinates from the central route database. |
 
 **Example request:**
 
 ```bash
-curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs/abc123" \
+curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs/abc123?include=gps" \
   -H "X-API-Key: cnl_your_key_here"
 ```
 
 **Response `200 OK`:**
 
-Same fields as the list item, plus an `ascents` array:
+Same fields as the list item, plus an `ascents` array (and `gps` if requested):
 
 ```json
 {
   "id": "abc123",
   "route": "Biographie",
-  ...
+  "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+  "gps": {
+    "latitude": 44.1823,
+    "longitude": 5.9714,
+    "country": "FR"
+  },
   "ascents": [
     {
       "id": "asc-uuid-1",
@@ -285,6 +347,8 @@ List goals. Does not support pagination (goal counts are typically small). Suppo
 |-----------|------|-------------|
 | `since` | ISO8601 datetime | Only goals updated after this timestamp |
 
+> **Note:** Goals that have never been modified after their initial creation may have `updatedAt: null`. Because `since` filters on this field, those goals will not appear in `since` responses — they are only returned by the unfiltered endpoint (`GET /v1/goals` with no parameters). This affects goals created on older app versions before update timestamps were introduced.
+
 **Example request:**
 
 ```bash
@@ -299,7 +363,7 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/goals" \
   "data": [
     {
       "id": "goal-uuid-1",
-      "type": "gradeTarget",
+      "type": "targetGradeByDate",
       "target": 0,
       "periodIsWeekly": false,
       "gradeTarget": "8a",
@@ -308,6 +372,18 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/goals" \
       "isArchived": false,
       "completedPeriods": [],
       "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "goal-uuid-2",
+      "type": "climbingDaysPerPeriod",
+      "target": 3,
+      "periodIsWeekly": true,
+      "gradeTarget": null,
+      "deadline": null,
+      "achievedAt": null,
+      "isArchived": false,
+      "completedPeriods": ["2026-W17", "2026-W18"],
+      "updatedAt": "2026-05-01T08:00:00.000Z"
     }
   ]
 }
@@ -318,15 +394,23 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/goals" \
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Goal UUID |
-| `type` | string | `gradeTarget` · `climbingDays` · `trainingDays` |
-| `target` | integer | Numeric target (e.g. days per period) |
-| `periodIsWeekly` | boolean | `true` = weekly period, `false` = monthly |
-| `gradeTarget` | string \| null | Target grade (grade-type goals only) |
-| `deadline` | ISO8601 \| null | Optional deadline date |
+| `type` | string | See goal types below |
+| `target` | integer | Numeric target — number of days or sessions per period (ignored for `targetGradeByDate`) |
+| `periodIsWeekly` | boolean | `true` = weekly period, `false` = monthly (applies to `climbingDaysPerPeriod`) |
+| `gradeTarget` | string \| null | Target grade string (`targetGradeByDate` only) |
+| `deadline` | ISO8601 \| null | Optional target date |
 | `achievedAt` | ISO8601 \| null | When the goal was first achieved |
 | `isArchived` | boolean | Whether the goal has been archived |
-| `completedPeriods` | string[] | ISO week/month strings for completed periods |
+| `completedPeriods` | string[] | ISO week keys (e.g. `"2026-W17"`) or month keys for completed periods |
 | `updatedAt` | ISO8601 \| null | Last modification timestamp |
+
+**Goal types:**
+
+| `type` value | Description |
+|---|---|
+| `climbingDaysPerPeriod` | Climbing at least `target` days per week or month |
+| `trainingSessionsPerWeek` | Completing at least `target` training sessions per week |
+| `targetGradeByDate` | Sending a route of grade `gradeTarget` by `deadline` |
 
 ---
 
@@ -344,11 +428,13 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?since=2026-04-30T12:00:00.00
   -H "X-API-Key: cnl_your_key_here"
 ```
 
-When using `since`, results are ordered by `updatedAt` ascending. The `since` parameter is mutually exclusive with `from`/`to`.
+When using `since`, results are ordered by `updatedAt` ascending. The `since` parameter is mutually exclusive with `from`/`to` on the climbs and training endpoints.
 
 ---
 
-## Example: Fetch all your sends from this year
+## Examples
+
+### Fetch all sends from this year
 
 ```bash
 API_KEY="cnl_your_key_here"
@@ -358,7 +444,20 @@ curl "$BASE/v1/climbs?from=2026-01-01&limit=100" \
   -H "X-API-Key: $API_KEY"
 ```
 
-## Example: Home dashboard in Python
+### Fetch climbs with GPS coordinates
+
+```bash
+curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?include=gps&limit=100" \
+  -H "X-API-Key: cnl_your_key_here"
+```
+
+Only climbs linked to a central route that has GPS data will have a non-null `gps` object. You can filter these client-side:
+
+```python
+climbs_with_gps = [c for c in climbs if c.get("gps") is not None]
+```
+
+### Home dashboard in Python
 
 ```python
 import requests
@@ -381,7 +480,7 @@ while True:
     if not body.get("hasMore"):
         break
 
-sends = [c for c in climbs if c["sendType"] != "Project"]
+sends = [c for c in climbs if c["projectStatus"] is None]
 print(f"Total sends: {len(sends)}")
 print(f"Hardest grade: {max((c['difficulty'] for c in sends), default='—')}")
 ```
