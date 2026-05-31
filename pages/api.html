@@ -530,6 +530,7 @@
                         <tr><td><code>from</code></td><td>ISO 8601 date</td><td>Climbs on or after this date</td></tr>
                         <tr><td><code>to</code></td><td>ISO 8601 date</td><td>Climbs on or before this date</td></tr>
                         <tr><td><code>since</code></td><td>ISO 8601 datetime</td><td>Only records updated after this timestamp. Mutually exclusive with <code>from</code>/<code>to</code>.</td></tr>
+                        <tr><td><code>include</code></td><td>string</td><td>Comma-separated list of optional fields. Currently supported: <code>gps</code>.</td></tr>
                     </tbody>
                 </table>
 
@@ -556,6 +557,7 @@
       "projectStatus": null,
       "projectNotes": null,
       "highPoint": null,
+      "centralRouteID": "rTeho8rot8CTj9kEvZE4",
       "updatedAt": "2026-08-15T18:30:00.000Z"
     }
   ],
@@ -584,7 +586,46 @@
                         <tr><td><code>projectStatus</code></td><td>string | null</td><td><code>Working</code> · <code>Close</code> · <code>On Hold</code></td></tr>
                         <tr><td><code>projectNotes</code></td><td>string | null</td><td>Project-specific notes</td></tr>
                         <tr><td><code>highPoint</code></td><td>string | null</td><td>Highest point reached (projects)</td></tr>
+                        <tr><td><code>centralRouteID</code></td><td>string | null</td><td>ID of the linked entry in the SendLog central route database, or <code>null</code> if not linked</td></tr>
                         <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Optional: GPS coordinates (<code>?include=gps</code>)</h3>
+                <p>Add <code>?include=gps</code> to include GPS coordinates sourced from the SendLog central route database. When requested, each climb object gains a <code>gps</code> field:</p>
+                <ul>
+                    <li><code>gps</code> is a coordinates object if the linked central route has GPS stored.</li>
+                    <li><code>gps</code> is <code>null</code> if the climb has no <code>centralRouteID</code>, or if the central route does not yet have GPS coordinates.</li>
+                    <li>Without <code>?include=gps</code> the <code>gps</code> key is <strong>absent entirely</strong> — existing integrations are unaffected.</li>
+                </ul>
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?include=gps" \
+  -H "X-API-Key: cnl_your_key_here"</code></pre>
+                <pre><code>{
+  "data": [
+    {
+      "id": "abc123",
+      "route": "Biographie",
+      "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+      "gps": { "latitude": 44.1823, "longitude": 5.9714, "country": "FR" },
+      ...
+    },
+    {
+      "id": "def456",
+      "route": "My Local Project",
+      "centralRouteID": null,
+      "gps": null,
+      ...
+    }
+  ]
+}</code></pre>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>GPS field</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>latitude</code></td><td>number</td><td>WGS84 latitude</td></tr>
+                        <tr><td><code>longitude</code></td><td>number</td><td>WGS84 longitude</td></tr>
+                        <tr><td><code>country</code></td><td>string | null</td><td>ISO 3166-1 alpha-2 country code (e.g. <code>"AT"</code>, <code>"FR"</code>)</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -598,18 +639,29 @@
                 <span class="badge badge-scope">climbs:read</span>
             </div>
             <div class="endpoint-body">
-                <p>Get a single climb note with its full repeat-ascent history.</p>
+                <p>Get a single climb note with its full repeat-ascent history. Supports the same <code>?include=gps</code> option as the list endpoint.</p>
+
+                <h3>Query parameters</h3>
+                <table class="param-table">
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>include</code></td><td>string</td><td>Optional fields. <code>gps</code> fetches GPS coordinates from the central route database.</td></tr>
+                    </tbody>
+                </table>
 
                 <h3>Example</h3>
-                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs/abc123" \
+                <pre><code>curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs/abc123?include=gps" \
   -H "X-API-Key: cnl_your_key_here"</code></pre>
 
                 <h3>Response <code>200 OK</code></h3>
-                <p>Same fields as the list item, plus an <code>ascents</code> array:</p>
+                <p>Same fields as the list item, plus an <code>ascents</code> array (and <code>gps</code> if requested):</p>
                 <pre><code>{
   "id": "abc123",
   "route": "Biographie",
-  ...
+  "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+  "gps": { "latitude": 44.1823, "longitude": 5.9714, "country": "FR" },
   "ascents": [
     {
       "id": "asc-uuid-1",
