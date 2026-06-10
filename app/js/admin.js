@@ -454,12 +454,9 @@ function renderAdminEditForm(route) {
           <select id="admin-f-routetype" class="form-input">
             ${[
 							"Sport",
-							"Trad",
 							"Boulder",
-							"Ice",
-							"Mixed",
-							"Via Ferrata",
-							"Top Rope",
+							"Multi-Pitch",
+							"Trad",
 						]
 							.map(
 								(t) =>
