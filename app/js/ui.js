@@ -744,7 +744,7 @@ function escapeHtml(str) {
 
 function exportCSV() {
 	const header =
-		"Date,Route,Area,Crag,Grade,Rating,Note,SendType,RouteType,ProjectStatus,AttemptCount,HighPoint,LastAttemptDate,ProjectNotes,AscentType,AscentID,AscentNotes,AscentDate\n";
+		"Date,Route,Area,Crag,Grade,Rating,Note,SendType,RouteType,ProjectStatus,AttemptCount,HighPoint,LastAttemptDate,ProjectNotes,AscentType,AscentID,AscentNotes,AscentDate,NumberOfPitches,ApproachNotes,DescentNotes,GearNotes,ClimbDuration,AscentDuration\n";
 	const esc = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
 	const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-CA") : ""); // YYYY-MM-DD
 	let rows = "";
@@ -765,6 +765,15 @@ function exportCSV() {
 			esc(fmtDate(c.lastAttemptDate)),
 			esc(c.projectNotes),
 		].join(",");
+		// Multi-pitch plan fields (ClimbNote-level, repeated on every row for this route).
+		const multiPitch = [
+			esc(c.numberOfPitches ?? ""),
+			esc(c.approachNotes),
+			esc(c.descentNotes),
+			esc(c.gearNotes),
+			esc(c.climbDuration ?? ""),
+		].join(",");
+		// FirstSend row: AscentDuration is blank (first-ascent duration lives in ClimbDuration).
 		rows +=
 			base +
 			"," +
@@ -774,6 +783,10 @@ function exportCSV() {
 				esc(""),
 				esc(fmtDate(c.date)),
 			].join(",") +
+			"," +
+			multiPitch +
+			"," +
+			esc("") +
 			"\n";
 		for (const a of c.ascents ?? []) {
 			rows +=
@@ -785,6 +798,10 @@ function exportCSV() {
 					esc(a.notes),
 					esc(fmtDate(a.date)),
 				].join(",") +
+				"," +
+				multiPitch +
+				"," +
+				esc(a.duration ?? "") +
 				"\n";
 		}
 	}
