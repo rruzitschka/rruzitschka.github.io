@@ -182,7 +182,7 @@
             color: var(--accent-color);
           "
         >
-          Version 3.12.0
+          Version 3.14.0
         </p>
 
         <div class="toc">
@@ -203,6 +203,12 @@
             </li>
             <li><a href="#project-tracking">Project Tracking</a></li>
             <li><a href="#route-types">Route Types</a></li>
+            <li>
+              <a href="#how-to-plan-multi-pitch-routes"
+                >How to Plan Multi-Pitch Routes
+                <span class="new-badge">NEW in 3.14</span></a
+              >
+            </li>
             <li>
               <a href="#statistics-and-progress-analysis"
                 >Statistics and Progress Analysis</a
@@ -688,37 +694,130 @@
         </h3>
         <p>
           Selecting <strong>Multi-Pitch</strong> as the route type unlocks a
-          dedicated planning section, editable both when creating and
-          editing the entry:
+          dedicated planning section on that entry. See
+          <a href="#how-to-plan-multi-pitch-routes"
+            >How to Plan Multi-Pitch Routes</a
+          >
+          for a full tutorial and field reference.
         </p>
-        <ul>
-          <li><strong>Number of Pitches</strong>: total pitch count</li>
-          <li><strong>Approach Notes</strong>: how to reach the base of the climb</li>
-          <li><strong>Descent Notes</strong>: rappel or walk-off details</li>
-          <li><strong>Gear Notes</strong>: rack, rope length, or other gear beta</li>
-          <li>
-            <strong>Navigate to Start</strong>: if the route has a captured
-            GPS location, a link hands off directly to Apple Maps
-          </li>
-          <li>
-            <strong>Climb Timer</strong>: “Start Climb” / “Finish Climb” tracks
-            elapsed time as a stopwatch and prefills the duration into the
-            attempt-log (first ascent) or add-ascent (repeat) form
-          </li>
-          <li>
-            <strong>Topo Photos</strong>: while editing, long-press an
-            attached photo and choose “Mark as Topo” to tag it — tagged
-            photos get a pin badge and open in a dedicated full-screen,
-            pinch-to-zoom Topo viewer that swipes only through topo photos
-          </li>
-        </ul>
-        <p>All of these fields are optional.</p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 7. Statistics and Progress Analysis -->
+      <!-- 7. How to Plan Multi-Pitch Routes -->
+      <div class="section" id="how-to-plan-multi-pitch-routes">
+        <h2>
+          7. How to Plan Multi-Pitch Routes
+          <span class="new-badge">NEW in 3.14</span>
+        </h2>
+        <p>
+          Multi-Pitch route planning turns a SendLog or Project into a
+          structured planning notebook — pitches, approach, descent, gear,
+          GPS navigation, topo photos, and a built-in climb timer — so your
+          beta is one tap away at the crag instead of buried in a free-text
+          note.
+        </p>
+
+        <h3>Tutorial: Planning Your First Multi-Pitch Route</h3>
+        <ol>
+          <li>
+            Go to the <strong>Projects</strong> tab (or
+            <strong>SendLogs</strong> if you're logging a route you already
+            sent) and tap <strong>+</strong> to create a new entry
+          </li>
+          <li>
+            Set <strong>Route Type</strong> to <strong>Multi-Pitch</strong>
+            — this unlocks the Multi-Pitch Plan section further down the form
+          </li>
+          <li>Fill in the basics: Route, Area, Crag, Grade</li>
+          <li>
+            In the Multi-Pitch Plan section, enter:
+            <ul>
+              <li><strong>Number of Pitches</strong></li>
+              <li><strong>Approach Notes</strong> (how to reach the base)</li>
+              <li><strong>Descent Notes</strong> (rappel or walk-off)</li>
+              <li><strong>Gear Notes</strong> (rack, rope length, etc.)</li>
+            </ul>
+          </li>
+          <li>Tap <strong>Save</strong></li>
+          <li>
+            Back in the detail view, tap <strong>+</strong> in the Photos
+            section to attach topo screenshots or approach photos
+          </li>
+          <li>
+            <strong>Capture the GPS location</strong> of the route start (see
+            <a href="#project-tracking">Project Tracking</a>) — once saved, a
+            <strong>Navigate to Start</strong> link appears in the
+            Multi-Pitch Plan section and hands off directly to Apple Maps
+          </li>
+          <li>
+            Long-press any attached photo and choose
+            <strong>Mark as Topo</strong> to tag your topo images — tagged
+            photos get a pin badge and open in a dedicated full-screen Topo
+            viewer
+          </li>
+          <li>At the crag, tap <strong>Start Climb</strong> when you leave the ground</li>
+          <li>
+            Tap <strong>Finish Climb</strong> when you top out — the elapsed
+            time prefills automatically into the attempt-log (first ascent)
+            or add-ascent (repeat) form. Decide send vs. fail as usual and
+            tap <strong>Save</strong>
+          </li>
+          <li>
+            If it was a send, use ✓ to convert the project to a SendLog (if
+            you started from a Project)
+          </li>
+        </ol>
+
+        <h3>Field Reference</h3>
+        <ul>
+          <li><strong>Number of Pitches</strong> — total pitch count for the route</li>
+          <li><strong>Approach Notes</strong> — free text: how to get to the base of the climb</li>
+          <li><strong>Descent Notes</strong> — free text: rappel or walk-off details</li>
+          <li><strong>Gear Notes</strong> — free text: rack, rope length, or other gear beta</li>
+          <li>
+            <strong>Navigate to Start</strong> — link that opens Apple Maps at
+            the route's saved GPS location (requires GPS to be captured
+            first)
+          </li>
+          <li>
+            <strong>Climb Timer</strong> — “Start Climb” / “Finish Climb”
+            stopwatch; finishing prefills the duration into the attempt-log
+            (first ascent) or add-ascent (repeat) form. Successful climbs
+            store a structured duration; failed attempts get the duration
+            folded into the attempt notes as text
+          </li>
+          <li>
+            <strong>Topo Photos</strong> — any attached photo can be tagged
+            as a topo (long-press → Mark as Topo, while editing). Tagged
+            photos get a pin badge and open in a dedicated full-screen,
+            pinch-to-zoom Topo viewer that swipes only through topo-tagged
+            photos
+          </li>
+        </ul>
+
+        <h3>Notes</h3>
+        <ul>
+          <li>
+            All Multi-Pitch Plan fields are optional — leave them blank if
+            you don't need detailed planning notes for a route
+          </li>
+          <li>
+            The planning section, Climb Timer, and Topo photo tagging are
+            only available when <strong>Route Type</strong> is set to
+            <strong>Multi-Pitch</strong>
+          </li>
+          <li>
+            Multi-Pitch Plan fields, ascent/climb durations, and topo tags
+            sync via Cloud Sync alongside the rest of your data (if
+            enabled), and round-trip through CSV/ZIP export and import
+          </li>
+        </ul>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+      </div>
+
+      <!-- 8. Statistics and Progress Analysis -->
       <div class="section" id="statistics-and-progress-analysis">
-        <h2>7. Statistics and Progress Analysis</h2>
+        <h2>8. Statistics and Progress Analysis</h2>
 
         <p>
           The Statistics tab provides comprehensive insights into your climbing
@@ -819,9 +918,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 8. Goals -->
+      <!-- 9. Goals -->
       <div class="section" id="goals">
-        <h2>8. Goals <span class="new-badge">Updated in 3.9</span></h2>
+        <h2>9. Goals <span class="new-badge">Updated in 3.9</span></h2>
 
         <p>
           The Goals feature lets you set personal targets and track your
@@ -887,9 +986,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 9. Training Log -->
+      <!-- 10. Training Log -->
       <div class="section" id="training-log">
-        <h2>9. Training Log <span class="new-badge">Updated in 3.11</span></h2>
+        <h2>10. Training Log <span class="new-badge">Updated in 3.11</span></h2>
 
         <p>
           The Training tab lets you record non-climbing training activities
@@ -969,9 +1068,9 @@
         <div class="back-to-toc"><a href="#top">&uarr; Back to Top</a></div>
       </div>
 
-      <!-- 10. Photos -->
+      <!-- 11. Photos -->
       <div class="section" id="photos">
-        <h2>10. Photos <span class="new-badge">NEW in 3.7</span></h2>
+        <h2>11. Photos <span class="new-badge">NEW in 3.7</span></h2>
 
         <h3>Attaching Photos to a Climb</h3>
         <ol>
@@ -1000,8 +1099,10 @@
         <p>
           On Multi-Pitch routes, any attached photo can be tagged as a topo —
           see
-          <a href="#route-types">Multi-Pitch Route Planning</a> for details on
-          tagging and viewing topo photos.
+          <a href="#how-to-plan-multi-pitch-routes"
+            >How to Plan Multi-Pitch Routes</a
+          >
+          for details on tagging and viewing topo photos.
         </p>
 
         <h3>Photo Sync</h3>
@@ -1031,9 +1132,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 9. Voice Notes -->
+      <!-- 12. Voice Notes -->
       <div class="section" id="voice-notes">
-        <h2>11. Voice Notes</h2>
+        <h2>12. Voice Notes</h2>
 
         <h3>Recording a Voice Note</h3>
         <ol>
@@ -1062,9 +1163,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 10. Sharing Your Achievements -->
+      <!-- 13. Sharing Your Achievements -->
       <div class="section" id="sharing-your-achievements">
-        <h2>12. Sharing Your Achievements</h2>
+        <h2>13. Sharing Your Achievements</h2>
 
         <h3>Creating a Share Card</h3>
         <ol>
@@ -1092,10 +1193,10 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 11. Cloud Sync & Web App -->
+      <!-- 14. Cloud Sync & Web App -->
       <div class="section" id="cloud-sync-and-web-dashboard">
         <h2>
-          13. Cloud Sync &amp; Web App <span class="new-badge">NEW in 3.7</span>
+          14. Cloud Sync &amp; Web App <span class="new-badge">NEW in 3.7</span>
         </h2>
 
         <p>
@@ -1252,9 +1353,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 12. Data Management -->
+      <!-- 15. Data Management -->
       <div class="section" id="data-management">
-        <h2>14. Data Management</h2>
+        <h2>15. Data Management</h2>
 
         <h3>Exporting Your Data</h3>
         <ol>
@@ -1323,9 +1424,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 13. Settings and Preferences -->
+      <!-- 16. Settings and Preferences -->
       <div class="section" id="settings-and-preferences">
-        <h2>15. Settings and Preferences</h2>
+        <h2>16. Settings and Preferences</h2>
 
         <h3>Grade System</h3>
         <p>Choose your preferred climbing grade system:</p>
@@ -1367,9 +1468,9 @@
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
 
-      <!-- 14. App Performance -->
+      <!-- 17. App Performance -->
       <div class="section" id="app-performance">
-        <h2>16. App Performance</h2>
+        <h2>17. App Performance</h2>
 
         <h3>v3.12.0 Improvements</h3>
         <ul>
@@ -1488,7 +1589,7 @@
 
       <!-- Partner API Keys -->
       <div class="section" id="api-keys">
-        <h2>17. Partner API Keys <span class="new-badge">NEW in 3.9</span></h2>
+        <h2>18. Partner API Keys <span class="new-badge">NEW in 3.9</span></h2>
 
         <p>
           Partner API Keys let you give a third-party app or script read-only
