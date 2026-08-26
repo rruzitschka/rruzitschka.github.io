@@ -558,6 +558,11 @@
       "projectNotes": null,
       "highPoint": null,
       "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+      "numberOfPitches": null,
+      "approachNotes": null,
+      "descentNotes": null,
+      "gearNotes": null,
+      "climbDuration": null,
       "updatedAt": "2026-08-15T18:30:00.000Z"
     }
   ],
@@ -587,6 +592,11 @@
                         <tr><td><code>projectNotes</code></td><td>string | null</td><td>Project-specific notes</td></tr>
                         <tr><td><code>highPoint</code></td><td>string | null</td><td>Highest point reached (projects)</td></tr>
                         <tr><td><code>centralRouteID</code></td><td>string | null</td><td>ID of the linked entry in the SendLog central route database, or <code>null</code> if not linked</td></tr>
+                        <tr><td><code>numberOfPitches</code></td><td>integer | null</td><td>Number of pitches (Multi-Pitch route planning), or <code>null</code> if not set</td></tr>
+                        <tr><td><code>approachNotes</code></td><td>string | null</td><td>Approach notes (Multi-Pitch route planning)</td></tr>
+                        <tr><td><code>descentNotes</code></td><td>string | null</td><td>Descent notes (Multi-Pitch route planning)</td></tr>
+                        <tr><td><code>gearNotes</code></td><td>string | null</td><td>Gear notes (Multi-Pitch route planning)</td></tr>
+                        <tr><td><code>climbDuration</code></td><td>integer | null</td><td>Duration in minutes of the first ascent, or <code>null</code> if not recorded</td></tr>
                         <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
                     </tbody>
                 </table>
@@ -682,6 +692,7 @@
                         <tr><td><code>sendType</code></td><td>string</td><td>Send type for this repeat ascent</td></tr>
                         <tr><td><code>date</code></td><td>ISO 8601 | null</td><td>Date of the repeat ascent</td></tr>
                         <tr><td><code>notes</code></td><td>string | null</td><td>Notes specific to this ascent</td></tr>
+                        <tr><td><code>duration</code></td><td>integer | null</td><td>Duration in minutes of this repeat ascent, or <code>null</code> if not recorded</td></tr>
                     </tbody>
                 </table>
 

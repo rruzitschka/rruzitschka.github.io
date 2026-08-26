@@ -141,6 +141,11 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
       "projectNotes": null,
       "highPoint": null,
       "centralRouteID": "rTeho8rot8CTj9kEvZE4",
+      "numberOfPitches": null,
+      "approachNotes": null,
+      "descentNotes": null,
+      "gearNotes": null,
+      "climbDuration": null,
       "updatedAt": "2026-08-15T18:30:00.000Z"
     }
   ],
@@ -169,6 +174,11 @@ curl "https://api-hoxktcdqvq-uc.a.run.app/v1/climbs?from=2026-01-01&limit=20" \
 | `projectNotes` | string \| null | Project-specific notes |
 | `highPoint` | string \| null | Highest point reached (projects) |
 | `centralRouteID` | string \| null | ID of the linked entry in the SendLog central route database, or `null` if the route has not been linked |
+| `numberOfPitches` | integer \| null | Number of pitches (Multi-Pitch route planning), or `null` if not set |
+| `approachNotes` | string \| null | Approach notes (Multi-Pitch route planning) |
+| `descentNotes` | string \| null | Descent notes (Multi-Pitch route planning) |
+| `gearNotes` | string \| null | Gear notes (Multi-Pitch route planning) |
+| `climbDuration` | integer \| null | Duration in minutes of the first ascent, or `null` if not recorded |
 | `updatedAt` | ISO8601 \| null | Last modification timestamp |
 
 #### Optional: GPS coordinates (`?include=gps`)
@@ -273,6 +283,7 @@ Same fields as the list item, plus an `ascents` array (and `gps` if requested):
 | `sendType` | string | Send type for this repeat ascent |
 | `date` | ISO8601 \| null | Date of the repeat ascent |
 | `notes` | string \| null | Notes specific to this ascent |
+| `duration` | integer \| null | Duration in minutes of this repeat ascent, or `null` if not recorded |
 
 Returns `404` if the climb does not exist or has been deleted.
 
