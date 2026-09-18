@@ -235,8 +235,12 @@
             <li>
               <a href="#settings-and-preferences">Settings and Preferences</a>
             </li>
-            <li><a href="#api-keys">Partner API Keys</a></li>
             <li><a href="#app-performance">App Performance</a></li>
+            <li>
+              <a href="#troubleshooting">Troubleshooting
+              <span class="new-badge">NEW in 3.15</span></a>
+            </li>
+            <li><a href="#api-keys">Partner API Keys</a></li>
           </ol>
         </div>
       </div>
@@ -1617,6 +1621,51 @@
           For questions or feedback, contact
           <a href="mailto:support@sendlog.at">support@sendlog.at</a> or reach
           out to Robert Ruzitschka via the App Store page.
+        </p>
+        <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
+      </div>
+
+      <!-- Troubleshooting -->
+      <div class="section" id="troubleshooting">
+        <h2>Troubleshooting <span class="new-badge">NEW in 3.15</span></h2>
+
+        <h3>"Database Repaired" message</h3>
+        <p>
+          If SendLog can't open its local database when launching (for example
+          because of disk corruption or an interrupted update), it automatically
+          repairs itself: the unreadable database file is moved aside as a
+          backup — never deleted — and a fresh, empty database is created so the
+          app keeps working. You'll see a "Database Repaired" message describing
+          what happened.
+        </p>
+        <p>
+          What happens to your data depends on whether Cloud Sync is enabled:
+        </p>
+        <ul>
+          <li>
+            <strong>Cloud Sync enabled:</strong> nothing to do. The app clears
+            its sync checkpoint and pulls your complete climbing history back
+            down from the cloud the next time it syncs.
+          </li>
+          <li>
+            <strong>Cloud Sync disabled:</strong> the app can't recover your
+            data automatically. The alert shows the exact location of the backup
+            file that was saved. If you later enable Cloud Sync in Settings, the
+            next sync repopulates the app from that point forward — but it will
+            not restore history from before the repair. Contact support with the
+            backup file if you need help recovering it.
+          </li>
+        </ul>
+
+        <h3>Protecting yourself in advance</h3>
+        <p>
+          The single most effective safeguard is to enable
+          <a href="#cloud-sync-and-web-dashboard">Cloud Sync</a> in Settings —
+          with it on, your full history survives a local database failure. As a
+          second line of defense, periodically export a ZIP via
+          <a href="#data-management">Data Management</a> (Settings → Export) and
+          keep it somewhere safe; a saved export can always be re-imported via
+          Settings → Import, on any device.
         </p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
