@@ -1,45 +1,34 @@
 # Ticket: Firebase Functions — write `areaSearch` on routes API
 
-**Priority:** Medium · **Effort:** ~1–2h · **Depends on:** nothing (web side shipped)
+**Status:** ✅ CLOSED — not applicable (investigated 2026-09-20)
 
-## Background
+## Investigation result
 
-Same as `docs/ticket-ios-areasearch.md`: the web admin browser's *area* search
-needs `areaSearch = foldedForSearch(climbingArea)` on every route doc. The
-backfill covered existing docs; **routes created/edited via the Cloud
-Functions routes API lack the field** until their write paths add it.
+The Cloud Functions codebase (`functions/src/`) has **no route-creation or
+route-edit endpoint**. Verified write targets across `src/`:
 
-## Scope
+| Location | Writes | Touches `climbingArea`? |
+| --- | --- | --- |
+| `index.ts` — `orphanRoutesOnUserDelete` | `isOrphaned`, `orphanedAt`, `updatedAt` on `routes/` docs | ❌ no |
+| `routes/climbs.ts` | read-only batch `get` of route docs (GPS lookup) | ❌ n/a |
+| `routes/keys.ts` | `users/{uid}/apiKeys/` only | ❌ n/a |
+| `routes/training.ts`, `routes/goals.ts` | unrelated collections | ❌ n/a |
 
-`functions/src/routes/` — every code path that creates or updates a route doc:
+`routes/` documents are written exclusively by:
 
-- [ ] Route creation handler — add `areaSearch`
-- [ ] Route update handler(s) — recompute `areaSearch` whenever
-      `climbingArea` changes
-- [ ] Any bulk/backfill/imports endpoint that touches `climbingArea`
+1. **Web app** — ✅ writes `areaSearch` (shipped with the admin routes browser)
+2. **iOS app** — ✅ writes `areaSearch` (`feature/areasearch-write-path`,
+   merged to `main`; effective in the next app release)
 
-## Tasks
+Both write `areaSearch = foldedForSearch(climbingArea)` with identical
+folding (lowercase + NFD-stripped diacritics). No Functions change is
+required — nothing in the Functions codebase can create or alter
+`climbingArea`.
 
-1. **Folding parity**: reuse the same fold logic the Functions already use for
-   `nameSearch`/`cragSearch` (lowercase + strip `[\u0300-\u036f]` after NFD
-   normalization). If there is no shared helper yet, extract one — web's
-   reference implementation is `app/js/admin-routes-browser.js#foldedForSearch`.
-2. **Jest tests** (`functions/tests/`, required by repo guidelines): folding
-   correctness (diacritics, null/empty area → `""`) and that create/update
-   payloads include `areaSearch`.
-3. **Deploy**: `firebase deploy --only functions` after merge.
+## Residual maintenance note
 
-## Verification
-
-- Call the API to create/update a route with `climbingArea: "Hohe Wand"` →
-  doc contains `areaSearch: "hohe wand"`.
-- Web admin area search finds it without re-running the backfill.
-- Re-run the admin "Backfill areaSearch" once after deploy to catch any docs
-  written in the interim (idempotent).
-
-## Notes
-
-- `firestore.indexes.json` (21 composites incl. `areaSearch`) is already
-  deployed — no index work needed.
-- Do NOT rename/re-purpose `nameSearch`/`cragSearch` — the app-side route
-  picker (`searchRoutes`) and iOS depend on them.
+If a routes write path is ever added to the Functions API, it must write
+`areaSearch` alongside `climbingArea` (see web reference implementation in
+`app/js/admin-routes-browser.js#foldedForSearch`) and add Jest coverage.
+Until then, legacy docs missing the field are covered by the idempotent
+"Backfill areaSearch" button in the web Admin Panel.
