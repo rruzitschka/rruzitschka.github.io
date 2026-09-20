@@ -8,7 +8,11 @@
 import { getCountFromServer } from "firebase/firestore";
 import { db, auth } from "./firebase-config.js";
 import {
-	searchRoutes,
+	adminQueryRoutes,
+	routeQueryStreamKeys,
+	adminScanCountryTargets,
+	adminApplyCountryToTargets,
+	adminBackfillAreaSearch,
 	adminSaveRoute,
 	adminDeleteRoute,
 	adminSetGPS,
@@ -20,6 +24,8 @@ import {
 	query,
 	where,
 	getDocs,
+	orderBy,
+	limit,
 } from "./firebase-routes.js";
 
 // ── Shim: ui.js globals (set on window after ui.js loads; safe to call at runtime) ──
@@ -171,76 +177,476 @@ function adminStatCard(label, value, valueColor) {
   `;
 }
 
-// ── Admin search helpers (lifted to module level to avoid deep nesting) ──────
-
-function bindAdminSearchRowHandlers(resultsEl, filtered) {
-	resultsEl.querySelectorAll(".admin-route-row").forEach((rowEl) => {
-		const route = filtered.find((r) => r.id === rowEl.dataset.id);
-		if (route)
-			rowEl.addEventListener("click", () => openAdminEditForm(route.id));
-	});
+async function runAdminBackfillAreaSearch(
+	btnId = "admin-backfill-areasearch",
+	statusId = "admin-backfill-status",
+) {
+	const btn = document.getElementById(btnId);
+	const status = document.getElementById(statusId);
+	if (!btn || !status || btn.disabled) return;
+	btn.disabled = true;
+	status.style.color = "#64748b";
+	status.textContent = "Scanning routes…";
+	try {
+		const { scanned, updated, batches } = await adminBackfillAreaSearch(
+			({ scanned: s, updated: u }) => {
+				status.textContent = `Scanned ${s} routes · updating ${u}…`;
+			},
+		);
+		status.style.color = "#16a34a";
+		status.textContent = `✓ Done — scanned ${scanned}, updated ${updated} (${batches} batch${batches === 1 ? "" : "es"}).`;
+		scheduleStatusClear(status);
+	} catch (err) {
+		console.error("Backfill areaSearch failed:", err);
+		status.style.color = "#ef4444";
+		status.textContent = `✗ Failed: ${escapeHtml(err.message ?? err)}`;
+		scheduleStatusClear(status);
+	} finally {
+		btn.disabled = false;
+	}
 }
 
-async function doSearch() {
-	const name = document.getElementById("admin-search-name").value.trim();
-	const crag = document.getElementById("admin-search-crag").value.trim();
-	const orphaned = document.getElementById("admin-search-orphaned").checked;
-	const resultsEl = document.getElementById("admin-search-results");
+/** Auto-clear a one-shot status message after 10s (only if not superseded). */
+function scheduleStatusClear(statusEl) {
+	const before = statusEl.textContent;
+	clearTimeout(scheduleStatusClear._timer);
+	scheduleStatusClear._timer = setTimeout(() => {
+		if (statusEl.isConnected && statusEl.textContent === before) {
+			statusEl.textContent = "";
+		}
+	}, 10_000);
+}
 
-	if (name.length < 2 && !orphaned) {
-		resultsEl.innerHTML =
-			'<p style="color:#94a3b8;font-size:0.875rem">Type at least 2 characters to search.</p>';
-		return;
+// ── Admin routes browser (paginated list + filters + search) ────────────────
+
+const PAGE_SIZE = 25;
+const ADMIN_ROUTE_TYPES = ["Sport", "Boulder", "Multi-Pitch", "Trad"];
+
+// Browser UI state — module level so it survives navigation to the edit form
+// and is restored (values + page + scroll position) when the user comes back.
+const adminBrowserState = {
+	searchText: "",
+	searchField: "any",
+	routeType: "",
+	country: "",
+	isOrphaned: false,
+	page: 0,
+	pages: [null], // pages[i] = cursors object that starts page i
+	total: null,
+	pendingScroll: 0, // scrollY to restore after back-navigation, 0 = none
+	loadSeq: 0,
+};
+
+// Type chip palette (module-level so the edit form could reuse it later)
+const TYPE_CHIP_COLORS = {
+	Sport: { bg: "#ecfdf5", color: "#059669" },
+	Boulder: { bg: "#fff7ed", color: "#ea580c" },
+	"Multi-Pitch": { bg: "#f5f3ff", color: "#7c3aed" },
+	Trad: { bg: "#eff6ff", color: "#2563eb" },
+};
+
+function countryFlagEmoji(code) {
+	if (!code || code.length !== 2) return "";
+	return String.fromCodePoint(
+		...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
+	);
+}
+
+/**
+ * Distinct ISO country codes across `routes`, scanned once per session and
+ * cached in sessionStorage. Returns null when the list is huge or the scan
+ * fails — callers fall back to a free-text input.
+ */
+async function loadAdminCountryOptions() {
+	try {
+		const cached = sessionStorage.getItem("adminRouteCountries");
+		if (cached) return JSON.parse(cached);
+		const snap = await getDocs(
+			query(collection(db, "routes"), orderBy("country"), limit(1000)),
+		);
+		const codes = [
+			...new Set(snap.docs.map((d) => d.data().country).filter(Boolean)),
+		].sort();
+		if (codes.length > 100) return null;
+		sessionStorage.setItem("adminRouteCountries", JSON.stringify(codes));
+		return codes;
+	} catch (err) {
+		console.warn("loadAdminCountryOptions failed:", err);
+		return null;
 	}
+}
+
+function resetAdminBrowserPagination() {
+	adminBrowserState.page = 0;
+	adminBrowserState.pages = [null];
+	adminBrowserState.total = null;
+	adminBrowserState.pendingScroll = 0;
+}
+
+function readAdminBrowserFilters() {
+	adminBrowserState.searchText =
+		document.getElementById("admin-b-search")?.value.trim() ?? "";
+	adminBrowserState.searchField =
+		document.getElementById("admin-b-field")?.value ?? "any";
+	adminBrowserState.routeType =
+		document.getElementById("admin-b-type")?.value ?? "";
+	adminBrowserState.country =
+		document.getElementById("admin-b-country")?.value ?? "";
+	adminBrowserState.isOrphaned =
+		document.getElementById("admin-b-orphaned")?.checked ?? false;
+}
+
+async function loadAdminBrowserPage(page) {
+	const resultsEl = document.getElementById("admin-b-results");
+	if (!resultsEl) return;
+	const seq = ++adminBrowserState.loadSeq;
 
 	resultsEl.innerHTML =
-		'<p style="color:#94a3b8;font-size:0.875rem">Searching…</p>';
+		'<p style="color:#94a3b8;font-size:0.875rem">Loading…</p>';
 
 	try {
-		const routes = await searchRoutes(
-			name.length >= 2 ? name : "",
-			crag || null,
-			getPreferredGradeSystem(),
-			40,
-		);
-		const filtered = orphaned ? routes.filter((r) => r.isOrphaned) : routes;
+		const cursors = adminBrowserState.pages[page] ?? null;
+		const { routes, nextCursors, total } = await adminQueryRoutes({
+			searchText: adminBrowserState.searchText,
+			searchField: adminBrowserState.searchField,
+			routeType: adminBrowserState.routeType || null,
+			country: adminBrowserState.country || null,
+			isOrphaned: adminBrowserState.isOrphaned,
+			pageSize: PAGE_SIZE,
+			cursors,
+		});
+		if (seq !== adminBrowserState.loadSeq) return; // stale response
 
-		if (!filtered.length) {
-			resultsEl.innerHTML =
-				'<p style="color:#94a3b8;font-size:0.875rem">No routes found.</p>';
+		adminBrowserState.total = total;
+		adminBrowserState.page = page;
+		adminBrowserState.pages[page + 1] = nextCursors;
+
+		const hasNext =
+			nextCursors.exhausted.length <
+			routeQueryStreamKeys(
+				adminBrowserState.searchText,
+				adminBrowserState.searchField,
+			).length;
+
+		if (!routes.length) {
+			resultsEl.innerHTML = `
+          <p style="color:#94a3b8;font-size:0.875rem">No routes match your filters.</p>
+        `;
 			return;
 		}
 
-		resultsEl.innerHTML = filtered
-			.map(
-				(r) => `
-          <div class="admin-route-row" data-id="${escapeHtml(r.id)}" style="
-            display:flex;justify-content:space-between;align-items:center;
-            padding:10px 12px;border:1px solid var(--border-color);
-            border-radius:8px;margin-bottom:6px;cursor:pointer;
-            background:${r.isOrphaned ? "#fff7ed" : "var(--card-bg, #fff)"}">
-            <div>
-              <div style="font-weight:600;font-size:0.95rem">
-                ${escapeHtml(r.name)}
-                ${r.isOrphaned ? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>' : ""}
-              </div>
-              <div style="font-size:0.8rem;color:#64748b">
-                ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)} · ${escapeHtml(r.displayGrade)}
-              </div>
-            </div>
-            <div style="font-size:0.8rem;color:#94a3b8;text-align:right">
-              ✓ ${r.sendCount} &nbsp; 📌 ${r.projectCount}
-            </div>
-          </div>
-        `,
-			)
-			.join("");
-
-		bindAdminSearchRowHandlers(resultsEl, filtered);
-	} catch (err) {
-		console.error("Admin search error:", err);
 		resultsEl.innerHTML =
-			'<p style="color:#ef4444;font-size:0.875rem">Search failed. Check your connection.</p>';
+			renderAdminBrowserCount(total) +
+			routes.map(renderAdminRouteRow).join("") +
+			renderAdminBrowserFooter(page, hasNext);
+
+		resultsEl
+			.querySelectorAll(".admin-route-row")
+			.forEach((rowEl) => {
+				rowEl.addEventListener("click", () => {
+					adminBrowserState.pendingScroll = window.scrollY;
+					openAdminEditForm(rowEl.dataset.id);
+				});
+			});
+		resultsEl
+			.querySelector("#admin-b-prev")
+			?.addEventListener("click", () =>
+				loadAdminBrowserPage(page - 1),
+			);
+		resultsEl
+			.querySelector("#admin-b-next")
+			?.addEventListener("click", () =>
+				loadAdminBrowserPage(page + 1),
+			);
+		resultsEl
+			.querySelector("#admin-b-retry")
+			?.addEventListener("click", () => loadAdminBrowserPage(page));
+		resultsEl
+			.querySelector("#admin-b-apply-country")
+			?.addEventListener("click", runAdminApplyCountry);
+
+		if (adminBrowserState.pendingScroll) {
+			window.scrollTo(0, adminBrowserState.pendingScroll);
+			adminBrowserState.pendingScroll = 0;
+		}
+	} catch (err) {
+		if (seq !== adminBrowserState.loadSeq) return;
+		console.error("Admin routes browser error:", err);
+		resultsEl.innerHTML = `
+      <p style="color:#ef4444;font-size:0.875rem">Failed to load routes: ${escapeHtml(err.message ?? err)}</p>
+      <button id="admin-b-retry" class="btn btn-secondary btn-sm" style="margin-top:0.5rem">Retry</button>
+    `;
+		resultsEl
+			.querySelector("#admin-b-retry")
+			?.addEventListener("click", () => loadAdminBrowserPage(page));
+	}
+}
+
+function renderAdminBrowserCount(total) {
+	if (total == null) return "";
+	const filtersActive = Boolean(
+		adminBrowserState.searchText ||
+			adminBrowserState.routeType ||
+			adminBrowserState.country ||
+			adminBrowserState.isOrphaned,
+	);
+	return `
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">
+      <p style="font-size:0.8rem;color:#64748b;margin:0">${total} routes</p>
+      <span style="flex:1"></span>
+      <button id="admin-b-apply-country" class="form-input" style="width:auto;padding:4px 10px;font-size:0.75rem;cursor:pointer"
+              ${filtersActive ? "" : "disabled"}
+              title="Set the same country on all matching routes (GPS-backed routes are never modified)">
+        Apply country to results…
+      </button>
+    </div>
+  `;
+}
+
+function renderAdminRouteRow(r) {
+	const chip = TYPE_CHIP_COLORS[r.routeType] ?? { bg: "#f1f5f9", color: "#475569" };
+	const displayGrade = convertFromFrench(r.grade, getPreferredGradeSystem());
+	const badges = [
+		r.isOrphaned
+			? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>'
+			: "",
+		r.latitude != null
+			? '<span title="GPS pin set" style="margin-left:4px;font-size:0.75rem">📍</span>'
+			: "",
+	]
+		.filter(Boolean)
+		.join("");
+	const countryLabel = r.country
+		? `${countryFlagEmoji(r.country)} ${escapeHtml(r.country)}`
+		: "—";
+
+	return `
+    <div class="admin-route-row" data-id="${escapeHtml(r.id)}" style="
+      display:flex;justify-content:space-between;align-items:center;gap:8px;
+      padding:10px 12px;border:1px solid var(--border-color);
+      border-radius:8px;margin-bottom:6px;cursor:pointer;
+      background:${r.isOrphaned ? "#fff7ed" : "var(--card-bg, #fff)"}">
+      <div style="min-width:0">
+        <div style="font-weight:600;font-size:0.95rem">
+          ${escapeHtml(r.name)}${badges}
+        </div>
+        <div style="font-size:0.8rem;color:#64748b">
+          ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""}
+          &nbsp;·&nbsp;${countryLabel}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;text-align:right">
+        <span style="font-size:0.8rem;font-weight:600">${escapeHtml(displayGrade)}</span>
+        <span style="font-size:0.7rem;padding:1px 8px;border-radius:4px;background:${chip.bg};color:${chip.color}">${escapeHtml(r.routeType)}</span>
+        <span style="font-size:0.8rem;color:#94a3b8">✓ ${r.sendCount}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminBrowserFooter(page, hasNext) {
+	const totalPages = Math.max(1, Math.ceil((adminBrowserState.total ?? 0) / PAGE_SIZE));
+	return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <button id="admin-b-prev" class="btn btn-secondary btn-sm" ${page === 0 ? "disabled" : ""}>
+        ← Previous
+      </button>
+      <span style="font-size:0.8rem;color:#64748b">Page ${page + 1} of ${totalPages}</span>
+      <button id="admin-b-next" class="btn btn-secondary btn-sm" ${hasNext ? "" : "disabled"}>
+        Next →
+      </button>
+    </div>
+  `;
+}
+
+// ── Batch country assignment ─────────────────────────────────────────────────
+
+/**
+ * Promise-based confirmation dialog for the batch country apply.
+ * Resolves { country, fillEmptyOnly } on confirm, null on cancel.
+ */
+function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes }) {
+	return new Promise((resolve) => {
+		const overlay = document.createElement("div");
+		overlay.style.cssText =
+			"position:fixed;inset:0;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center;z-index:1000";
+		const countryInput = codes
+			? `<select id="admin-ac-country" class="form-input" style="width:100%">
+              <option value="">Select country…</option>
+              ${codes
+					.map(
+						(c) =>
+							`<option value="${escapeHtml(c)}">${countryFlagEmoji(c)} ${escapeHtml(c)}</option>`,
+					)
+					.join("")}
+              <option value="__other__">Other (enter code)…</option>
+            </select>`
+			: `<input type="text" id="admin-ac-country" class="form-input" style="width:100%"
+               placeholder="ISO country code" maxlength="2" autocomplete="off" />`;
+
+		overlay.innerHTML = `
+      <div style="background:var(--card-bg,#fff);border-radius:12px;padding:1.25rem;max-width:440px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
+        <h3 style="margin:0 0 0.5rem;font-size:1rem">Apply country to results</h3>
+        <p style="margin:0 0 0.75rem;font-size:0.85rem">
+          Apply country to <b>${matched}</b> routes?
+          (${gpsBacked} GPS-backed routes will be skipped.)
+        </p>
+        <div style="margin-bottom:0.75rem">${countryInput}</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;margin-bottom:0.5rem">
+          <input type="checkbox" id="admin-ac-fill" checked />
+          Only fill routes without a country
+        </label>
+        <p id="admin-ac-warn" style="display:none;margin:0 0 0.5rem;font-size:0.78rem;color:#b45309"></p>
+        <p style="margin:0 0 0.75rem;font-size:0.75rem;color:#94a3b8">
+          A later admin GPS assignment (which reverse-geocodes) will overwrite a
+          manually set country — GPS-derived values win.
+        </p>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button id="admin-ac-cancel" class="btn btn-secondary btn-sm">Cancel</button>
+          <button id="admin-ac-ok" class="btn btn-primary btn-sm">Apply</button>
+        </div>
+      </div>
+    `;
+		document.body.appendChild(overlay);
+
+		const fill = overlay.querySelector("#admin-ac-fill");
+		const warn = overlay.querySelector("#admin-ac-warn");
+		function updateWarn() {
+			if (fill.checked) {
+				warn.style.display = "none";
+				warn.textContent = "";
+			} else {
+				warn.style.display = "";
+				warn.textContent =
+					`This will overwrite existing country values on ${overwriteCount} routes without GPS. ` +
+					"GPS-backed routes are never modified.";
+			}
+		}
+		fill.addEventListener("change", updateWarn);
+		updateWarn();
+
+		// "Other" swaps the select for a free-text code input (keeps the same id
+		// so the confirm handler is unchanged).
+		overlay.querySelector("#admin-ac-country").addEventListener("change", (e) => {
+			if (e.target.value !== "__other__") return;
+			const input = document.createElement("input");
+			input.type = "text";
+			input.id = "admin-ac-country";
+			input.className = "form-input";
+			input.style.width = "100%";
+			input.placeholder = "ISO country code";
+			input.maxLength = 2;
+			input.autocomplete = "off";
+			e.target.replaceWith(input);
+			input.focus();
+		});
+
+		function cleanup() {
+			overlay.remove();
+		}
+		overlay.querySelector("#admin-ac-cancel").addEventListener("click", () => {
+			cleanup();
+			resolve(null);
+		});
+		overlay.querySelector("#admin-ac-ok").addEventListener("click", () => {
+			const country = overlay
+				.querySelector("#admin-ac-country")
+				.value.trim()
+				.toUpperCase();
+			if (country.length !== 2) {
+				warn.style.display = "";
+				warn.style.color = "#ef4444";
+				warn.textContent = "Please pick a 2-letter ISO country code.";
+				return;
+			}
+			cleanup();
+			resolve({ country, fillEmptyOnly: fill.checked });
+		});
+	});
+}
+
+/**
+ * Scan → confirm → write flow behind the "Apply country to results…" button.
+ * Status/progress/summary are shown in the backfill status span.
+ */
+async function runAdminApplyCountry() {
+	const resultsEl = document.getElementById("admin-b-results");
+	const statusEl = document.getElementById("admin-b-backfill-status");
+	const btn = document.getElementById("admin-b-apply-country");
+	if (!btn || btn.disabled) return;
+
+	const filters = {
+		searchText: adminBrowserState.searchText,
+		searchField: adminBrowserState.searchField,
+		routeType: adminBrowserState.routeType || null,
+		country: adminBrowserState.country || null,
+		isOrphaned: adminBrowserState.isOrphaned,
+	};
+	const setStatus = (text, color = "#64748b") => {
+		if (statusEl) {
+			statusEl.style.color = color;
+			statusEl.textContent = text;
+		}
+	};
+
+	btn.disabled = true;
+	try {
+		setStatus("Scanning matched routes…");
+		const scan = await adminScanCountryTargets(filters, true, ({ scanned }) =>
+			setStatus(`Scanning matched routes… ${scanned} found`),
+		);
+		const matched = scan.targets.length + scan.skippedAlreadySet + scan.skippedGPS;
+		if (matched === 0) {
+			setStatus("No matching routes found.", "#94a3b8");
+			return;
+		}
+
+		const codes = await loadAdminCountryOptions();
+		const decision = await showAdminApplyCountryDialog({
+			matched,
+			gpsBacked: scan.skippedGPS,
+			overwriteCount: scan.skippedAlreadySet,
+			codes,
+		});
+		if (!decision) return; // cancelled
+
+		let targets = scan.targets;
+		if (!decision.fillEmptyOnly && scan.skippedAlreadySet > 0) {
+			// Overwrite mode: re-scan so previously-set (GPS-less) docs are targets too
+			setStatus("Scanning (overwrite mode)…");
+			const rescan = await adminScanCountryTargets(filters, false);
+			targets = rescan.targets;
+		}
+		if (targets.length === 0) {
+			setStatus(
+				`Nothing to do — all ${scan.skippedGPS} matched routes are GPS-backed.`,
+				"#94a3b8",
+			);
+			return;
+		}
+
+		setStatus(`Updating ${targets.length} routes…`);
+		const updated = await adminApplyCountryToTargets(
+			targets,
+			decision.country,
+			({ updated: u, total }) => setStatus(`Updating routes… ${u}/${total}`),
+		);
+		setStatus(
+			`✓ Updated ${updated} routes · skipped ${scan.skippedAlreadySet} already set · skipped ${scan.skippedGPS} GPS-backed`,
+			"#16a34a",
+		);
+		scheduleStatusClear(statusEl);
+		// Country values changed — the session-cached dropdown list is now stale;
+		// drop it so the next Routes-tab render re-scans.
+		sessionStorage.removeItem("adminRouteCountries");
+		if (resultsEl) {
+			loadAdminBrowserPage(adminBrowserState.page); // refresh rows
+		}
+	} catch (err) {
+		console.error("Apply country batch failed:", err);
+		setStatus(`✗ Failed: ${escapeHtml(err.message ?? err)}`, "#ef4444");
+	} finally {
+		btn.disabled = false;
 	}
 }
 
@@ -248,33 +654,110 @@ function renderAdminSearch() {
 	const el = document.getElementById("admin-tab-content");
 	if (!el) return;
 	el.innerHTML = `
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="admin-search-name" placeholder="Route name…"
-               class="form-input" style="flex:1" autocomplete="off" />
-        <input type="text" id="admin-search-crag" placeholder="Crag (optional)"
-               class="form-input" style="width:160px" autocomplete="off" />
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" id="admin-b-search" placeholder="Search route, crag, or area…"
+               class="form-input" style="flex:1;min-width:200px" autocomplete="off"
+               value="${escapeHtml(adminBrowserState.searchText)}" />
+        <select id="admin-b-field" class="form-input" style="width:auto" title="Search in">
+          ${["any", "name", "crag", "area"]
+				.map(
+					(f) =>
+						`<option value="${f}"${adminBrowserState.searchField === f ? " selected" : ""}>Field: ${f === "any" ? "Any" : f[0].toUpperCase() + f.slice(1)}</option>`,
+				)
+				.join("")}
+        </select>
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#64748b;margin-bottom:1rem;cursor:pointer">
-        <input type="checkbox" id="admin-search-orphaned" />
-        Show orphaned routes only
-      </label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+        <select id="admin-b-type" class="form-input" style="width:auto">
+          <option value="">Type: All</option>
+          ${ADMIN_ROUTE_TYPES.map(
+				(t) =>
+					`<option value="${escapeHtml(t)}"${adminBrowserState.routeType === t ? " selected" : ""}>${escapeHtml(t)}</option>`,
+			).join("")}
+        </select>
+        <select id="admin-b-country" class="form-input" style="width:auto">
+          <option value="">Country: All</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#64748b;cursor:pointer">
+          <input type="checkbox" id="admin-b-orphaned" ${adminBrowserState.isOrphaned ? "checked" : ""} />
+          Orphaned only
+        </label>
+        <span style="flex:1"></span>
+        <button id="admin-b-backfill" class="form-input" style="width:auto;padding:6px 10px;font-size:0.75rem;cursor:pointer"
+                title="Add the missing areaSearch field to route docs (idempotent, safe to re-run)">
+          Backfill areaSearch
+        </button>
+        <span id="admin-b-backfill-status" style="font-size:0.75rem;color:#94a3b8"></span>
+      </div>
 
-      <div id="admin-search-results">
-        <p style="color:#94a3b8;font-size:0.875rem">Type at least 2 characters to search.</p>
+      <div id="admin-b-results">
+        <p style="color:#94a3b8;font-size:0.875rem">Loading…</p>
       </div>
   `;
 
-	let timer = null;
+	// Country dropdown: hydrate once per session; fall back to free-text input
+	// when the distinct list is huge or the scan fails.
+	const countrySelect = document.getElementById("admin-b-country");
+	loadAdminCountryOptions().then((codes) => {
+		if (!countrySelect.isConnected) return;
+		if (!codes) {
+			const input = document.createElement("input");
+			input.type = "text";
+			input.id = "admin-b-country";
+			input.className = "form-input";
+			input.style.width = "120px";
+			input.placeholder = "Country (ISO)";
+			input.maxLength = 2;
+			input.autocomplete = "off";
+			input.value = adminBrowserState.country;
+			input.addEventListener("change", () => {
+				readAdminBrowserFilters();
+				resetAdminBrowserPagination();
+				loadAdminBrowserPage(0);
+			});
+			countrySelect.replaceWith(input);
+		} else {
+			codes.forEach((c) => {
+				const opt = document.createElement("option");
+				opt.value = c;
+				opt.textContent = `${countryFlagEmoji(c)} ${c}`;
+				if (adminBrowserState.country === c) opt.selected = true;
+				countrySelect.appendChild(opt);
+			});
+		}
+	});
 
-	["admin-search-name", "admin-search-crag"].forEach((id) => {
-		document.getElementById(id).addEventListener("input", () => {
-			clearTimeout(timer);
-			timer = setTimeout(doSearch, 300);
-		});
+	let timer = null;
+	document.getElementById("admin-b-search").addEventListener("input", () => {
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			readAdminBrowserFilters();
+			resetAdminBrowserPagination();
+			loadAdminBrowserPage(0);
+		}, 300);
+	});
+
+	["admin-b-field", "admin-b-type", "admin-b-country"].forEach((id) => {
+		document
+			.getElementById(id)
+			.addEventListener("change", () => {
+				readAdminBrowserFilters();
+				resetAdminBrowserPagination();
+				loadAdminBrowserPage(0);
+			});
+	});
+	document.getElementById("admin-b-orphaned").addEventListener("change", () => {
+		readAdminBrowserFilters();
+		resetAdminBrowserPagination();
+		loadAdminBrowserPage(0);
 	});
 	document
-		.getElementById("admin-search-orphaned")
-		.addEventListener("change", doSearch);
+		.getElementById("admin-b-backfill")
+		.addEventListener("click", () =>
+			runAdminBackfillAreaSearch("admin-b-backfill", "admin-b-backfill-status"),
+		);
+
+	loadAdminBrowserPage(adminBrowserState.page);
 }
 
 // ── Edit form — fetch full doc then render ─────────────────────────────────
