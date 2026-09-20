@@ -361,9 +361,14 @@ async function loadAdminBrowserPage(page) {
 		resultsEl
 			.querySelector("#admin-b-retry")
 			?.addEventListener("click", () => loadAdminBrowserPage(page));
-		resultsEl
+	resultsEl
 			.querySelector("#admin-b-apply-country")
 			?.addEventListener("click", runAdminApplyCountry);
+		resultsEl
+			.querySelector("#admin-b-backfill")
+			?.addEventListener("click", () =>
+				runAdminBackfillAreaSearch("admin-b-backfill", "admin-b-backfill-status"),
+			);
 		document.getElementById("admin-b-apply-country").disabled =
 			!adminBrowserFiltersActive();
 
@@ -755,11 +760,6 @@ function renderAdminSearch() {
 		resetAdminBrowserPagination();
 		loadAdminBrowserPage(0);
 	});
-	document
-		.getElementById("admin-b-backfill")
-		.addEventListener("click", () =>
-			runAdminBackfillAreaSearch("admin-b-backfill", "admin-b-backfill-status"),
-		);
 
 	loadAdminBrowserPage(adminBrowserState.page);
 }
