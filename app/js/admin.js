@@ -156,25 +156,11 @@ async function loadAndRenderAdminStats() {
       <p style="font-size:0.75rem;color:#94a3b8;text-align:right">
         <button id="admin-stats-refresh" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:0.75rem;">↻ Refresh</button>
       </p>
-      <div id="admin-maintenance" style="margin-top:1.5rem;border-top:1px solid var(--border-color);padding-top:1rem">
-        <h3 style="font-size:0.9rem;font-weight:600;margin:0 0 0.5rem">Maintenance</h3>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <button id="admin-backfill-areasearch" class="form-input" style="width:auto;padding:6px 12px;font-size:0.8rem;cursor:pointer">
-            Backfill areaSearch
-          </button>
-          <span id="admin-backfill-status" style="font-size:0.8rem;color:#94a3b8">
-            Adds the missing <code>areaSearch</code> field to route docs (enables area search).
-          </span>
-        </div>
-      </div>
     `;
 
 		document
 			.getElementById("admin-stats-refresh")
 			?.addEventListener("click", loadAndRenderAdminStats);
-		document
-			.getElementById("admin-backfill-areasearch")
-			?.addEventListener("click", runAdminBackfillAreaSearch);
 	} catch (err) {
 		console.error("Admin stats failed:", err);
 		el.innerHTML = `<p style="color:#ef4444;font-size:0.875rem">✗ Failed to load stats: ${escapeHtml(err.message ?? err)}</p>`;
@@ -209,13 +195,26 @@ async function runAdminBackfillAreaSearch(
 		);
 		status.style.color = "#16a34a";
 		status.textContent = `✓ Done — scanned ${scanned}, updated ${updated} (${batches} batch${batches === 1 ? "" : "es"}).`;
+		scheduleStatusClear(status);
 	} catch (err) {
 		console.error("Backfill areaSearch failed:", err);
 		status.style.color = "#ef4444";
 		status.textContent = `✗ Failed: ${escapeHtml(err.message ?? err)}`;
+		scheduleStatusClear(status);
 	} finally {
 		btn.disabled = false;
 	}
+}
+
+/** Auto-clear a one-shot status message after 10s (only if not superseded). */
+function scheduleStatusClear(statusEl) {
+	const before = statusEl.textContent;
+	clearTimeout(scheduleStatusClear._timer);
+	scheduleStatusClear._timer = setTimeout(() => {
+		if (statusEl.isConnected && statusEl.textContent === before) {
+			statusEl.textContent = "";
+		}
+	}, 10_000);
 }
 
 // ── Admin routes browser (paginated list + filters + search) ────────────────
@@ -619,6 +618,7 @@ async function runAdminApplyCountry() {
 			`✓ Updated ${updated} routes · skipped ${scan.skippedAlreadySet} already set · skipped ${scan.skippedGPS} GPS-backed`,
 			"#16a34a",
 		);
+		scheduleStatusClear(statusEl);
 		if (resultsEl) {
 			loadAdminBrowserPage(adminBrowserState.page); // refresh rows
 		}

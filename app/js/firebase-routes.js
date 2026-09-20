@@ -298,11 +298,14 @@ function adminCountCacheKey(filters) {
 }
 
 // Per-filter-set total count cache — one set of count reads per filter combo.
+// Entries expire after 60s so backfills / batch applies show up promptly.
 const _adminRouteCountCache = new Map();
+const _COUNT_TTL_MS = 60_000;
 
 async function adminRouteCount(filters) {
 	const cacheKey = adminCountCacheKey(filters);
-	if (_adminRouteCountCache.has(cacheKey)) return _adminRouteCountCache.get(cacheKey);
+	const cached = _adminRouteCountCache.get(cacheKey);
+	if (cached && Date.now() - cached.at < _COUNT_TTL_MS) return cached.total;
 	if (_adminRouteCountCache.size > 100) _adminRouteCountCache.clear();
 
 	const fieldKeys = routeQueryStreamKeys(filters.searchText, filters.searchField);
@@ -324,7 +327,7 @@ async function adminRouteCount(filters) {
 	// Per-stream counts for the merged "any" case can double-count docs that
 	// match more than one field; the merged page dedupes, so report the raw sum
 	// as an upper bound ("N routes" header).
-	_adminRouteCountCache.set(cacheKey, total);
+	_adminRouteCountCache.set(cacheKey, { total, at: Date.now() });
 	return total;
 }
 
@@ -505,6 +508,7 @@ export async function adminApplyCountryToTargets(
 		updated += Math.min(BATCH_WRITE, targets.length - i);
 		onProgress?.({ updated, total: targets.length });
 	}
+	_adminRouteCountCache.clear(); // country filter/count may have changed
 	return updated;
 }
 
@@ -1018,6 +1022,7 @@ export async function adminBackfillAreaSearch(onProgress) {
 		lastID = snap.docs[snap.docs.length - 1].id;
 		if (snap.docs.length < BATCH_SIZE) break;
 	}
+	_adminRouteCountCache.clear(); // area matches may have changed
 	return { scanned, updated, batches };
 }
 
