@@ -1021,4 +1021,13 @@ export async function adminBackfillAreaSearch(onProgress) {
 	return { scanned, updated, batches };
 }
 
-export { collection, collectionGroup, query, where, getDocs, orderBy, limit };
+export {
+	collection,
+	collectionGroup,
+	query,
+	where,
+	getDocs,
+	orderBy,
+	limit,
+	routeQueryStreamKeys,
+};
