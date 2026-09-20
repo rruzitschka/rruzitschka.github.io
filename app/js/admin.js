@@ -479,6 +479,7 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 							`<option value="${escapeHtml(c)}">${countryFlagEmoji(c)} ${escapeHtml(c)}</option>`,
 					)
 					.join("")}
+              <option value="__other__">Other (enter code)…</option>
             </select>`
 			: `<input type="text" id="admin-ac-country" class="form-input" style="width:100%"
                placeholder="ISO country code" maxlength="2" autocomplete="off" />`;
@@ -523,6 +524,22 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 		}
 		fill.addEventListener("change", updateWarn);
 		updateWarn();
+
+		// "Other" swaps the select for a free-text code input (keeps the same id
+		// so the confirm handler is unchanged).
+		overlay.querySelector("#admin-ac-country").addEventListener("change", (e) => {
+			if (e.target.value !== "__other__") return;
+			const input = document.createElement("input");
+			input.type = "text";
+			input.id = "admin-ac-country";
+			input.className = "form-input";
+			input.style.width = "100%";
+			input.placeholder = "ISO country code";
+			input.maxLength = 2;
+			input.autocomplete = "off";
+			e.target.replaceWith(input);
+			input.focus();
+		});
 
 		function cleanup() {
 			overlay.remove();
@@ -619,6 +636,9 @@ async function runAdminApplyCountry() {
 			"#16a34a",
 		);
 		scheduleStatusClear(statusEl);
+		// Country values changed — the session-cached dropdown list is now stale;
+		// drop it so the next Routes-tab render re-scans.
+		sessionStorage.removeItem("adminRouteCountries");
 		if (resultsEl) {
 			loadAdminBrowserPage(adminBrowserState.page); // refresh rows
 		}
