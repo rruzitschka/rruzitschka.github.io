@@ -10,6 +10,7 @@ export default defineConfig({
       // unit-testable. Browser-side UI files (stats.js, ui.js, admin.js etc.)
       // require a live DOM and are excluded from coverage measurement.
       include: [
+        "app/js/admin-routes-browser.js",
         "app/js/firebase-climbs.js",
         "app/js/firebase-routes.js",
         "app/js/firebase-training.js",

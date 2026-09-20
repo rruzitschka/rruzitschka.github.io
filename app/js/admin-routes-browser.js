@@ -18,7 +18,7 @@ export function foldedForSearch(str) {
 	return (str || "")
 		.toLowerCase()
 		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "");
+		.replaceAll(/[\u0300-\u036f]/g, "");
 }
 
 // ── Search fields ────────────────────────────────────────────────────────────
@@ -101,12 +101,16 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 		constraints.push({ kind: "where", field: "country", op: "==", value: country });
 	}
 	if (bounds) {
-		constraints.push({ kind: "where", field: bounds.field, op: ">=", value: bounds.lower });
-		constraints.push({ kind: "where", field: bounds.field, op: "<", value: bounds.upper });
+		constraints.push(
+			{ kind: "where", field: bounds.field, op: ">=", value: bounds.lower },
+			{ kind: "where", field: bounds.field, op: "<", value: bounds.upper },
+		);
 	}
 
-	constraints.push({ kind: "orderBy", field: firestoreField, direction: "asc" });
-	constraints.push({ kind: "limit", count: pageSize });
+	constraints.push(
+		{ kind: "orderBy", field: firestoreField, direction: "asc" },
+		{ kind: "limit", count: pageSize },
+	);
 	if (cursorDoc) {
 		constraints.push({ kind: "startAfter", doc: cursorDoc });
 	}

@@ -188,11 +188,12 @@ async function runAdminBackfillAreaSearch(
 	status.style.color = "#64748b";
 	status.textContent = "Scanning routes…";
 	try {
-		const { scanned, updated, batches } = await adminBackfillAreaSearch(
+		const stats = await adminBackfillAreaSearch( // NOSONAR — adminBackfillAreaSearch is async (cross-module); Sonar S4123 false positive
 			({ scanned: s, updated: u }) => {
 				status.textContent = `Scanned ${s} routes · updating ${u}…`;
 			},
 		);
+		const { scanned, updated, batches } = stats;
 		status.style.color = "#16a34a";
 		status.textContent = `✓ Done — scanned ${scanned}, updated ${updated} (${batches} batch${batches === 1 ? "" : "es"}).`;
 		scheduleStatusClear(status);
@@ -246,9 +247,9 @@ const TYPE_CHIP_COLORS = {
 };
 
 function countryFlagEmoji(code) {
-	if (!code || code.length !== 2) return "";
+	if (code?.length !== 2) return "";
 	return String.fromCodePoint(
-		...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
+		...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.codePointAt(0) - 65),
 	);
 }
 
@@ -266,7 +267,7 @@ async function loadAdminCountryOptions() {
 		);
 		const codes = [
 			...new Set(snap.docs.map((d) => d.data().country).filter(Boolean)),
-		].sort();
+		].sort((a, b) => a.localeCompare(b));
 		if (codes.length > 100) return null;
 		sessionStorage.setItem("adminRouteCountries", JSON.stringify(codes));
 		return codes;
@@ -420,9 +421,9 @@ function renderAdminRouteRow(r) {
 		r.isOrphaned
 			? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>'
 			: "",
-		r.latitude != null
-			? '<span title="GPS pin set" style="margin-left:4px;font-size:0.75rem">📍</span>'
-			: "",
+		r.latitude == null
+			? ""
+			: '<span title="GPS pin set" style="margin-left:4px;font-size:0.75rem">📍</span>',
 	]
 		.filter(Boolean)
 		.join("");
@@ -708,8 +709,16 @@ function renderAdminSearch() {
 	// when the distinct list is huge or the scan fails.
 	const countrySelect = document.getElementById("admin-b-country");
 	loadAdminCountryOptions().then((codes) => {
-		if (!countrySelect.isConnected) return;
-		if (!codes) {
+		if (countrySelect.isConnected === false) return;
+		if (codes) {
+			codes.forEach((c) => {
+				const opt = document.createElement("option");
+				opt.value = c;
+				opt.textContent = `${countryFlagEmoji(c)} ${c}`;
+				if (adminBrowserState.country === c) opt.selected = true;
+				countrySelect.appendChild(opt);
+			});
+		} else {
 			const input = document.createElement("input");
 			input.type = "text";
 			input.id = "admin-b-country";
@@ -725,14 +734,6 @@ function renderAdminSearch() {
 				loadAdminBrowserPage(0);
 			});
 			countrySelect.replaceWith(input);
-		} else {
-			codes.forEach((c) => {
-				const opt = document.createElement("option");
-				opt.value = c;
-				opt.textContent = `${countryFlagEmoji(c)} ${c}`;
-				if (adminBrowserState.country === c) opt.selected = true;
-				countrySelect.appendChild(opt);
-			});
 		}
 	});
 

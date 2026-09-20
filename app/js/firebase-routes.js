@@ -5,7 +5,6 @@
 
 import {
 	collection,
-	collectionGroup,
 	doc,
 	documentId,
 	getDoc,
@@ -384,7 +383,7 @@ export async function adminQueryRoutes({
 	);
 
 	const streams = [];
-	const nextDocs = { ...(cursors?.docs ?? {}) };
+	const nextDocs = { ...cursors?.docs };
 	const nextExhausted = new Set(exhausted);
 	for (const { field, snap } of streamSnaps) {
 		streams.push(snap.docs.map(routeFromDocSnap));
@@ -402,6 +401,24 @@ export async function adminQueryRoutes({
 		nextCursors: { docs: nextDocs, exhausted: [...nextExhausted] },
 		total,
 	};
+}
+
+/**
+ * Classify a single route doc for the country batch apply.
+ * HARD INVARIANT: GPS-backed routes (latitude != null) are never targets.
+ */
+function classifyCountryTarget(d, seen, fillEmptyOnly, out) {
+	if (seen.has(d.id)) return;
+	seen.add(d.id);
+	out.scanned += 1;
+	const data = d.data();
+	if (data.latitude != null) {
+		out.skippedGPS += 1; // hard invariant — never modified by the batch
+	} else if (fillEmptyOnly && (data.country ?? "") !== "") {
+		out.skippedAlreadySet += 1;
+	} else {
+		out.targets.push({ id: d.id, ref: d.ref, data });
+	}
 }
 
 /**
@@ -424,15 +441,12 @@ export async function adminQueryRoutes({
 export async function adminScanCountryTargets(
 	filters,
 	fillEmptyOnly = true,
-	onProgress,
+	onProgress = undefined,
 ) {
 	const fieldKeys = routeQueryStreamKeys(filters.searchText, filters.searchField);
 	const BATCH_SCAN = 500;
 	const seen = new Set();
-	const targets = [];
-	let skippedAlreadySet = 0;
-	let skippedGPS = 0;
-	let scanned = 0;
+	const out = { targets: [], skippedAlreadySet: 0, skippedGPS: 0, scanned: 0 };
 
 	for (const k of fieldKeys) {
 		let cursor = null;
@@ -447,24 +461,14 @@ export async function adminScanCountryTargets(
 			);
 			const snap = await getDocs(q);
 			for (const d of snap.docs) {
-				if (seen.has(d.id)) continue;
-				seen.add(d.id);
-				scanned += 1;
-				const data = d.data();
-				if (data.latitude != null) {
-					skippedGPS += 1; // hard invariant — never modified by the batch
-				} else if (fillEmptyOnly && (data.country ?? "") !== "") {
-					skippedAlreadySet += 1;
-				} else {
-					targets.push({ id: d.id, ref: d.ref, data });
-				}
+				classifyCountryTarget(d, seen, fillEmptyOnly, out);
 			}
-			onProgress?.({ scanned });
+			onProgress?.({ scanned: out.scanned });
 			if (snap.docs.length < BATCH_SCAN) break;
 			cursor = snap.docs[snap.docs.length - 1];
 		}
 	}
-	return { targets, skippedAlreadySet, skippedGPS, scanned };
+	return out;
 }
 
 /**
@@ -1002,7 +1006,7 @@ export async function adminBackfillAreaSearch(onProgress) {
 			constraints.unshift(where(documentId(), ">", lastID));
 		}
 		const snap = await getDocs(query(collection(db, "routes"), ...constraints));
-		if (snap.empty) break;
+		if (snap.docs.length === 0) break;
 
 		const pending = snap.docs.filter((d) => d.data().areaSearch === undefined);
 		if (pending.length > 0) {
@@ -1026,6 +1030,7 @@ export async function adminBackfillAreaSearch(onProgress) {
 	return { scanned, updated, batches };
 }
 
+// Re-exports for admin.js (keeps its single firebase-routes.js import point)
 export {
 	collection,
 	collectionGroup,
@@ -1034,5 +1039,5 @@ export {
 	getDocs,
 	orderBy,
 	limit,
-	routeQueryStreamKeys,
-};
+} from "firebase/firestore";
+export { routeQueryStreamKeys } from "./admin-routes-browser.js";
