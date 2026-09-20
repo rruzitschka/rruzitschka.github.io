@@ -364,6 +364,8 @@ async function loadAdminBrowserPage(page) {
 		resultsEl
 			.querySelector("#admin-b-apply-country")
 			?.addEventListener("click", runAdminApplyCountry);
+		document.getElementById("admin-b-apply-country").disabled =
+			!adminBrowserFiltersActive();
 
 		if (adminBrowserState.pendingScroll) {
 			window.scrollTo(0, adminBrowserState.pendingScroll);
@@ -384,23 +386,26 @@ async function loadAdminBrowserPage(page) {
 
 function renderAdminBrowserCount(total) {
 	if (total == null) return "";
-	const filtersActive = Boolean(
+	return `
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">
+      <p style="font-size:0.8rem;color:#64748b;margin:0">${total} routes</p>
+      <span style="flex:1"></span>
+      <button id="admin-b-backfill" class="btn btn-secondary btn-sm"
+              title="Add the missing areaSearch field to route docs (idempotent, safe to re-run)">
+        Backfill areaSearch
+      </button>
+      <span id="admin-b-backfill-status" style="font-size:0.75rem;color:#94a3b8"></span>
+    </div>
+  `;
+}
+
+function adminBrowserFiltersActive() {
+	return Boolean(
 		adminBrowserState.searchText ||
 			adminBrowserState.routeType ||
 			adminBrowserState.country ||
 			adminBrowserState.isOrphaned,
 	);
-	return `
-    <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">
-      <p style="font-size:0.8rem;color:#64748b;margin:0">${total} routes</p>
-      <span style="flex:1"></span>
-      <button id="admin-b-apply-country" class="form-input" style="width:auto;padding:4px 10px;font-size:0.75rem;cursor:pointer"
-              ${filtersActive ? "" : "disabled"}
-              title="Set the same country on all matching routes (GPS-backed routes are never modified)">
-        Apply country to results…
-      </button>
-    </div>
-  `;
 }
 
 function renderAdminRouteRow(r) {
@@ -683,11 +688,10 @@ function renderAdminSearch() {
           Orphaned only
         </label>
         <span style="flex:1"></span>
-        <button id="admin-b-backfill" class="form-input" style="width:auto;padding:6px 10px;font-size:0.75rem;cursor:pointer"
-                title="Add the missing areaSearch field to route docs (idempotent, safe to re-run)">
-          Backfill areaSearch
+        <button id="admin-b-apply-country" class="btn btn-secondary btn-sm"
+                title="Set the same country on all matching routes (GPS-backed routes are never modified)">
+          Apply country to results…
         </button>
-        <span id="admin-b-backfill-status" style="font-size:0.75rem;color:#94a3b8"></span>
       </div>
 
       <div id="admin-b-results">
