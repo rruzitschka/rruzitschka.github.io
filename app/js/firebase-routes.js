@@ -592,6 +592,14 @@ export async function createCentralRoute({
 		nameSearch: foldedForSearch(name),
 		cragSearch: foldedForSearch(crag ?? ""),
 		areaSearch: foldedForSearch(climbingArea ?? ""),
+		recentEdits: [
+			{
+				editedAt: new Date(),
+				editedBy: user.uid,
+				action: "create",
+				changes: [],
+			},
+		],
 	});
 
 	return id;
