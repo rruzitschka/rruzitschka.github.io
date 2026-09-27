@@ -140,7 +140,6 @@ let _originalCentralRouteID = null; // centralRouteID when edit overlay was open
 let _communityRatings = new Map(); // routeID -> communityRating; fetched once per session
 let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
 /** @type {Map<string, Array>} */
-const _ascentCache = new Map(); // noteId -> ascents[]; populated lazily on detail modal open
 
 const SEND_CLASSES = {
 	Redpoint: "send-rp",
@@ -343,7 +342,7 @@ function showDetailModal(climb) {
     `;
 	}
 
-	// Ascents placeholder — filled asynchronously from _ascentCache
+	// Ascents placeholder — filled asynchronously (fresh fetch per open)
 	html += `<div id="detail-ascents-container"></div>`;
 
 	// Photos section: async-loaded from Firestore sub-collection
@@ -396,9 +395,10 @@ function showDetailModal(climb) {
 			.catch(() => {});
 	}
 
-	// Async: lazy-load ascents for the detail modal view
+	// Async: lazy-load ascents for the detail modal view — always fresh, so
+	// repeats added elsewhere (e.g. in the iOS app) show up without a reload.
 	if (climb.recordName) {
-		_getAscentsCached(climb.recordName)
+		fetchAscents(climb.recordName)
 			.then((ascents) => {
 				if (ascents.length === 0) return;
 				const container = document.getElementById("detail-ascents-container");
@@ -1919,7 +1919,6 @@ function bindSendOverlayHandlers() {
 				document.getElementById("so-ascent-notes").value = "";
 				document.getElementById("so-ascent-form").classList.add("hidden");
 				document.getElementById("so-ascent-toggle").textContent = "+ Add";
-				_ascentCache.delete(climbRecordName); // invalidate so renderAscentsList re-fetches
 				await loadData();
 				await renderAscentsList({ recordName: climbRecordName });
 			} catch (err) {
@@ -2340,7 +2339,9 @@ function bindPeriodTabs() {
 
 async function renderAscentsList(climb) {
 	const container = document.getElementById("so-ascents-list");
-	const ascents = await _getAscentsCached(climb.recordName);
+	// Always fresh: the overlay should reflect ascents added elsewhere (e.g.
+	// in the iOS app) since the last open.
+	const ascents = await fetchAscents(climb.recordName);
 	container.innerHTML = ascents
 		.map((a) => {
 			const d = a.date
@@ -2367,19 +2368,8 @@ async function renderAscentsList(climb) {
 			);
 			if (!confirmed) return;
 			await deleteAscent(btn.dataset.record);
-			_ascentCache.delete(climb.recordName); // invalidate so next open re-fetches
 			await renderAscentsList(climb);
 		});
 	});
 }
 
-/**
- * Returns cached ascents for a note, fetching from Firestore on first access.
- */
-async function _getAscentsCached(noteId) {
-	if (!noteId) return [];
-	if (_ascentCache.has(noteId)) return _ascentCache.get(noteId);
-	const ascents = await fetchAscents(noteId);
-	_ascentCache.set(noteId, ascents);
-	return ascents;
-}
