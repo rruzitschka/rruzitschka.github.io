@@ -502,7 +502,15 @@ export async function adminApplyCountryToTargets(
 					{
 						editedAt: new Date(),
 						editedBy: uid,
+						action: "country-batch",
 						note: "admin country batch update",
+						changes: [
+							{
+								field: "country",
+								from: t.data.country ?? null,
+								to: country,
+							},
+						],
 					},
 					...(t.data.recentEdits ?? []),
 				].slice(0, 3),
@@ -656,6 +664,53 @@ export function reportRating(routeID, newRating, previousRating) {
 	);
 }
 
+// ── Audit trail ───────────────────────────────────────────────────────────
+
+/** Route fields tracked in recentEdits diffs (human-meaningful only). */
+const AUDIT_FIELDS = [
+	"name",
+	"climbingArea",
+	"crag",
+	"grade",
+	"createdGrade",
+	"routeType",
+	"country",
+	"createdBy",
+	"isOrphaned",
+];
+
+/**
+ * Diff a route doc's tracked fields against their new values.
+ * Returns an array of { field, from, to } (max 10), skipping unchanged
+ * fields and search/counter/timestamp bookkeeping.
+ */
+function routeFieldChanges(data, fields) {
+	const changes = [];
+	for (const field of AUDIT_FIELDS) {
+		if (!(field in fields)) continue;
+		const from = data[field] ?? null;
+		const to = fields[field] ?? null;
+		if (from === to) continue;
+		if (
+			typeof from === "string" &&
+			typeof to === "string" &&
+			from.trim() === to.trim()
+		)
+			continue; // whitespace-only difference
+		changes.push({ field, from, to });
+		if (changes.length >= 10) break;
+	}
+	return changes;
+}
+
+/** Prepend an audit entry to the recentEdits array (newest first, cap 3). */
+function pushRecentEdit(prev, uid, action, changes = undefined, note = undefined) {
+	const entry = { editedAt: new Date(), editedBy: uid, action };
+	if (changes !== undefined) entry.changes = changes;
+	if (note !== undefined) entry.note = note;
+	return [entry, ...prev].slice(0, 3);
+}
+
 // ── Owner update ───────────────────────────────────────────────────────────
 
 export function updateCentralRoute(
@@ -668,9 +723,8 @@ export function updateCentralRoute(
 	runTransaction(db, async (tx) => {
 		const snap = await tx.get(ref);
 		if (!snap.exists()) return;
-		const prev = snap.data().recentEdits ?? [];
-		const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
-		tx.update(ref, {
+		const data = snap.data();
+		const fields = {
 			name,
 			climbingArea: climbingArea ?? "",
 			crag: crag ?? "",
@@ -683,8 +737,11 @@ export function updateCentralRoute(
 			areaSearch: foldedForSearch(climbingArea ?? ""),
 			updatedBy: uid,
 			updatedAt: serverTimestamp(),
-			recentEdits: next,
-		});
+		};
+		const changes = routeFieldChanges(data, fields);
+		if (changes.length === 0) return; // no-op edit — don't spam the trail
+		fields.recentEdits = pushRecentEdit(data.recentEdits ?? [], uid, "update", changes);
+		tx.update(ref, fields);
 	}).catch((err) => console.warn("updateCentralRoute failed:", err));
 }
 
@@ -729,8 +786,6 @@ export async function adminSaveRoute(
 		const snap = await tx.get(ref);
 		if (!snap.exists()) throw new Error("Route not found");
 		const data = snap.data();
-		const prev = data.recentEdits ?? [];
-		const next = [{ editedAt: new Date(), editedBy: uid }, ...prev].slice(0, 3);
 
 		const fields = {
 			name,
@@ -748,11 +803,21 @@ export async function adminSaveRoute(
 			orphanedAt: isOrphaned ? new Date() : null,
 			updatedBy: uid,
 			updatedAt: serverTimestamp(),
-			recentEdits: next,
 		};
 		// country: empty string → remove field; null → leave untouched; value → set
 		if (country !== null && country !== undefined) {
 			fields.country = country.trim() || null;
+		}
+
+		const changes = routeFieldChanges(data, fields);
+		if (changes.length > 0 || createdBy !== data.createdBy) {
+			fields.recentEdits = pushRecentEdit(
+				data.recentEdits ?? [],
+				uid,
+				"update",
+				changes,
+				createdBy && createdBy !== data.createdBy ? "ownership transfer" : undefined,
+			);
 		}
 
 		if (createdBy && createdBy !== data.createdBy) {
@@ -840,6 +905,15 @@ export async function getRoute(routeID) {
 		recentEdits: (d.recentEdits ?? []).map((e) => ({
 			editedAt: e.editedAt?.toDate ? e.editedAt.toDate() : new Date(e.editedAt),
 			editedBy: e.editedBy,
+			action: e.action ?? null,
+			note: e.note ?? null,
+			changes: Array.isArray(e.changes)
+				? e.changes.map((c) => ({
+						field: c.field,
+						from: c.from ?? null,
+						to: c.to ?? null,
+					}))
+				: null,
 		})),
 		lastOwnershipTransfer: d.lastOwnershipTransfer
 			? {

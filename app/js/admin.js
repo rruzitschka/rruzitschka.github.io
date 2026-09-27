@@ -879,15 +879,37 @@ function renderAdminEditForm(route) {
         Recent Edits (last ${route.recentEdits.length})
       </div>
       ${route.recentEdits
-				.map(
-					(e) => `
-        <div style="font-size:0.8rem;color:#64748b;padding:3px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px">
-          <span style="color:#94a3b8;min-width:140px">${fmtDateTime(e.editedAt)}</span>
-          <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(e.editedBy)}">${uidShort(e.editedBy)}</span>
-          ${e.editedBy === currentUID ? '<span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ""}
-        </div>
-      `,
-				)
+				.map((e) => {
+					const actionLabel =
+						e.action ??
+						(e.note?.startsWith("admin country batch") ? "country-batch" : "update");
+					const changesHtml = (e.changes ?? [])
+						.map((c) => {
+							const fmt = (v) => {
+								if (v === null || v === undefined) return "—";
+								const s = String(v);
+								return s === "" ? "(empty)" : escapeHtml(s);
+							};
+							return `
+              <div style="font-family:monospace;font-size:0.72rem;padding:2px 0 2px 148px;color:#475569">
+                <span style="color:#0f766e">${escapeHtml(c.field)}:</span>
+                <span style="color:#b91c1c;text-decoration:line-through">${fmt(c.from)}</span>
+                → <span style="color:#15803d">${fmt(c.to)}</span>
+              </div>`;
+						})
+						.join("");
+					return `
+        <div style="border-bottom:1px solid #f1f5f9;padding:3px 0">
+          <div style="font-size:0.8rem;color:#64748b;display:flex;gap:8px">
+            <span style="color:#94a3b8;min-width:140px">${fmtDateTime(e.editedAt)}</span>
+            <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(e.editedBy)}">${uidShort(e.editedBy)}</span>
+            ${e.editedBy === currentUID ? '<span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ""}
+            <span style="font-size:0.7rem;color:#7c3aed;background:#f5f3ff;padding:1px 6px;border-radius:4px">${escapeHtml(actionLabel)}</span>
+            ${e.note ? `<span style="font-size:0.7rem;color:#94a3b8">${escapeHtml(e.note)}</span>` : ""}
+          </div>
+          ${changesHtml}
+        </div>`;
+				})
 				.join("")}
     </div>
   `
