@@ -362,9 +362,6 @@ async function loadAdminBrowserPage(page) {
 		resultsEl
 			.querySelector("#admin-b-retry")
 			?.addEventListener("click", () => loadAdminBrowserPage(page));
-	resultsEl
-			.querySelector("#admin-b-apply-country")
-			?.addEventListener("click", runAdminApplyCountry);
 		resultsEl
 			.querySelector("#admin-b-backfill")
 			?.addEventListener("click", () =>
@@ -372,7 +369,6 @@ async function loadAdminBrowserPage(page) {
 			);
 		document.getElementById("admin-b-apply-country").disabled =
 			!adminBrowserFiltersActive();
-
 		if (adminBrowserState.pendingScroll) {
 			window.scrollTo(0, adminBrowserState.pendingScroll);
 			adminBrowserState.pendingScroll = 0;
@@ -761,6 +757,12 @@ function renderAdminSearch() {
 		resetAdminBrowserPagination();
 		loadAdminBrowserPage(0);
 	});
+	// The apply-country button lives in this static filter bar — bind it here
+	// (it is NOT inside #admin-b-results; its disabled state is refreshed per
+	// list load in loadAdminBrowserPage).
+	document
+		.getElementById("admin-b-apply-country")
+		.addEventListener("click", runAdminApplyCountry);
 
 	loadAdminBrowserPage(adminBrowserState.page);
 }
