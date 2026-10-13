@@ -393,8 +393,8 @@ function renderAdminBrowserCount(total) {
       <p style="font-size:0.8rem;color:#64748b;margin:0">${total} routes</p>
       <span style="flex:1"></span>
       <button id="admin-b-backfill" class="btn btn-secondary btn-sm"
-              title="Add the missing areaSearch field to route docs (idempotent, safe to re-run)">
-        Backfill areaSearch
+              title="Rebuild nameSearch/cragSearch/areaSearch where missing or stale (idempotent, safe to re-run)">
+        Rebuild search fields
       </button>
       <span id="admin-b-backfill-status" style="font-size:0.75rem;color:#94a3b8"></span>
     </div>

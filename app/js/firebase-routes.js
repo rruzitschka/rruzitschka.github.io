@@ -1064,10 +1064,12 @@ export async function fetchRouteGPSData(routeIDs) {
 }
 
 /**
- * Backfill the `areaSearch` field on all route docs where it is missing.
+ * Backfill the search fields (`nameSearch`, `cragSearch`, `areaSearch`) on all route
+ * docs where they are missing or stale (i.e. differ from the current folding — e.g.
+ * docs written before apostrophes were stripped from the fold).
  * Admin privilege — iterates `routes/` in limit(500) batches ordered by document ID,
- * computes `areaSearch = foldedForSearch(climbingArea)` and writes it via writeBatch.
- * Idempotent and safe to re-run (only touches docs missing the field).
+ * recomputes each field via foldedForSearch and writes docs that differ via writeBatch.
+ * Idempotent and safe to re-run (only touches docs whose fields would change).
  *
  * @param {({scanned: number, updated: number}) => void} [onProgress]
  * @returns {{scanned: number, updated: number, batches: number}} totals
@@ -1090,11 +1092,23 @@ export async function adminBackfillAreaSearch(onProgress) {
 		const snap = await getDocs(query(collection(db, "routes"), ...constraints));
 		if (snap.docs.length === 0) break;
 
-		const pending = snap.docs.filter((d) => d.data().areaSearch === undefined);
+		const pending = snap.docs.filter((d) => {
+			const data = d.data();
+			const expected = {
+				nameSearch: foldedForSearch(data.name ?? ""),
+				cragSearch: foldedForSearch(data.crag ?? ""),
+				areaSearch: foldedForSearch(data.climbingArea ?? ""),
+			};
+			return Object.keys(expected).some(
+				(key) => data[key] !== expected[key],
+			);
+		});
 		if (pending.length > 0) {
 			const batch = writeBatch(db);
 			for (const d of pending) {
 				batch.update(d.ref, {
+					nameSearch: foldedForSearch(d.data().name ?? ""),
+					cragSearch: foldedForSearch(d.data().crag ?? ""),
 					areaSearch: foldedForSearch(d.data().climbingArea ?? ""),
 				});
 			}

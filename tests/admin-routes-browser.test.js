@@ -22,6 +22,13 @@ describe("foldedForSearch()", () => {
 		expect(foldedForSearch("Café Mühlbach")).toBe("cafe muhlbach");
 	});
 
+	it("removes apostrophe variants (straight, curly)", () => {
+		expect(foldedForSearch("L\u2019Ocaive")).toBe("locaive");
+		expect(foldedForSearch("L\u2018Ocaive")).toBe("locaive");
+		expect(foldedForSearch("L'Ocaive")).toBe("locaive");
+		expect(foldedForSearch("Dell\u2019Orso")).toBe("dellorso");
+	});
+
 	it("returns empty string for null/undefined", () => {
 		expect(foldedForSearch(null)).toBe("");
 		expect(foldedForSearch(undefined)).toBe("");

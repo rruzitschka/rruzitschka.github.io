@@ -170,10 +170,14 @@ describe("adminQueryRoutes()", () => {
 // ── adminBackfillAreaSearch ──────────────────────────────────────────────────
 
 describe("adminBackfillAreaSearch()", () => {
-	it("writes areaSearch only for docs missing it, in batches of ≤500", async () => {
+	it("rewrites search fields for docs missing or having stale ones, in batches of ≤500", async () => {
+		const consistent = {
+			name: "x", crag: "x", climbingArea: "X",
+			nameSearch: "x", cragSearch: "x", areaSearch: "x",
+		};
 		const page = Array.from({ length: 500 }, (_, i) => ({
 			id: `r${i}`,
-			data: i < 3 ? { climbingArea: "Hohe Wand" } : { climbingArea: "X", areaSearch: "x" },
+			data: i < 3 ? { climbingArea: "Hohe Wand" } : { ...consistent },
 		}));
 		mockGetDocs
 			.mockResolvedValueOnce(makeSnap(page)) // full page → cursor loop
@@ -186,14 +190,24 @@ describe("adminBackfillAreaSearch()", () => {
 		expect(batches).toHaveLength(2);
 		const written = batches.flat().map((b) => b.ops).flat();
 		expect(written).toHaveLength(4);
-		expect(written[0].fields).toEqual({ areaSearch: "hohe wand" });
+		expect(written[0].fields).toEqual({
+			nameSearch: "", cragSearch: "", areaSearch: "hohe wand",
+		});
 		// 4th write (the last page) is diacritics-folded
-		expect(written[3].fields).toEqual({ areaSearch: "cafe wand" });
+		expect(written[3].fields).toEqual({
+			nameSearch: "", cragSearch: "", areaSearch: "cafe wand",
+		});
 	});
 
-	it("is idempotent — a second run with all fields present updates nothing", async () => {
+	it("is idempotent — a second run with all fields current updates nothing", async () => {
 		mockGetDocs.mockResolvedValue(
-			makeSnap([{ id: "r1", data: { climbingArea: "X", areaSearch: "x" } }]),
+			makeSnap([{
+				id: "r1",
+				data: {
+					name: "R", crag: "C", climbingArea: "X",
+					nameSearch: "r", cragSearch: "c", areaSearch: "x",
+				},
+			}]),
 		);
 		const batches = makeBatchMock();
 
@@ -201,6 +215,27 @@ describe("adminBackfillAreaSearch()", () => {
 
 		expect(result.updated).toBe(0);
 		expect(batches).toHaveLength(0);
+	});
+
+	it("recomputes search fields when the folding changed (e.g. apostrophe stripping)", async () => {
+		mockGetDocs.mockResolvedValue(
+			makeSnap([{
+				id: "r1",
+				data: {
+					name: "L\u2019Ocaive", crag: "Crag", climbingArea: "L\u2019Ocaive",
+					nameSearch: "l\u2019ocaive", cragSearch: "crag", areaSearch: "l\u2019ocaive",
+				},
+			}]),
+		);
+		const batches = makeBatchMock();
+
+		const result = await adminBackfillAreaSearch();
+
+		expect(result.updated).toBe(1);
+		const written = batches.flat().map((b) => b.ops).flat();
+		expect(written[0].fields).toEqual({
+			nameSearch: "locaive", cragSearch: "crag", areaSearch: "locaive",
+		});
 	});
 
 	it("clears the admin count cache after the run", async () => {

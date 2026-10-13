@@ -11,14 +11,20 @@
 
 // ── Search folding ─────────────────────────────────────────────────────────
 // Must stay identical to the iOS CentralRoute nameSearch/cragSearch folding
-// (lowercased, diacritics stripped). Previously duplicated here and in
-// firebase-routes.js; now exported once and reused.
+// (lowercased, diacritics stripped, apostrophe variants removed). Previously
+// duplicated here and in firebase-routes.js; now exported once and reused.
+
+// Apostrophe-like characters removed by the fold so that names such as
+// "L'Ocaive" are findable regardless of which quote character was typed
+// (iOS autocorrect inserts U+2019) or whether the apostrophe is omitted.
+const APOSTROPHE_CHARS = /[\u0027\u2018\u2019\u201B\u02BC\u2032\u0060\u00B4]/g;
 
 export function foldedForSearch(str) {
 	return (str || "")
 		.toLowerCase()
 		.normalize("NFD")
-		.replaceAll(/[\u0300-\u036f]/g, "");
+		.replaceAll(/[\u0300-\u036f]/g, "")
+		.replaceAll(APOSTROPHE_CHARS, "");
 }
 
 // ── Search fields ────────────────────────────────────────────────────────────
