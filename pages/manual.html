@@ -182,7 +182,7 @@
             color: var(--accent-color);
           "
         >
-          Version 3.15.0
+          Version 3.17.0
         </p>
 
         <div class="toc">
@@ -515,6 +515,11 @@
           <li>All sends appear chronologically in the SendLogs tab</li>
           <li>Tap any entry to open the full detail view</li>
           <li>
+            The detail view groups everything into clear sections — Location
+            (with a "Route Start" map link when GPS is saved), Route Details,
+            rating stars with the community badge, photos, and notes
+          </li>
+          <li>
             In the detail view you can:
             <ul>
               <li>
@@ -550,6 +555,10 @@
             The original send is marked <em>(First Send)</em>; repeats are
             marked <em>(Repeat)</em>
           </li>
+          <li>
+            Rows with a recorded duration show it (e.g. <em>2h 15m</em>) —
+            the send itself and each repeat keep their own time
+          </li>
         </ol>
 
         <h4>Adding a Repeat Ascent</h4>
@@ -563,6 +572,10 @@
               <li><strong>Date</strong>: When you repeated the route</li>
               <li>
                 <strong>Send Type</strong>: May differ from your first send
+              </li>
+              <li>
+                <strong>Duration</strong>: How long the ascent took (e.g. from
+                the climb timer) — shows on the ascent's history row
               </li>
               <li><strong>Notes</strong>: Details specific to this ascent</li>
             </ul>
@@ -595,23 +608,21 @@
         <ul>
           <li>
             Use the search field at the top of the SendLogs tab to find entries
-            by name, area, or crag
+            by name, area, or crag — case- and accent-insensitive
           </li>
           <li>
-            <strong>Area Filter</strong>: Tap "Filter by Area" to select a
-            specific location
+            <strong>Filter Chips</strong>: Three chips above the list —
+            <strong>Area</strong>, <strong>Crag</strong>, and
+            <strong>Type</strong>. They narrow each other, so you only ever
+            pick combinations that exist in your log; tap "All …" to reset
           </li>
           <li>
-            <strong>Route Type Filter</strong>: Tap "Filter by Route Type" to
-            show only Sport, Boulder, or Multi-Pitch routes
+            <strong>Country Flags</strong>: Routes linked to the community
+            database show their country flag on the rating line
           </li>
           <li>
-            <strong>Interactive Filtering</strong>: Filters update each other —
-            selecting a route type narrows the area list, and vice versa
-          </li>
-          <li>
-            <strong>Clear Filters</strong>: Select "All Areas" or "All Route
-            Types" to reset
+            <strong>Community search</strong> ignores apostrophe variants —
+            "L'Ocaive" is found whether you type the quote or not
           </li>
         </ul>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
@@ -802,7 +813,9 @@
           </li>
           <li>
             If it was a send, use ✓ to convert the project to a SendLog (if
-            you started from a Project)
+            you started from a Project) — the Multi-Pitch Plan stays visible
+            on the send, and the recorded duration appears on the send's
+            ascent-history row
           </li>
         </ol>
 
@@ -821,8 +834,9 @@
             <strong>Climb Timer</strong> — “Start Climb” / “Finish Climb”
             stopwatch; finishing prefills the duration into the attempt-log
             (first ascent) or add-ascent (repeat) form. Successful climbs
-            store a structured duration; failed attempts get the duration
-            folded into the attempt notes as text
+            store a structured duration that shows on the ascent-history
+            row; failed attempts get the duration folded into the attempt
+            notes as text
           </li>
           <li>
             <strong>Topo Photos</strong> — any attached photo can be tagged
@@ -916,7 +930,11 @@
             repeat ascent days)
           </li>
           <li>
-            <strong>Unique Climbing Days</strong>: Days with at least one ascent
+            <strong>Unique Climbing Days</strong>: Days with at least one
+            ascent. With <em>Incl. Training</em> on, days with only a training
+            session count too; switch the toggle off to count real climbing
+            days only (Total Climbs always counts climbs, never training
+            sessions)
           </li>
           <li>
             <strong>Average Climbs per Day</strong>: Total climbs &divide;
@@ -940,7 +958,8 @@
           <li>
             <strong>Calendar Heatmap</strong>: Daily activity over the last 6
             months. Blue cells = climbing days (darker = more climbs); orange
-            cells = training-only days.
+            cells = training-only days. Follows the <em>Incl. Training</em>
+            toggle — training cells disappear when training is excluded.
           </li>
         </ul>
 
@@ -1716,7 +1735,7 @@
         <a href="../index.html">Return to Home Page</a>
       </div>
 
-      <p class="last-updated">Last Updated: September 2026 · Version 3.15.0</p>
+      <p class="last-updated">Last Updated: October 2026 · Version 3.17.0</p>
     </div>
 
     <footer>&copy; 2026 SendLog App</footer>
