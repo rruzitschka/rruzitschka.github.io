@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 
 import {
+	COUNTRY_NONE,
 	foldedForSearch,
 	SEARCH_FIELD_MAP,
 	searchBounds,
@@ -91,7 +92,22 @@ describe("buildRouteQuery()", () => {
 		});
 		const fields = c.filter((d) => d.kind === "where").map((d) => d.field);
 		expect(fields).toEqual(["isOrphaned", "routeType", "country"]);
-	});
+});
+
+it("COUNTRY_NONE sentinel → country == null, still in equality position", () => {
+		const c = buildRouteQuery({ isOrphaned: false, country: COUNTRY_NONE, pageSize: 25 });
+		expect(c[1]).toEqual({ kind: "where", field: "country", op: "==", value: null });
+		const fields = c.filter((d) => d.kind === "where").map((d) => d.field);
+		expect(fields).toEqual(["isOrphaned", "country"]);
+});
+
+it("COUNTRY_NONE combined with real codes stays distinct from them", () => {
+		const c = buildRouteQuery({ country: COUNTRY_NONE, pageSize: 25 });
+		expect(c.filter((d) => d.kind === "where")).toEqual([
+				{ kind: "where", field: "country", op: "==", value: null },
+		]);
+		expect(COUNTRY_NONE).not.toBe("");
+});
 
 	it("search text adds folded prefix range wheres on the right field", () => {
 		const c = buildRouteQuery({ searchText: "Café", searchField: "crag", pageSize: 25 });

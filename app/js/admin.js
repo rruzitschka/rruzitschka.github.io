@@ -7,6 +7,7 @@
 
 import { getCountFromServer } from "firebase/firestore";
 import { db, auth } from "./firebase-config.js";
+import { COUNTRY_NONE } from "./admin-routes-browser.js";
 import {
 	adminQueryRoutes,
 	routeQueryStreamKeys,
@@ -684,6 +685,7 @@ function renderAdminSearch() {
         </select>
         <select id="admin-b-country" class="form-input" style="width:auto">
           <option value="">Country: All</option>
+          <option value="${COUNTRY_NONE}">Country: (none)</option>
         </select>
         <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#64748b;cursor:pointer">
           <input type="checkbox" id="admin-b-orphaned" ${adminBrowserState.isOrphaned ? "checked" : ""} />
@@ -707,6 +709,9 @@ function renderAdminSearch() {
 	loadAdminCountryOptions().then((codes) => {
 		if (countrySelect.isConnected === false) return;
 		if (codes) {
+			if (adminBrowserState.country === COUNTRY_NONE) {
+				countrySelect.querySelector(`option[value="${COUNTRY_NONE}"]`).selected = true;
+			}
 			codes.forEach((c) => {
 				const opt = document.createElement("option");
 				opt.value = c;

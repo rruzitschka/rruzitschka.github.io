@@ -59,6 +59,13 @@ export function searchBounds(term, field) {
 // ── Query assembly ───────────────────────────────────────────────────────────
 
 /**
+ * Sentinel for the "routes without a country" filter option in the Country
+ * dropdown. Firestore `country == null` matches docs where the field is null
+ * OR missing, which is exactly "no country set".
+ */
+export const COUNTRY_NONE = "__none__";
+
+/**
  * Build the constraint descriptor list for a single route-list query.
  *
  * Equality filters appear in the fixed order isOrphaned → routeType → country,
@@ -70,7 +77,7 @@ export function searchBounds(term, field) {
  *   searchText?: string,
  *   searchField?: "name"|"crag"|"area",   // required when searchText is set
  *   routeType?: string|null,
- *   country?: string|null,
+ *   country?: string|null,   // COUNTRY_NONE sentinel → country == null
  *   isOrphaned?: boolean|null,
  *   pageSize?: number,
  * }} filters
@@ -103,7 +110,10 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 	if (routeType) {
 		constraints.push({ kind: "where", field: "routeType", op: "==", value: routeType });
 	}
-	if (country) {
+	if (country === COUNTRY_NONE) {
+		// "no country set" — Firestore null equality also matches missing fields
+		constraints.push({ kind: "where", field: "country", op: "==", value: null });
+	} else if (country) {
 		constraints.push({ kind: "where", field: "country", op: "==", value: country });
 	}
 	if (bounds) {
