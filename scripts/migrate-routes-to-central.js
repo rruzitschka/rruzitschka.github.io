@@ -114,6 +114,7 @@
         name,
         climbingArea:       climbingArea || '',
         crag:               crag || '',
+        country:            null, // explicit null — Firestore null equality never matches absent fields
         grade:              frenchGrade,
         createdGrade:       canonicalGrade,
         createdGradeSystem: gradeSystem,

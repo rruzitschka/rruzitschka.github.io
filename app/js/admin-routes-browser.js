@@ -60,8 +60,9 @@ export function searchBounds(term, field) {
 
 /**
  * Sentinel for the "routes without a country" filter option in the Country
- * dropdown. Firestore `country == null` matches docs where the field is null
- * OR missing, which is exactly "no country set".
+ * dropdown. Matches docs where country is explicitly null — so every write
+ * path must set country (null or ISO code); absent fields are never matched
+ * by Firestore null equality.
  */
 export const COUNTRY_NONE = "__none__";
 
@@ -111,7 +112,8 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 		constraints.push({ kind: "where", field: "routeType", op: "==", value: routeType });
 	}
 	if (country === COUNTRY_NONE) {
-		// "no country set" — Firestore null equality also matches missing fields
+		// "no country set" — write paths store country: null explicitly
+		// (Firestore null equality does NOT match field-absent docs)
 		constraints.push({ kind: "where", field: "country", op: "==", value: null });
 	} else if (country) {
 		constraints.push({ kind: "where", field: "country", op: "==", value: country });

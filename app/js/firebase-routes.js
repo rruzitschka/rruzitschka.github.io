@@ -574,6 +574,7 @@ export async function createCentralRoute({
 		name,
 		climbingArea: climbingArea ?? "",
 		crag: crag ?? "",
+		country: null, // explicit null — Firestore null equality never matches absent fields
 		grade: french,
 		createdGrade: grade,
 		createdGradeSystem: gradeSystem ?? system,
