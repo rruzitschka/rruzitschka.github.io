@@ -22,3 +22,4 @@
 - Route `country` is an ISO 3166-1 alpha-2 code (validate via `iso-countries.js`). **Never leave `country` absent on a route doc — write `country: null` explicitly** (Firestore null equality never matches field-absent docs; that bug class is known).
 - Equality filter order in `buildRouteQuery` (isOrphaned → routeType → country) must match the composite indexes in `firestore.indexes.json`.
 - GPS-backed routes (latitude set) are authoritative for country — batch operations must never overwrite them.
+- Admin "Save GPS Pin" reverse-geocodes the country (BigDataCloud, see `reverse-geocode.js`) and overwrites any existing value; "Remove GPS" keeps the country.

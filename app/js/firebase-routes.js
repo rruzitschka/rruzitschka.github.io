@@ -874,15 +874,15 @@ export async function adminSetGPS(routeID, latitude, longitude, country) {
 }
 
 /**
- * Remove the GPS pin from a route (sets latitude, longitude, country to null).
- * Admin privilege.
+ * Remove the GPS pin from a route (sets latitude + longitude to null).
+ * The country is kept — it may have been set manually; correcting a wrong
+ * GPS-derived country is the edit form's job. Admin privilege.
  */
 export async function adminClearGPS(routeID) {
 	const uid = auth.currentUser?.uid ?? "unknown";
 	await updateDoc(doc(db, "routes", routeID), {
 		latitude: null,
 		longitude: null,
-		country: null,
 		updatedBy: uid,
 		updatedAt: serverTimestamp(),
 	});

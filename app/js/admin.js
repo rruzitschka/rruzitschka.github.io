@@ -9,6 +9,7 @@ import { getCountFromServer } from "firebase/firestore";
 import { db, auth } from "./firebase-config.js";
 import { COUNTRY_NONE } from "./admin-routes-browser.js";
 import { isoCountryOptionsHTML, countryFlagEmoji, isoCountryName } from "./iso-countries.js";
+import { reverseGeocodeCountry } from "./reverse-geocode.js";
 import {
 	adminQueryRoutes,
 	routeQueryStreamKeys,
@@ -1043,7 +1044,9 @@ function renderAdminEditForm(route) {
           </div>
         </div>
         <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:0.75rem">
-          Country is set via the Country field above (GPS never overwrites it).
+          Saving a GPS pin reverse-geocodes the country and overwrites any
+          existing value (manual or GPS-derived). Removing the pin keeps the
+          country.
         </p>
         <div style="display:flex;gap:8px">
           <button id="admin-gps-save-btn" class="btn btn-primary btn-sm">📍 Save GPS Pin</button>
@@ -1167,7 +1170,9 @@ function renderAdminEditForm(route) {
 		.addEventListener("click", async () => {
 			const lat = parseFloat(document.getElementById("admin-gps-lat").value);
 			const lon = parseFloat(document.getElementById("admin-gps-lon").value);
-			const country = null; // country is managed via the main form (Save Changes)
+			// GPS wins over any existing (manual) country: reverse-geocode the pin;
+			// null on geocode failure → adminSetGPS leaves the country untouched
+			const country = await reverseGeocodeCountry(lat, lon);
 			const status = document.getElementById("admin-gps-status");
 			const btn = document.getElementById("admin-gps-save-btn");
 
@@ -1189,7 +1194,9 @@ function renderAdminEditForm(route) {
 			try {
 				await adminSetGPS(route.id, lat, lon, country);
 				status.style.color = "var(--success-color, #16a34a)";
-				status.textContent = "\u2713 GPS pin saved.";
+				status.textContent = country
+					? `\u2713 GPS pin saved — country set to ${countryFlagEmoji(country)} ${isoCountryName(country) ?? country}.`
+					: "\u2713 GPS pin saved — country could not be determined, existing value kept.";
 				setTimeout(() => openAdminEditForm(route.id), 800);
 			} catch (err) {
 				console.error("adminSetGPS failed:", err);
