@@ -12,3 +12,9 @@ node_modules/
 .vscode/
 .worktrees/
 serve.js
+
+# Build/test artifacts (generated)
+coverage/
+.scannerwork/
+.graphify_uncached.txt
+.pi-lens/

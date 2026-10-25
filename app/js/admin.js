@@ -8,6 +8,7 @@
 import { getCountFromServer } from "firebase/firestore";
 import { db, auth } from "./firebase-config.js";
 import { COUNTRY_NONE } from "./admin-routes-browser.js";
+import { isoCountryOptionsHTML, countryFlagEmoji, isoCountryName } from "./iso-countries.js";
 import {
 	adminQueryRoutes,
 	routeQueryStreamKeys,
@@ -246,13 +247,6 @@ const TYPE_CHIP_COLORS = {
 	"Multi-Pitch": { bg: "#f5f3ff", color: "#7c3aed" },
 	Trad: { bg: "#eff6ff", color: "#2563eb" },
 };
-
-function countryFlagEmoji(code) {
-	if (code?.length !== 2) return "";
-	return String.fromCodePoint(
-		...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.codePointAt(0) - 65),
-	);
-}
 
 /**
  * Distinct ISO country codes across `routes`, scanned once per session and
@@ -961,6 +955,13 @@ function renderAdminEditForm(route) {
           <input type="text" id="admin-f-crag" class="form-input" value="${escapeHtml(route.crag)}" />
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label">Country</label>
+        <select id="admin-f-country" class="form-input">
+          ${isoCountryOptionsHTML(route.country ?? "", "— No country —")}
+        </select>
+        ${route.country ? `<p style="font-size:0.75rem;color:#64748b;margin:4px 0 0">Current: ${countryFlagEmoji(route.country)} ${isoCountryName(route.country) ?? escapeHtml(route.country)}</p>` : ""}
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Grade</label>
@@ -1029,7 +1030,7 @@ function renderAdminEditForm(route) {
 							: "Click the map or drag the pin to place it, then press “Save GPS Pin”."
 					}
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:0.75rem;align-items:end">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem;align-items:end">
           <div class="form-group" style="margin:0">
             <label class="form-label" style="font-size:0.75rem">Latitude</label>
             <input type="number" id="admin-gps-lat" class="form-input" step="any"
@@ -1040,12 +1041,10 @@ function renderAdminEditForm(route) {
             <input type="number" id="admin-gps-lon" class="form-input" step="any"
                    value="${route.longitude ?? ""}" placeholder="e.g. 15.4414" />
           </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label" style="font-size:0.75rem">Country</label>
-            <input type="text" id="admin-gps-country" class="form-input" maxlength="2"
-                   value="${escapeHtml(route.country ?? "")}" placeholder="AT" style="text-transform:uppercase" />
-          </div>
         </div>
+        <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:0.75rem">
+          Country is set via the Country field above (GPS never overwrites it).
+        </p>
         <div style="display:flex;gap:8px">
           <button id="admin-gps-save-btn" class="btn btn-primary btn-sm">📍 Save GPS Pin</button>
           ${
@@ -1115,7 +1114,9 @@ function renderAdminEditForm(route) {
 					routeType: document.getElementById("admin-f-routetype").value,
 					createdBy: document.getElementById("admin-f-createdby").value.trim(),
 					isOrphaned: document.getElementById("admin-f-orphaned").checked,
-					country: null, // GPS country managed separately via adminSetGPS
+						// "" → adminSaveRoute stores null (clears); null would leave untouched
+						country:
+							document.getElementById("admin-f-country")?.value || "",
 				});
 				status.style.color = "var(--success-color, #16a34a)";
 				status.textContent = "✓ Saved successfully";
@@ -1166,11 +1167,7 @@ function renderAdminEditForm(route) {
 		.addEventListener("click", async () => {
 			const lat = parseFloat(document.getElementById("admin-gps-lat").value);
 			const lon = parseFloat(document.getElementById("admin-gps-lon").value);
-			const country =
-				document
-					.getElementById("admin-gps-country")
-					.value.trim()
-					.toUpperCase() || null;
+			const country = null; // country is managed via the main form (Save Changes)
 			const status = document.getElementById("admin-gps-status");
 			const btn = document.getElementById("admin-gps-save-btn");
 

@@ -72,9 +72,11 @@ describe("fetchRouteData()", () => {
 		const result = await fetchRouteData([]);
 		expect(result.ratings).toBeInstanceOf(Map);
 		expect(result.gps).toBeInstanceOf(Map);
+		expect(result.countries).toBeInstanceOf(Map);
 		expect(result.createdBy).toBeInstanceOf(Map);
 		expect(result.ratings.size).toBe(0);
 		expect(result.gps.size).toBe(0);
+		expect(result.countries.size).toBe(0);
 		expect(result.createdBy.size).toBe(0);
 		expect(mockGetDocs).not.toHaveBeenCalled();
 	});
@@ -114,6 +116,21 @@ describe("fetchRouteData()", () => {
 			country: "CH",
 		});
 		expect(gps.has("r2")).toBe(false);
+	});
+
+	it("populates countries independently of GPS (only when set)", async () => {
+		mockGetDocs.mockResolvedValue(
+			makeSnap([
+				{ id: "r1", data: { country: "AT" } }, // no GPS — still listed
+				{ id: "r2", data: { latitude: 47.0, longitude: 15.0, country: null } },
+				{ id: "r3", data: {} }, // field absent → not listed
+			]),
+		);
+
+		const { countries } = await fetchRouteData(["r1", "r2", "r3"]);
+		expect(countries.get("r1")).toBe("AT");
+		expect(countries.has("r2")).toBe(false);
+		expect(countries.has("r3")).toBe(false);
 	});
 
 	it("populates createdBy for all returned routes", async () => {

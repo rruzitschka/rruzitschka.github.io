@@ -554,6 +554,7 @@ export async function adminApplyCountryToMatching({
 }
 
 export async function createCentralRoute({
+	country = null,
 	name,
 	climbingArea,
 	crag,
@@ -574,7 +575,7 @@ export async function createCentralRoute({
 		name,
 		climbingArea: climbingArea ?? "",
 		crag: crag ?? "",
-		country: null, // explicit null — Firestore null equality never matches absent fields
+		country: country?.trim().toUpperCase() || null, // never leave the field absent
 		grade: french,
 		createdGrade: grade,
 		createdGradeSystem: gradeSystem ?? system,
@@ -724,7 +725,7 @@ function pushRecentEdit(prev, uid, action, changes = undefined, note = undefined
 
 export function updateCentralRoute(
 	routeID,
-	{ name, climbingArea, crag, grade, gradeSystem, routeType },
+	{ name, climbingArea, crag, grade, gradeSystem, routeType, country },
 ) {
 	const uid = auth.currentUser?.uid ?? "unknown";
 	const french = normalizeToFrench(grade);
@@ -747,6 +748,10 @@ export function updateCentralRoute(
 			updatedBy: uid,
 			updatedAt: serverTimestamp(),
 		};
+		// country: only written when the caller passes it (undefined = untouched)
+		if (country !== undefined) {
+			fields.country = country.trim().toUpperCase() || null;
+		}
 		const changes = routeFieldChanges(data, fields);
 		if (changes.length === 0) return; // no-op edit — don't spam the trail
 		fields.recentEdits = pushRecentEdit(data.recentEdits ?? [], uid, "update", changes);
@@ -813,7 +818,7 @@ export async function adminSaveRoute(
 			updatedBy: uid,
 			updatedAt: serverTimestamp(),
 		};
-		// country: empty string → remove field; null → leave untouched; value → set
+		// country: null/undefined → leave untouched; "" → null; ISO code → set
 		if (country !== null && country !== undefined) {
 			fields.country = country.trim() || null;
 		}
@@ -946,6 +951,8 @@ export async function getRoute(routeID) {
  * Returns:
  *   ratings   — Map<routeID, number>  (only routes with ratingCount > 0)
  *   gps       — Map<routeID, {latitude, longitude, country}>  (only routes with GPS)
+ *   countries — Map<routeID, string>  (only routes with a country set —
+ *               independent of GPS, so country-less routes stay absent)
  *   createdBy — Map<routeID, string|null>
  *
  * Replaces the separate fetchCommunityRatings() + fetchRouteGPSData() calls,
@@ -955,9 +962,10 @@ export async function getRoute(routeID) {
 export async function fetchRouteData(routeIDs) {
 	const ratings = new Map();
 	const gps = new Map();
+	const countries = new Map();
 	const createdBy = new Map();
 	const unique = [...new Set((routeIDs ?? []).filter(Boolean))];
-	if (unique.length === 0) return { ratings, gps, createdBy };
+	if (unique.length === 0) return { ratings, gps, countries, createdBy };
 
 	const CHUNK = 30;
 	for (let i = 0; i < unique.length; i += CHUNK) {
@@ -972,6 +980,8 @@ export async function fetchRouteData(routeIDs) {
 				const sum = data.ratingSum ?? 0;
 				const count = data.ratingCount ?? 0;
 				if (count > 0) ratings.set(d.id, sum / count);
+				// country (independent of GPS)
+				if (data.country) countries.set(d.id, data.country);
 				// GPS
 				if (data.latitude != null && data.longitude != null) {
 					gps.set(d.id, {
@@ -987,7 +997,7 @@ export async function fetchRouteData(routeIDs) {
 			console.warn("fetchRouteData batch failed:", err);
 		}
 	}
-	return { ratings, gps, createdBy };
+	return { ratings, gps, countries, createdBy };
 }
 
 /**

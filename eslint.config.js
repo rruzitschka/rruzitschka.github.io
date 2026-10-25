@@ -42,6 +42,9 @@ export default [
     files: [
       'app/js/firebase-*.js',
       'app/js/admin.js',
+      'app/js/iso-countries.js',
+      'app/js/overlay-country.js',
+      'app/js/route-link-ui.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

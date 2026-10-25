@@ -45,6 +45,15 @@ import {
 	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
+import { isoCountryName, countryFlagEmoji } from "./iso-countries.js";
+import {
+	syncCountrySelects as _syncCountrySelects,
+	overlayCountryChange,
+} from "./overlay-country.js";
+import {
+	setFindRouteLinked,
+	setFindRouteUnlinked,
+} from "./route-link-ui.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -139,6 +148,9 @@ let _previousReportedRating = 0; // reportedRating when edit overlay was opened
 let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
 let _communityRatings = new Map(); // routeID -> communityRating; fetched once per session
 let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
+let _routeCountries = new Map(); // routeID -> ISO country code (only when set); fetched once per session
+let _routeDataFetched = false; // set when fetchRouteData succeeded; retry on next load otherwise
+let _centralRouteCountry = undefined; // country of the route linked in the open overlay; undefined = not yet known
 /** @type {Map<string, Array>} */
 
 const SEND_CLASSES = {
@@ -226,7 +238,9 @@ function renderClimbsTable(climbs) {
 		const tr = document.createElement("tr");
 		tr.style.cursor = "pointer";
 		tr.innerHTML = `
-      <td><strong>${escapeHtml(climb.route || "—")}</strong>${climb.centralRouteID && _gpsData.has(climb.centralRouteID) ? ' <span title="Route start GPS available" style="font-size:0.8rem">📍</span>' : ""}</td>
+      <td><strong>${escapeHtml(climb.route || "—")}</strong>${climb.centralRouteID && _gpsData.has(climb.centralRouteID) ? ' <span title="Route start GPS available" style="font-size:0.8rem">📍</span>' : ""}${climb.centralRouteID && _routeCountries.has(climb.centralRouteID)
+				? ` <span style="font-size:0.9rem" title="${isoCountryName(_routeCountries.get(climb.centralRouteID)) ?? _routeCountries.get(climb.centralRouteID)}">${countryFlagEmoji(_routeCountries.get(climb.centralRouteID))}</span>`
+				: ' <span title="No country set" style="opacity:0.3">🌐</span>'}</td>
       <td>${escapeHtml(climb.climbingArea || "—")}${climb.crag ? ` <small style="color:#64748b">/ ${escapeHtml(climb.crag)}</small>` : ""}</td>
       <td><span class="type-badge">${escapeHtml(climb.routeType || "—")}</span></td>
       <td><span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || "—")}</span></td>
@@ -371,23 +385,27 @@ function showDetailModal(climb) {
 				if (ratingSpan && route.communityRating != null) {
 					ratingSpan.textContent = `(${route.communityRating.toFixed(1)})`;
 				}
-				// GPS row — injected after the table when coordinates are available
-				if (route.latitude != null && route.longitude != null) {
+				// Location row — country when set (plus GPS details when available),
+				// injected after the table
+				{
 					const gpsContainer = document.getElementById("detail-gps-row");
 					if (gpsContainer) {
-						const mapsURL = `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climb.route || "Route start")}`;
-						const flag = route.country
-							? String.fromCodePoint(
-									...[...route.country.toUpperCase()].map(
-										(c) => 0x1f1e6 - 65 + c.charCodeAt(0),
-									),
-								)
-							: "";
+						const hasGPS =
+							route.latitude != null && route.longitude != null;
+						const countryLine = route.country
+							? `${countryFlagEmoji(route.country)} ${isoCountryName(route.country) ?? escapeHtml(route.country)}`
+							: '<span style="color:#94a3b8">No country set</span>';
+						const mapsURL = hasGPS
+							? `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climb.route || "Route start")}`
+							: null;
 						gpsContainer.innerHTML = `
 							<div style="margin-bottom:1.25rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
-								<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;">📍 Route Start${flag ? " " + flag : ""}</div>
+								<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;">📍 Route Start</div>
+								<div style="font-size:0.9rem;margin-bottom:${hasGPS ? "0.4rem" : "0"}">${countryLine}</div>
+								${hasGPS ? `
 								<div style="font-size:0.85rem;font-family:monospace;margin-bottom:0.4rem;">${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</div>
 								<a href="${escapeHtml(mapsURL)}" target="_blank" rel="noopener" style="font-size:0.82rem;color:var(--accent-color,#6366f1);">Open in Maps ↗</a>
+								` : ""}
 							</div>`;
 					}
 				}
@@ -1080,14 +1098,13 @@ export async function loadData() {
 		const linkedIDs = [
 			...new Set(climbs.map((c) => c.centralRouteID).filter(Boolean)),
 		];
-		if (
-			(_communityRatings.size === 0 || _gpsData.size === 0) &&
-			linkedIDs.length > 0
-		) {
+		if (!_routeDataFetched && linkedIDs.length > 0) {
 			fetchRouteData(linkedIDs)
-				.then(({ ratings, gps }) => {
+				.then(({ ratings, gps, countries }) => {
+					_routeDataFetched = true; // failed fetches retry on next list load
 					_communityRatings = ratings;
 					_gpsData = gps;
+					_routeCountries = countries;
 					if (_currentRefresh) _currentRefresh();
 				})
 				.catch(() => {});
@@ -1277,26 +1294,7 @@ function setStylePill(value) {
 
 // ---------- Route search overlay ----------
 
-/** Update a find-route button to linked state, with 👤 if the current user owns the route. */
-function setFindRouteLinked(btnId, routeName, createdBy) {
-	const btn = document.getElementById(btnId);
-	if (!btn) return;
-	const isOwned = createdBy && createdBy === auth.currentUser?.uid;
-	btn.textContent = isOwned ? "✓ 👤" : "✓";
-	btn.title = isOwned
-		? `✓ ${routeName} (you created this route)`
-		: `✓ ${routeName}`;
-	btn.style.color = "var(--success-color, green)";
-}
-
-/** Reset a find-route button to unlinked state. */
-function setFindRouteUnlinked(btnId) {
-	const btn = document.getElementById(btnId);
-	if (!btn) return;
-	btn.textContent = "🔍";
-	btn.title = "Find Route in Database";
-	btn.style.color = "";
-}
+// setFindRouteLinked / setFindRouteUnlinked live in route-link-ui.js
 
 /**
  * Build and inject a route search overlay into the DOM.
@@ -1503,8 +1501,15 @@ function showAddSendOverlay(prefill = {}) {
 			prefill.route,
 			_centralRouteCreatedBy,
 		);
+		// Fetch country asynchronously so the country select can prefill
+		fetchRouteOwnershipThenSync(
+			prefill.centralRouteID,
+			"find-route-btn-send",
+			prefill.route,
+		);
 	}
 
+	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 	overlay.classList.remove("hidden");
 }
 
@@ -1540,20 +1545,15 @@ function showEditSendOverlay(climb) {
 		_centralRouteArea = climb.climbingArea || "";
 		_centralRouteCreatedBy = null;
 		setFindRouteLinked("find-route-btn-send", climb.route, null);
-		// Fetch createdBy asynchronously to update ownership icon
-		getDoc(doc(db, "routes", climb.centralRouteID))
-			.then((routeSnap) => {
-				if (routeSnap.exists()) {
-					_centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
-					setFindRouteLinked(
-						"find-route-btn-send",
-						climb.route,
-						_centralRouteCreatedBy,
-					);
-				}
-			})
-			.catch(() => {});
+		// Fetch createdBy + country asynchronously to update ownership icon
+		// and the country select (owner-only editing)
+		fetchRouteOwnershipThenSync(
+			climb.centralRouteID,
+			"find-route-btn-send",
+			climb.route,
+		);
 	}
+	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 }
 
 function showAddProjectOverlay() {
@@ -1574,6 +1574,7 @@ function showAddProjectOverlay() {
 	document.getElementById("project-overlay-delete").classList.add("hidden");
 	document.getElementById("po-route-error").classList.add("hidden");
 	document.getElementById("po-route").classList.remove("error");
+	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 	overlay.classList.remove("hidden");
 }
 
@@ -1606,22 +1607,33 @@ function showEditProjectOverlay(climb) {
 		_centralRouteArea = climb.climbingArea || "";
 		_centralRouteCreatedBy = null;
 		setFindRouteLinked("find-route-btn-project", climb.route, null);
-		getDoc(doc(db, "routes", climb.centralRouteID))
-			.then((routeSnap) => {
-				if (routeSnap.exists()) {
-					_centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
-					setFindRouteLinked(
-						"find-route-btn-project",
-						climb.route,
-						_centralRouteCreatedBy,
-					);
-				}
-			})
-			.catch(() => {});
+		fetchRouteOwnershipThenSync(
+			climb.centralRouteID,
+			"find-route-btn-project",
+			climb.route,
+		);
 	}
+	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 }
 
 // ── Overlay shared helpers ──────────────────────────────────────────────────
+
+/**
+ * Fetch the linked route's ownership + country asynchronously, update the
+ * soft-link ownership icon and the country selects. Shared by the Send and
+ * Project overlays after they link a central route.
+ */
+function fetchRouteOwnershipThenSync(routeID, findRouteBtnId, routeLabel) {
+	getDoc(doc(db, "routes", routeID))
+		.then((routeSnap) => {
+			if (!routeSnap.exists()) return;
+			_centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
+			_centralRouteCountry = routeSnap.data().country ?? null;
+			setFindRouteLinked(findRouteBtnId, routeLabel, _centralRouteCreatedBy);
+			_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
+		})
+		.catch(() => {});
+}
 
 /**
  * Shared setup for Send and Project overlays.
@@ -1639,7 +1651,9 @@ function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId }) {
 		_pendingNewCentralRoute = null;
 		_previousReportedRating = 0;
 		_originalCentralRouteID = null;
+		_centralRouteCountry = undefined;
 		setFindRouteUnlinked(findRouteBtnId);
+		_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 	}
 
 	document
@@ -1669,12 +1683,14 @@ function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId }) {
 			_centralRouteCrag = route.crag || "";
 			_centralRouteArea = route.climbingArea || "";
 			_centralRouteCreatedBy = route.createdBy ?? null;
+			_centralRouteCountry = route.country ?? null;
 			if (isNew) {
 				_pendingNewCentralRoute = route;
 				_centralRouteID = null;
 				_centralRouteCreatedBy = null;
 			}
 			setFindRouteLinked(findRouteBtnId, route.name, _centralRouteCreatedBy);
+			_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 		});
 	});
 
@@ -1701,6 +1717,7 @@ function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId }) {
 			) {
 				_centralRouteID = null;
 				setFindRouteUnlinked(findRouteBtnId);
+				_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 			}
 		});
 	});
@@ -1752,6 +1769,8 @@ async function _maybeCreateCentralRoute(fieldPrefix, routeVal) {
 			grade: document.getElementById(`${p}-difficulty`).value || "",
 			gradeSystem: getPreferredGradeSystem(),
 			routeType: document.getElementById(`${p}-routetype`).value,
+			country:
+				document.getElementById(`${p}-country`)?.value.trim().toUpperCase() || null,
 		});
 		_centralRouteID = centralID;
 	} catch (err) {
@@ -1773,6 +1792,9 @@ function _maybePropagateToRoute(centralID, fieldPrefix, routeVal) {
 		grade: document.getElementById(`${p}-difficulty`).value || "",
 		gradeSystem: getPreferredGradeSystem(),
 		routeType: document.getElementById(`${p}-routetype`).value,
+		// {} until the linked route's country is known — a fast save before the
+		// route fetch resolved must not silently wipe the country. "" → clears.
+		...overlayCountryChange(p, _centralRouteCountry),
 	});
 }
 
