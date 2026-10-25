@@ -150,7 +150,7 @@ let _communityRatings = new Map(); // routeID -> communityRating; fetched once p
 let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
 let _routeCountries = new Map(); // routeID -> ISO country code (only when set); fetched once per session
 let _routeDataFetched = false; // set when fetchRouteData succeeded; retry on next load otherwise
-let _centralRouteCountry = undefined; // country of the route linked in the open overlay; undefined = not yet known
+let _centralRouteCountry; // country of the route linked in the open overlay; undefined = not yet known
 /** @type {Map<string, Array>} */
 
 const SEND_CLASSES = {

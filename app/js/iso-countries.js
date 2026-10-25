@@ -69,7 +69,7 @@ export const ISO_COUNTRIES = {
  * Country name for an ISO alpha-2 code; null for unknown/absent input.
  */
 export function isoCountryName(code) {
-	if (!code || code.length !== 2) return null;
+	if (code?.length !== 2) return null;
 	return ISO_COUNTRIES[code.toUpperCase()] ?? null;
 }
 
@@ -91,7 +91,7 @@ export function countryFlagEmoji(code) {
 export function isoCountryOptionsHTML(selectedCode = "", noneLabel = "") {
 	const upper = selectedCode?.toUpperCase?.() ?? "";
 	const none =
-		noneLabel !== "" ? `<option value="">${noneLabel}</option>` : "";
+		noneLabel === "" ? "" : `<option value="">${noneLabel}</option>`;
 	const opts = Object.entries(ISO_COUNTRIES)
 		.sort((a, b) => a[1].localeCompare(b[1]))
 		.map(
