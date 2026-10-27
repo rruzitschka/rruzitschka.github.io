@@ -10,6 +10,7 @@ import { db, auth } from "./firebase-config.js";
 import { COUNTRY_NONE } from "./admin-routes-browser.js";
 import { isoCountryOptionsHTML, countryFlagEmoji, isoCountryName } from "./iso-countries.js";
 import { reverseGeocodeCountry } from "./reverse-geocode.js";
+import { WEB_APP_VERSION } from "./firebase-auth.js";
 import {
 	adminQueryRoutes,
 	routeQueryStreamKeys,
@@ -125,7 +126,7 @@ async function loadAndRenderAdminStats() {
 	el.innerHTML = '<p style="color:#94a3b8;font-size:0.875rem">Loading…</p>';
 
 	try {
-		const [totalSnap, activeSnap, orphanedSnap, usersSnap, apiKeysSnap] =
+		const [totalSnap, activeSnap, orphanedSnap, usersSnap, apiKeysSnap, userDocsSnap] =
 			await Promise.all([
 				getCountFromServer(collection(db, "routes")),
 				getCountFromServer(
@@ -136,6 +137,8 @@ async function loadAndRenderAdminStats() {
 				),
 				getCountFromServer(collection(db, "users")),
 				getDocs(collectionGroup(db, "apiKeys")),
+				// full user docs for the lastSeen version distribution (small collection)
+				getDocs(collection(db, "users")),
 			]);
 
 		const totalRoutes = totalSnap.data().count;
@@ -156,6 +159,7 @@ async function loadAndRenderAdminStats() {
         ${adminStatCard("API Keys Issued", totalKeys)}
         ${adminStatCard("Users with API Keys", usersWithKeys)}
       </div>
+      ${renderAdminLastSeenVersions(userDocsSnap)}
       <p style="font-size:0.75rem;color:#94a3b8;text-align:right">
         <button id="admin-stats-refresh" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:0.75rem;">↻ Refresh</button>
       </p>
@@ -168,6 +172,59 @@ async function loadAndRenderAdminStats() {
 		console.error("Admin stats failed:", err);
 		el.innerHTML = `<p style="color:#ef4444;font-size:0.875rem">✗ Failed to load stats: ${escapeHtml(err.message ?? err)}</p>`;
 	}
+}
+
+/**
+ * Version distribution from the users/{uid} presence stamps (lastSeen…
+ * AppVersion, see the analytics plan). Rendered as a small two-column table;
+ * counts users per last-seen version per platform ("—" = never seen).
+ */
+function renderAdminLastSeenVersions(userDocsSnap) {
+	const iosCounts = new Map();
+	const webCounts = new Map();
+	let iosUnknown = 0;
+	let webUnknown = 0;
+	for (const d of userDocsSnap.docs) {
+		const v = d.data();
+		if (v.lastSeenIOS == null && v.lastSeenIOSAppVersion == null) {
+			// not an iOS user — fall through
+		} else if (v.lastSeenIOSAppVersion) {
+			iosCounts.set(v.lastSeenIOSAppVersion, (iosCounts.get(v.lastSeenIOSAppVersion) ?? 0) + 1);
+		} else {
+			iosUnknown += 1;
+		}
+		if (v.lastSeenWebAppVersion) {
+			webCounts.set(v.lastSeenWebAppVersion, (webCounts.get(v.lastSeenWebAppVersion) ?? 0) + 1);
+		} else if (v.lastSeenWeb != null) {
+			// used the web before the version stamp existed
+			webUnknown += 1;
+		}
+	}
+	const versions = [...new Set([...iosCounts.keys(), ...webCounts.keys()])].sort(
+		(a, b) => b.localeCompare(a, undefined, { numeric: true }),
+	);
+	const rows = versions
+		.map(
+			(v) => `
+        <tr>
+          <td style="padding:2px 10px 2px 0;font-family:monospace">${v}</td>
+          <td style="padding:2px 10px 2px 0">${iosCounts.get(v) ?? 0} iOS</td>
+          <td style="padding:2px 0">${webCounts.get(v) ?? 0} web${v === WEB_APP_VERSION ? " ← current" : ""}</td>
+        </tr>`,
+		)
+		.join("");
+	if (!rows) return ""; // no version stamps deployed yet
+	return `
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:0.85rem;font-weight:600;color:#64748b;margin-bottom:0.5rem">Users per last-seen version</div>
+      <table style="font-size:0.85rem;color:#334155;border-collapse:collapse">
+        ${rows}
+        <tr><td colspan="3" style="padding-top:6px;font-size:0.75rem;color:#94a3b8">
+          no version stamp yet: ${iosUnknown} iOS · ${webUnknown} web
+        </td></tr>
+      </table>
+    </div>
+  `;
 }
 
 function adminStatCard(label, value, valueColor) {

@@ -20,6 +20,11 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase-config.js';
 
+// Web app version — stamped onto users/{uid} as lastSeenWebAppVersion
+// (lightweight usage indicator, see the analytics plan). Bump when the
+// deployed site content changes.
+export const WEB_APP_VERSION = '3.17';
+
 export async function initAuth() {
   return new Promise(resolve => {
     onAuthStateChanged(auth, async user => {
@@ -87,8 +92,9 @@ async function _ensureUserDocument(user) {
     const snap = await getDoc(userRef);
 
     const data = {
-      uid:         user.uid,
-      lastSeenWeb: serverTimestamp(),
+      uid:                  user.uid,
+      lastSeenWeb:          serverTimestamp(),
+      lastSeenWebAppVersion: WEB_APP_VERSION,
     };
 
     // Only set registeredAt if the document doesn't exist yet or is missing the field
