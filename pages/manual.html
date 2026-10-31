@@ -182,7 +182,7 @@
             color: var(--accent-color);
           "
         >
-          Version 3.17.0
+          Version 3.18.0
         </p>
 
         <div class="toc">
@@ -261,7 +261,10 @@
           Database. Version 3.10.0 adds community ratings. Version 3.12.0 moves
           training statistics to the Stats tab, adds a Training session detail
           view, an Include Training filter toggle, training days in the heatmap,
-          and a compact filter chip strip.
+          and a compact filter chip strip. Version 3.17.0 adds goal celebrations
+          with fireworks. Version 3.18.0 adds privacy-preserving anonymous usage
+          statistics (opt-out in Settings → Privacy) and a Get Support button
+          that pre-fills a support email with your app version and device info.
         </p>
         <div class="back-to-toc"><a href="#top">↑ Back to Top</a></div>
       </div>
@@ -322,6 +325,12 @@
           <li>
             <strong>Enhanced Data Import/Export</strong>: Full backup and
             restore including repeat ascent data
+          </li>
+          <li>
+            <strong>Anonymous Usage Statistics (optional)</strong>:
+            Privacy-preserving analytics that help improve SendLog — climbing
+            content, account information, and location data are never included;
+            on by default, disable anytime in Settings → Privacy
           </li>
           <li>
             <strong>Personalized Settings</strong>: Grade system, appearance,
@@ -1515,6 +1524,34 @@
           Enable or disable Firebase-based cloud sync, manage your signed-in
           Apple ID, or delete your cloud account. See
           <a href="#cloud-sync-and-web-dashboard">section 11</a> for details.
+        </p>
+
+        <h3>Privacy</h3>
+        <p>
+          <strong>Anonymous Usage Statistics</strong> toggle — SendLog collects
+          anonymous, privacy-preserving feature-usage statistics to help improve
+          the app. Climbing content, account information, and location data are
+          never included. The toggle takes effect immediately; no restart
+          needed.
+        </p>
+        <p>
+          <strong>Privacy Policy</strong> — opens the full privacy policy
+          (in-app, also available at
+          <a href="policy.html">sendlog.at → Terms &amp; Privacy</a>).
+        </p>
+        <p>
+          On first launch after updating you may see a one-time informational
+          banner about these statistics — tap <em>Learn More</em> to read the
+          policy, or dismiss it; you can change the setting anytime in
+          Settings → Privacy.
+        </p>
+
+        <h3>Get Support</h3>
+        <p>
+          Pre-fills an email to <a href="mailto:support@sendlog.at">support@sendlog.at</a>
+          with your app version, device/iOS version, sync status and climb count
+          — works offline; falls back to a copy-details dialog when no Mail
+          account is configured.
         </p>
 
         <h3>Data Management</h3>
