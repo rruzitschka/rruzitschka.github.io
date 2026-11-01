@@ -1298,6 +1298,9 @@ function bindStarPicker() {
 // Gym route types — gym name lives in the `crag` field (ADR 0005); gym
 // notes are hard-gated from the central route DB.
 const GYM_ROUTE_TYPES = new Set(["Gym", "Gym Boulder"]);
+/** Send types meaningful for rope climbing in a gym — pinkpoint/all free
+ * are outdoor-specific (gear/whole-free ascent). */
+const GYM_ROPE_SEND_TYPES = new Set(["redpoint", "on sight", "top rope"]);
 const ROPE_SEND_TYPES = new Set([
 	"redpoint",
 	"on sight",
@@ -1308,25 +1311,32 @@ const ROPE_SEND_TYPES = new Set([
 
 /** iOS GymSessionWizard parity: coerce the send type on a route-type switch
  * (boulder → Flash unless already boulder-native; rope → Redpoint unless
- * already rope-native). Project is never coerced. */
-function coerceSendTypeForRouteType(current, isBoulder) {
-	if (isBoulder && !BOULDER_SEND_TYPES.includes(current)) return "flash";
-	if (!isBoulder && !ROPE_SEND_TYPES.has(current)) return "redpoint";
-	return current;
+ * already rope-native). Project is never coerced. Gyms additionally drop
+ * pinkpoint/all free — they are meaningless indoors. */
+function coerceSendTypeForRouteType(current, routeType) {
+	if (BOULDER_ROUTE_TYPES.has(routeType))
+		return BOULDER_SEND_TYPES.includes(current) ? current : "flash";
+	if (GYM_ROUTE_TYPES.has(routeType))
+		return GYM_ROPE_SEND_TYPES.has(current) ? current : "redpoint";
+	return ROPE_SEND_TYPES.has(current) ? current : "redpoint";
 }
 
-/** Tab visibility: boulder shows Flash/Top, rope shows rope styles; a legacy
- * send type that matches no visible tab stays selectable (iOS keeps legacy
- * rope types selectable on boulder notes). */
-function syncStyleTabVisibility(current, isBoulder) {
+/** Tab visibility: boulder shows Flash/Top, rope shows rope styles (gyms
+ * without pinkpoint/all free); a legacy send type that matches no visible
+ * tab stays selectable (iOS keeps legacy types selectable on edits). */
+function syncStyleTabVisibility(current, routeType) {
+	const isBoulder = BOULDER_ROUTE_TYPES.has(routeType);
+	const isGym = GYM_ROUTE_TYPES.has(routeType);
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		const isBoulderTab =
-			tab.dataset.style === "Flash" || tab.dataset.style === "Top";
-		const matchesCurrent = canonicalizeSendType(tab.dataset.style) === current;
-		tab.classList.toggle(
-			"hidden",
-			!(isBoulderTab === isBoulder || matchesCurrent),
-		);
+		const style = tab.dataset.style;
+		const isBoulderTab = style === "Flash" || style === "Top";
+		const isOutdoorOnly =
+			style === "Pinkpoint" || style === "All Free";
+		const allowed = isBoulder
+			? isBoulderTab
+			: !isBoulderTab && !(isGym && isOutdoorOnly);
+		const matchesCurrent = canonicalizeSendType(style) === current;
+		tab.classList.toggle("hidden", !(allowed || matchesCurrent));
 	});
 }
 
@@ -1340,8 +1350,8 @@ function syncStyleTabVisibility(current, isBoulder) {
 function syncSendOverlayForRouteType(normalize = false) {
 	const routeType = document.getElementById("so-routetype").value;
 	const isGym = GYM_ROUTE_TYPES.has(routeType);
-	const isBoulder = BOULDER_ROUTE_TYPES.includes(routeType);
-	// Gym notes use the crag field for the gym name (ADR 0005)
+	// Gym notes use the crag field for the gym name (ADR 0005); area and
+	// country belong to the central route DB, which gym notes never touch.
 	document.getElementById("so-crag-label").textContent = isGym
 		? "Gym"
 		: "Crag";
@@ -1351,19 +1361,22 @@ function syncSendOverlayForRouteType(normalize = false) {
 	document
 		.getElementById("so-area-group")
 		.classList.toggle("hidden", isGym);
+	document
+		.getElementById("so-country-group")
+		.classList.toggle("hidden", isGym);
 
 	let current = canonicalizeSendType(
 		document.getElementById("so-sendtype").value,
 	);
 	if (normalize && current !== "project") {
-		const next = coerceSendTypeForRouteType(current, isBoulder);
+		const next = coerceSendTypeForRouteType(current, routeType);
 		if (next !== current) {
 			current = next;
 			setStylePill(normalizeSendType(next));
 		}
 	}
 
-	syncStyleTabVisibility(current, isBoulder);
+	syncStyleTabVisibility(current, routeType);
 }
 
 function setStylePill(value) {
@@ -1377,7 +1390,17 @@ function setStylePill(value) {
 		Top: "active-tp",
 	};
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		tab.className = "style-tab";
+		// Only reset the active state — `className = ...` would also strip the
+		// hidden class that route-type visibility sync relies on.
+		tab.classList.remove(
+			"active-rp",
+			"active-os",
+			"active-tr",
+			"active-af",
+			"active-pk",
+			"active-fl",
+			"active-tp",
+		);
 		if (tab.dataset.style === value) tab.classList.add(styleMap[value] ?? "");
 	});
 	const hidden = document.getElementById("so-sendtype");

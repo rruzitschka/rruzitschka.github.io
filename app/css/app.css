@@ -1992,6 +1992,16 @@ body {
 	background: #eff6ff;
 	color: #1d4ed8;
 }
+.style-tab.active-tr {
+	border-color: #6366f1;
+	background: #eef2ff;
+	color: #4f46e5;
+}
+.style-tab.active-af {
+	border-color: #8b5cf6;
+	background: #f5f3ff;
+	color: #7c3aed;
+}
 .style-tab.active-fl {
 	border-color: #f59e0b;
 	background: #fffbeb;
