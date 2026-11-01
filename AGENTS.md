@@ -1,5 +1,12 @@
 # SendLog Web App — Agent Instructions
 
+## Internal Documentation
+
+- **`docs/codebase/`** is the canonical dev reference (STACK, STRUCTURE,
+  ARCHITECTURE, CONVENTIONS, INTEGRATIONS, TESTING, CONCERNS) — keep it
+  current: **update after every push** whenever code, dependencies, commands,
+  or conventions changed.
+
 ## CodeScene
 
 - After changing code, run `code_health_review` on the changed files. If Code Health drops, fix the issues, run the review again, and use `code_health_score` to confirm the result.
