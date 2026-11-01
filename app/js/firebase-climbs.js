@@ -215,10 +215,10 @@ export async function fetchAllClimbAscents(climbs) {
 	);
 }
 
-export async function saveClimbNote(note) {
-	const user = getCurrentUser();
-	if (!user) throw new Error("Not signed in");
-	const id = (note.id ?? note.recordName ?? crypto.randomUUID()).toUpperCase();
+/** Builds the Firestore doc for a climb note save. Pure — testable without
+ * Firestore. Date handling: present → Timestamp; explicitly cleared (null/
+ * empty string) → null so date-sorted queries keep including the note. */
+function buildClimbNoteDoc(id, note) {
 	const docData = {
 		id,
 		route: note.route ?? "",
@@ -234,6 +234,7 @@ export async function saveClimbNote(note) {
 		updatedAt: serverTimestamp(),
 	};
 	if (note.date) docData.date = Timestamp.fromDate(new Date(note.date));
+	else if (note.date !== undefined) docData.date = null;
 	if (note.lastAttemptDate)
 		docData.lastAttemptDate = Timestamp.fromDate(
 			new Date(note.lastAttemptDate),
@@ -243,9 +244,18 @@ export async function saveClimbNote(note) {
 	if (note.projectNotes) docData.projectNotes = note.projectNotes;
 	if (note.highPoint) docData.highPoint = note.highPoint;
 	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
-	await setDoc(doc(db, `users/${user.uid}/climbNotes/${id}`), docData, {
-		merge: true,
-	});
+	return docData;
+}
+
+export async function saveClimbNote(note) {
+	const user = getCurrentUser();
+	if (!user) throw new Error("Not signed in");
+	const id = (note.id ?? note.recordName ?? crypto.randomUUID()).toUpperCase();
+	await setDoc(
+		doc(db, `users/${user.uid}/climbNotes/${id}`),
+		buildClimbNoteDoc(id, note),
+		{ merge: true },
+	);
 	return id;
 }
 

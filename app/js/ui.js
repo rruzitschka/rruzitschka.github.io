@@ -365,6 +365,7 @@ function showDetailModal(climb) {
         <div style="font-weight:600;margin-bottom:0.5rem">Project Details</div>
         <table style="width:100%;border-collapse:collapse;font-size:0.93rem">
           ${climb.projectStatus ? `<tr><td style="padding:0.3rem 0;color:#64748b;width:40%">Status</td><td>${escapeHtml(climb.projectStatus.charAt(0).toUpperCase() + climb.projectStatus.slice(1))}</td></tr>` : ""}
+          ${climb.date ? `<tr><td style="padding:0.3rem 0;color:#64748b">First Attempt</td><td>${formatDate(climb.date)}</td></tr>` : ""}
           ${climb.highPoint ? `<tr><td style="padding:0.3rem 0;color:#64748b">High Point</td><td>${escapeHtml(String(climb.highPoint))}</td></tr>` : ""}
           ${climb.lastAttemptDate ? `<tr><td style="padding:0.3rem 0;color:#64748b">Last Attempt</td><td>${formatDate(climb.lastAttemptDate)}</td></tr>` : ""}
           ${climb.attemptCount ? `<tr><td style="padding:0.3rem 0;color:#64748b">Attempts</td><td>${climb.attemptCount}</td></tr>` : ""}
@@ -629,7 +630,7 @@ function bindFilterHandlers(initialClimbs) {
 
 		// Apply sidebar view filter on top
 		if (activeView === "projects")
-			filtered = filtered.filter((c) => !!c.isProject);
+			filtered = filtered.filter((c) => Boolean(c.isProject));
 		else if (activeView === "sent")
 			filtered = filtered.filter((c) => !c.isProject);
 
@@ -1653,6 +1654,10 @@ function showAddProjectOverlay() {
 	initGradePicker(document.getElementById("po-difficulty"), null);
 	document.getElementById("po-routetype").value = "Sport";
 	document.getElementById("po-attempts").value = "0";
+	// iOS parity: a new project's date is its first attempt (default today).
+	document.getElementById("po-date").value = new Date()
+		.toISOString()
+		.slice(0, 10);
 	document.getElementById("po-last-attempt-date").value = "";
 	document.getElementById("po-highpoint").value = "";
 	document.getElementById("po-status").value = "active";
@@ -1678,6 +1683,9 @@ function showEditProjectOverlay(climb) {
 	);
 	document.getElementById("po-routetype").value = climb.routeType ?? "Sport";
 	document.getElementById("po-attempts").value = climb.attemptCount ?? 0;
+	document.getElementById("po-date").value = climb.date
+		? climb.date.toISOString().slice(0, 10)
+		: "";
 	document.getElementById("po-last-attempt-date").value = climb.lastAttemptDate
 		? climb.lastAttemptDate.toISOString().slice(0, 10)
 		: "";
@@ -2087,6 +2095,7 @@ function bindProjectOverlayHandlers() {
 				const lastAttemptVal = document.getElementById(
 					"po-last-attempt-date",
 				).value;
+				const poDateVal = document.getElementById("po-date").value;
 
 				const centralID = await _maybeCreateCentralRoute("po", routeVal);
 
@@ -2098,6 +2107,7 @@ function bindProjectOverlayHandlers() {
 					crag: document.getElementById("po-crag").value.trim() || null,
 					difficulty: document.getElementById("po-difficulty").value || null,
 					sendType: "Project",
+					date: poDateVal ? new Date(poDateVal) : null,
 					routeType: document.getElementById("po-routetype").value,
 					attemptCount:
 						Number(document.getElementById("po-attempts").value) || 0,
