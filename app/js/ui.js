@@ -2242,7 +2242,7 @@ function showTrainingDetailModal(session) {
 	</table>
 	`;
 
-	html += buildRoutesSectionHtml(session.routes);
+	html += buildRoutesSectionHtml(session.routes, escapeHtml);
 
 	if (session.type === GYM_SESSION_TYPE) {
 		html += `<div style="margin-bottom:1.25rem;font-size:0.85rem;color:#64748b">Attached sends: <strong id="session-send-count">…</strong></div>`;

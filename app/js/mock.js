@@ -291,13 +291,13 @@ const MOCK_SESSIONS = [
   { recordName: 'mock-ts-5',  id: 'ts-5',  date: new Date('2026-03-05'), type: 'Yoga',         duration: 60,  intensity: 2, notes: 'Recovery day.' },
   { recordName: 'mock-ts-6',  id: 'ts-6',  date: new Date('2026-02-28'), type: 'Gym Session',  duration: 90,  intensity: 4, notes: null },
   { recordName: 'mock-ts-7',  id: 'ts-7',  date: new Date('2026-02-20'), type: 'Hangboard',    duration: 45,  intensity: 4, notes: 'Added pinches this week.' },
-  { recordName: 'mock-ts-8',  id: 'ts-8',  date: new Date('2026-02-14'), type: 'Running',      duration: 40,  intensity: 3, notes: '6km easy pace.' },
+  { recordName: 'mock-ts-8',  id: 'ts-8',  date: new Date('2026-02-14'), type: 'Cardio',      duration: 40,  intensity: 3, notes: '6km easy pace.' },
   { recordName: 'mock-ts-9',  id: 'ts-9',  date: new Date('2026-02-08'), type: 'Gym Session',  duration: 100, intensity: 4, notes: 'Good power endurance circuit.' },
   { recordName: 'mock-ts-10', id: 'ts-10', date: new Date('2026-01-30'), type: 'Campus Board', duration: 35,  intensity: 5, notes: 'Moving on rungs 1-4-7.' },
   { recordName: 'mock-ts-11', id: 'ts-11', date: new Date('2026-01-22'), type: 'Yoga',         duration: 55,  intensity: 2, notes: 'Hip opening focus.' },
   { recordName: 'mock-ts-12', id: 'ts-12', date: new Date('2026-01-15'), type: 'Hangboard',    duration: 45,  intensity: 3, notes: 'Volume day, high reps.' },
   { recordName: 'mock-ts-13', id: 'ts-13', date: new Date('2026-01-08'), type: 'Gym Session',  duration: 110, intensity: 3, notes: null },
-  { recordName: 'mock-ts-14', id: 'ts-14', date: new Date('2025-12-20'), type: 'Running',      duration: 50,  intensity: 3, notes: '8km base building.' },
+  { recordName: 'mock-ts-14', id: 'ts-14', date: new Date('2025-12-20'), type: 'Cardio',      duration: 50,  intensity: 3, notes: '8km base building.' },
 ];
 
 const MOCK_API_KEYS = [
