@@ -3,7 +3,10 @@
  * warm-up routes table (DOM-free string builder).
  */
 import { describe, it, expect } from "vitest";
-import { buildRoutesSectionHtml } from "../app/js/route-line-ui.js";
+import {
+	buildRoutesSectionHtml,
+	buildSessionSendsHtml,
+} from "../app/js/route-line-ui.js";
 
 const escapeHtml = (s) =>
 	String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -35,5 +38,36 @@ describe("buildRoutesSectionHtml", () => {
 		);
 		expect(html).not.toContain("<script>");
 		expect(html).toContain("&lt;script&gt;");
+	});
+});
+
+describe("buildSessionSendsHtml", () => {
+	it("returns empty string when there are no sends", () => {
+		expect(buildSessionSendsHtml(null, escapeHtml)).toBe("");
+		expect(buildSessionSendsHtml([], escapeHtml)).toBe("");
+	});
+
+	it("renders one row per attached send", () => {
+		const html = buildSessionSendsHtml(
+			[
+				{
+					route: "Yellow Rodilla",
+					difficulty: "6b",
+					sendType: "Flash",
+				},
+			],
+			escapeHtml,
+		);
+		expect(html).toContain("Attached Sends");
+		expect(html).toContain("Yellow Rodilla");
+		expect(html).toContain("6b · Flash");
+	});
+
+	it("escapes route names", () => {
+		const html = buildSessionSendsHtml(
+			[{ route: "<img>", difficulty: "6b", sendType: "Top" }],
+			escapeHtml,
+		);
+		expect(html).not.toContain("<img>");
 	});
 });

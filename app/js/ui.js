@@ -65,6 +65,7 @@ import {
 	setGymFields,
 	gymSessionFieldsForSave,
 	buildRoutesSectionHtml,
+	buildSessionSendsHtml,
 } from "./route-line-ui.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
@@ -2183,21 +2184,25 @@ function setIntensity(value) {
 
 const GYM_SESSION_TYPE = "Gym Session";
 
-// Gym session whose detail modal is showing the attached-sends line
+// Gym session whose detail modal is showing the attached-sends section
 // (fetched lazily once the modal markup is in the DOM).
 let pendingSendCountSession = null;
 
-/** Fills the attached-sends placeholder in the open session detail modal.
- * sessionID links are authoritative — any same-day check is iOS-only at
- * attach time. */
-async function updateSessionSendCount(sessionId) {
-	const el = document.getElementById("session-send-count");
-	if (!el) return;
+/** Fills the attached-sends section in the open session detail modal with
+ * the linked climbs. sessionID links are authoritative — any same-day check
+ * is iOS-only at attach time. */
+async function updateSessionSends(sessionId) {
+	const section = document.getElementById("session-sends-section");
+	if (!section || !section.isConnected) return;
 	try {
 		const sends = await fetchSessionSends(sessionId);
-		el.textContent = String(sends.length);
+		if (!section.isConnected) return; // modal closed while fetching
+		section.innerHTML = sends.length
+			? buildSessionSendsHtml(sends, escapeHtml)
+			: `<div style="font-size:0.85rem;color:#64748b">No attached sends yet — link gym sends to this session in the iOS app.</div>`;
 	} catch {
-		el.textContent = "—";
+		if (section.isConnected)
+			section.innerHTML = `<div style="font-size:0.85rem;color:#64748b">Attached sends: —</div>`;
 	}
 }
 
@@ -2245,7 +2250,7 @@ function showTrainingDetailModal(session) {
 	html += buildRoutesSectionHtml(session.routes, escapeHtml);
 
 	if (session.type === GYM_SESSION_TYPE) {
-		html += `<div style="margin-bottom:1.25rem;font-size:0.85rem;color:#64748b">Attached sends: <strong id="session-send-count">…</strong></div>`;
+		html += `<div id="session-sends-section" style="margin-bottom:1.25rem;font-size:0.85rem;color:#64748b">Attached sends: …</div>`;
 		pendingSendCountSession = session;
 	}
 
@@ -2267,7 +2272,7 @@ function showTrainingDetailModal(session) {
 	document.body.style.overflow = "hidden";
 
 	if (pendingSendCountSession) {
-		updateSessionSendCount(pendingSendCountSession.id);
+		updateSessionSends(pendingSendCountSession.id);
 		pendingSendCountSession = null;
 	}
 

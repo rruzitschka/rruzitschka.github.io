@@ -80,6 +80,24 @@ export function gymSessionFieldsForSave(type) {
 	};
 }
 
+/** Detail-modal HTML for the sends attached to a gym session (empty when
+ * none — the caller decides how to render that case). */
+export function buildSessionSendsHtml(sends, escapeHtml) {
+	if (!sends?.length) return "";
+	const rows = sends
+		.map(
+			(s) =>
+				`<tr><td style="padding:0.2rem 0">${escapeHtml(s.route)}</td><td style="padding:0.2rem 0;color:#64748b">${escapeHtml(s.difficulty)} · ${escapeHtml(s.sendType ?? "")}</td></tr>`,
+		)
+		.join("");
+	return `
+	<div style="font-weight:600;margin-bottom:0.35rem">Attached Sends</div>
+	<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem">
+		<table style="width:100%;border-collapse:collapse;font-size:0.93rem">${rows}</table>
+	</div>
+	`;
+}
+
 /** Detail-modal HTML for the warm-up routes table (empty when none). */
 export function buildRoutesSectionHtml(routes, escapeHtml) {
 	if (!routes?.length) return "";
