@@ -6,6 +6,10 @@ import {
 	fetchClimbs as $fetchClimbs,
 	fetchAscents as $fetchAscents,
 	fetchSessionSends as $fetchSessionSends,
+	canonicalizeSendType,
+	normalizeSendType,
+	BOULDER_ROUTE_TYPES,
+	BOULDER_SEND_TYPES,
 	saveClimbNote as $saveClimbNote,
 	deleteClimbNote as $deleteClimbNote,
 	saveAscent as $saveAscent,
@@ -1289,6 +1293,71 @@ function bindStarPicker() {
 	});
 }
 
+// Gym route types — gym name lives in the `crag` field (ADR 0005); gym
+// notes are hard-gated from the central route DB.
+const GYM_ROUTE_TYPES = ["Gym", "Gym Boulder"];
+const ROPE_SEND_TYPES = ["redpoint", "on sight", "top rope", "all free", "pinkpoint"];
+
+/** iOS GymSessionWizard parity: coerce the send type on a route-type switch
+ * (boulder → Flash unless already boulder-native; rope → Redpoint unless
+ * already rope-native). Project is never coerced. */
+function coerceSendTypeForRouteType(current, isBoulder) {
+	if (isBoulder && !BOULDER_SEND_TYPES.includes(current)) return "flash";
+	if (!isBoulder && !ROPE_SEND_TYPES.includes(current)) return "redpoint";
+	return current;
+}
+
+/** Tab visibility: boulder shows Flash/Top, rope shows rope styles; a legacy
+ * send type that matches no visible tab stays selectable (iOS keeps legacy
+ * rope types selectable on boulder notes). */
+function syncStyleTabVisibility(current, isBoulder) {
+	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
+		const isBoulderTab =
+			tab.dataset.style === "Flash" || tab.dataset.style === "Top";
+		const matchesCurrent = canonicalizeSendType(tab.dataset.style) === current;
+		tab.classList.toggle(
+			"hidden",
+			!(isBoulderTab === isBoulder || matchesCurrent),
+		);
+	});
+}
+
+/**
+ * Syncs the send overlay's gym-sensitive UI to the selected route type:
+ * Crag label ↔ Gym (+ hide the climbing-area field), and which send-type
+ * tabs are visible. With `normalize` (user type switch), the send type is
+ * coerced like iOS. Legacy send types on existing notes are preserved and
+ * their tab kept visible.
+ */
+function syncSendOverlayForRouteType(normalize = false) {
+	const routeType = document.getElementById("so-routetype").value;
+	const isGym = GYM_ROUTE_TYPES.includes(routeType);
+	const isBoulder = BOULDER_ROUTE_TYPES.includes(routeType);
+	// Gym notes use the crag field for the gym name (ADR 0005)
+	document.getElementById("so-crag-label").textContent = isGym
+		? "Gym"
+		: "Crag";
+	document.getElementById("so-crag").placeholder = isGym
+		? "e.g. Boulderhalle Wien"
+		: "e.g. La Face";
+	document
+		.getElementById("so-area-group")
+		.classList.toggle("hidden", isGym);
+
+	let current = canonicalizeSendType(
+		document.getElementById("so-sendtype").value,
+	);
+	if (normalize && current !== "project") {
+		const next = coerceSendTypeForRouteType(current, isBoulder);
+		if (next !== current) {
+			current = next;
+			setStylePill(normalizeSendType(next));
+		}
+	}
+
+	syncStyleTabVisibility(current, isBoulder);
+}
+
 function setStylePill(value) {
 	const styleMap = {
 		Redpoint: "active-rp",
@@ -1296,6 +1365,8 @@ function setStylePill(value) {
 		"Top Rope": "active-tr",
 		"All Free": "active-af",
 		Pinkpoint: "active-pk",
+		Flash: "active-fl",
+		Top: "active-tp",
 	};
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
 		tab.className = "style-tab";
@@ -1494,6 +1565,7 @@ function showAddSendOverlay(prefill = {}) {
 	document.getElementById("so-notes").value = "";
 	setStarRating(0);
 	setStylePill("Redpoint");
+	syncSendOverlayForRouteType();
 	document.getElementById("so-ascents-section").classList.add("hidden");
 	document.getElementById("so-ascent-form").classList.add("hidden");
 	document.getElementById("so-ascent-toggle").textContent = "+ Add";
@@ -1544,6 +1616,7 @@ function showEditSendOverlay(climb) {
 	document.getElementById("so-notes").value = climb.noteText ?? "";
 	setStarRating(climb.rating ?? 0);
 	setStylePill(climb.sendType ?? "Redpoint");
+	syncSendOverlayForRouteType();
 	document.getElementById("so-ascents-section").classList.remove("hidden");
 	document.getElementById("send-overlay-delete").classList.remove("hidden");
 	renderAscentsList(climb);
@@ -1795,7 +1868,9 @@ async function _maybeCreateCentralRoute(fieldPrefix, routeVal) {
 }
 
 /** Propagates overlay field edits back to central route if the current user is the creator. */
-function _maybePropagateToRoute(centralID, fieldPrefix, routeVal) {
+function _maybePropagateToRoute(centralID, fieldPrefix, routeVal, isGym = false) {
+	// Gym notes never write back to the central route DB (ADR 0005).
+	if (isGym) return;
 	if (!centralID || _centralRouteCreatedBy !== auth.currentUser?.uid) return;
 	const p = fieldPrefix;
 	updateCentralRoute(centralID, {
@@ -1811,6 +1886,32 @@ function _maybePropagateToRoute(centralID, fieldPrefix, routeVal) {
 	});
 }
 
+/** Adds an ascent from the send overlay's inline ascent form. */
+async function submitAscentFromOverlay() {
+	const climbRecordName = document.getElementById("so-record-name").value;
+	if (!climbRecordName) return;
+	const dateVal = document.getElementById("so-ascent-date").value;
+	const typeVal = document.getElementById("so-ascent-type").value;
+	const notesVal = document.getElementById("so-ascent-notes").value.trim();
+	try {
+		await saveAscent({
+			id: crypto.randomUUID(),
+			date: dateVal ? new Date(dateVal) : new Date(),
+			sendType: typeVal,
+			notes: notesVal || null,
+			climbNoteRecordName: climbRecordName,
+		});
+		document.getElementById("so-ascent-date").value = "";
+		document.getElementById("so-ascent-notes").value = "";
+		document.getElementById("so-ascent-form").classList.add("hidden");
+		document.getElementById("so-ascent-toggle").textContent = "+ Add";
+		await loadData();
+		await renderAscentsList({ recordName: climbRecordName });
+	} catch (err) {
+		alert("Add ascent failed: " + (err.message ?? err));
+	}
+}
+
 function bindSendOverlayHandlers() {
 	const closeOverlay = bindOverlayCommon({
 		overlayId: "send-overlay",
@@ -1821,6 +1922,10 @@ function bindSendOverlayHandlers() {
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
 		tab.addEventListener("click", () => setStylePill(tab.dataset.style));
 	});
+
+	document
+		.getElementById("so-routetype")
+		.addEventListener("change", () => syncSendOverlayForRouteType(true));
 
 	document
 		.getElementById("send-overlay-save")
@@ -1843,7 +1948,15 @@ function bindSendOverlayHandlers() {
 				const projectRecordName =
 					document.getElementById("send-overlay").dataset.projectRecordName;
 
-				const centralID = await _maybeCreateCentralRoute("so", routeVal);
+				const routeTypeVal = document.getElementById("so-routetype").value;
+				const isGym = GYM_ROUTE_TYPES.includes(routeTypeVal);
+				// Gym notes are hard-gated from the central route DB (ADR 0005):
+				// no central doc creation, no link (a converted note's link is
+				// cleared), no rating/counter writes.
+				if (isGym) _pendingNewCentralRoute = null;
+				const centralID = isGym
+					? null
+					: await _maybeCreateCentralRoute("so", routeVal);
 
 				await saveClimbNote({
 					recordName,
@@ -1856,7 +1969,7 @@ function bindSendOverlayHandlers() {
 						? new Date(document.getElementById("so-date").value)
 						: null,
 					sendType: document.getElementById("so-sendtype").value,
-					routeType: document.getElementById("so-routetype").value,
+					routeType: routeTypeVal,
 					rating: currentStarRating,
 					reportedRating:
 						centralID && currentStarRating > 0 ? currentStarRating : 0,
@@ -1865,8 +1978,9 @@ function bindSendOverlayHandlers() {
 				});
 
 				// Community rating — new sends (previousRating = 0) handled in block above;
-				// edits use delta logic based on link state
-				if (recordName) {
+				// edits use delta logic based on link state. Gym notes never write
+				// to routes/ (ADR 0005).
+				if (recordName && !isGym) {
 					const sameRoute = centralID && centralID === _originalCentralRouteID;
 					const linkCleared = !centralID && Boolean(_originalCentralRouteID);
 					const newLink = Boolean(centralID) && !sameRoute;
@@ -1885,7 +1999,7 @@ function bindSendOverlayHandlers() {
 					}
 				}
 
-				_maybePropagateToRoute(centralID, "so", routeVal);
+				_maybePropagateToRoute(centralID, "so", routeVal, isGym);
 
 				if (centralID) {
 					if (projectRecordName) {
@@ -1936,30 +2050,7 @@ function bindSendOverlayHandlers() {
 
 	document
 		.getElementById("so-ascent-add")
-		.addEventListener("click", async function () {
-			const climbRecordName = document.getElementById("so-record-name").value;
-			if (!climbRecordName) return;
-			const dateVal = document.getElementById("so-ascent-date").value;
-			const typeVal = document.getElementById("so-ascent-type").value;
-			const notesVal = document.getElementById("so-ascent-notes").value.trim();
-			try {
-				await saveAscent({
-					id: crypto.randomUUID(),
-					date: dateVal ? new Date(dateVal) : new Date(),
-					sendType: typeVal,
-					notes: notesVal || null,
-					climbNoteRecordName: climbRecordName,
-				});
-				document.getElementById("so-ascent-date").value = "";
-				document.getElementById("so-ascent-notes").value = "";
-				document.getElementById("so-ascent-form").classList.add("hidden");
-				document.getElementById("so-ascent-toggle").textContent = "+ Add";
-				await loadData();
-				await renderAscentsList({ recordName: climbRecordName });
-			} catch (err) {
-				alert("Add ascent failed: " + (err.message ?? err));
-			}
-		});
+		.addEventListener("click", submitAscentFromOverlay);
 
 	document
 		.getElementById("btn-log-send")

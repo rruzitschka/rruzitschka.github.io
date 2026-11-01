@@ -142,6 +142,8 @@
                 <option value="All Free">All Free</option>
                 <option value="Pinkpoint">Pinkpoint</option>
                 <option value="Project">Project</option>
+                <option value="Flash">Flash</option>
+                <option value="Top">Top</option>
               </select>
               <select id="filter-routetype">
                 <option value="">All Types</option>
@@ -541,12 +543,12 @@
               </div>
             </div>
             <div class="form-row-2">
-              <div class="form-group">
+              <div class="form-group" id="so-area-group">
                 <label for="so-area">Area</label>
                 <input type="text" id="so-area" placeholder="e.g. Ceüse" />
               </div>
               <div class="form-group">
-                <label for="so-crag">Crag</label>
+                <label for="so-crag" id="so-crag-label">Crag</label>
                 <input type="text" id="so-crag" placeholder="e.g. La Face" />
               </div>
             </div>
@@ -573,6 +575,8 @@
                   <option>Boulder</option>
                   <option>Multi-Pitch</option>
                   <option>Trad</option>
+                  <option>Gym</option>
+                  <option>Gym Boulder</option>
                 </select>
               </div>
             </div>
@@ -592,6 +596,8 @@
                 <div class="style-tab" data-style="Top Rope">Top Rope</div>
                 <div class="style-tab" data-style="All Free">All Free</div>
                 <div class="style-tab" data-style="Pinkpoint">Pinkpoint</div>
+                <div class="style-tab hidden" data-style="Flash">Flash</div>
+                <div class="style-tab hidden" data-style="Top">Top</div>
               </div>
               <input type="hidden" id="so-sendtype" value="Redpoint" />
             </div>

@@ -33,8 +33,10 @@ const SEND_TYPE_NORMALIZE = {
 	allfree: "All Free",
 	project: "Project",
 	pinkpoint: "Pinkpoint",
+	flash: "Flash",
+	top: "Top",
 };
-function normalizeSendType(raw) {
+export function normalizeSendType(raw) {
 	return SEND_TYPE_NORMALIZE[raw?.toLowerCase()] ?? raw ?? "Redpoint";
 }
 
@@ -46,11 +48,19 @@ const SEND_TYPE_CANONICAL = {
 	"All Free": "all free",
 	Project: "project",
 	Pinkpoint: "pinkpoint",
+	Flash: "flash",
+	Top: "top",
 };
 /** Convert a display-facing Title Case sendType to the lowercase value stored in Firestore. */
-function canonicalizeSendType(raw) {
+export function canonicalizeSendType(raw) {
 	return SEND_TYPE_CANONICAL[raw] ?? raw?.toLowerCase() ?? "redpoint";
 }
+
+/** Route types whose sends use the boulder-native send types (flash / top).
+ * Mirrors the iOS boulderSendTypes behaviour. */
+export const BOULDER_ROUTE_TYPES = ["Boulder", "Gym Boulder"];
+/** Send types that are native to boulder logging (lowercase, iOS-native). */
+export const BOULDER_SEND_TYPES = ["flash", "top"];
 
 // Canonical Firestore format for projectStatus (lowercase, iOS-native).
 // Web uses different vocabulary (Working/Close/Abandoned); this maps to iOS values.
