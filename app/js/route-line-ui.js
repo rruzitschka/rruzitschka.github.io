@@ -7,13 +7,19 @@
 
 const GYM_SESSION_TYPE = "Gym Session";
 
-/** Shows/hides the gym-only fields; only "Gym Session" gets them (iOS parity). */
+/** Shows/hides the gym-only fields; only "Gym Session" gets them (iOS parity).
+ * Optional chaining: a cached old index.html paired with fresh JS (deploy
+ * skew) must never throw and break the training overlay. */
 export function syncGymFieldVisibility() {
-	const isGym = document.getElementById("to-type").value === GYM_SESSION_TYPE;
-	document.getElementById("to-gym-group").classList.toggle("hidden", !isGym);
+	const typeSelect = document.getElementById("to-type");
+	if (!typeSelect) return;
+	const isGym = typeSelect.value === GYM_SESSION_TYPE;
+	document
+		.getElementById("to-gym-group")
+		?.classList.toggle("hidden", !isGym);
 	document
 		.getElementById("to-routes-group")
-		.classList.toggle("hidden", !isGym);
+		?.classList.toggle("hidden", !isGym);
 }
 
 /** Renders one route-line row (grade, Lead/Top-rope, Sent/Failed). */

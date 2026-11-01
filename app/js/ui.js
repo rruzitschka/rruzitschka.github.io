@@ -1347,23 +1347,29 @@ function syncStyleTabVisibility(current, routeType) {
  * coerced like iOS. Legacy send types on existing notes are preserved and
  * their tab kept visible.
  */
+/** Gym notes use the crag field for the gym name (ADR 0005); guarded so a
+ * missing element (deploy skew) cannot throw. */
+function syncCragFieldForGym(isGym) {
+	const cragLabel = document.getElementById("so-crag-label");
+	if (cragLabel) cragLabel.textContent = isGym ? "Gym" : "Crag";
+	const cragInput = document.getElementById("so-crag");
+	if (cragInput)
+		cragInput.placeholder = isGym
+			? "e.g. Boulderhalle Wien"
+			: "e.g. La Face";
+}
+
 function syncSendOverlayForRouteType(normalize = false) {
 	const routeType = document.getElementById("so-routetype").value;
 	const isGym = GYM_ROUTE_TYPES.has(routeType);
-	// Gym notes use the crag field for the gym name (ADR 0005); area and
-	// country belong to the central route DB, which gym notes never touch.
-	document.getElementById("so-crag-label").textContent = isGym
-		? "Gym"
-		: "Crag";
-	document.getElementById("so-crag").placeholder = isGym
-		? "e.g. Boulderhalle Wien"
-		: "e.g. La Face";
-	document
-		.getElementById("so-area-group")
-		.classList.toggle("hidden", isGym);
+	// Area and country belong to the central route DB, which gym notes never
+	// touch (ADR 0005). Optional chaining: a cached old index.html paired
+	// with fresh JS (deploy skew) must never throw and kill the overlay.
+	syncCragFieldForGym(isGym);
+	document.getElementById("so-area-group")?.classList.toggle("hidden", isGym);
 	document
 		.getElementById("so-country-group")
-		.classList.toggle("hidden", isGym);
+		?.classList.toggle("hidden", isGym);
 
 	let current = canonicalizeSendType(
 		document.getElementById("so-sendtype").value,
