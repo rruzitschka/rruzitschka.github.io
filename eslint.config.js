@@ -44,6 +44,7 @@ export default [
       'app/js/admin.js',
       'app/js/iso-countries.js',
       'app/js/route-entries.js',
+      'app/js/send-style.js',
       'app/js/overlay-country.js',
       'app/js/route-link-ui.js',
       'app/js/route-line-ui.js',

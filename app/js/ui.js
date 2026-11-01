@@ -8,8 +8,6 @@ import {
 	fetchSessionSends as $fetchSessionSends,
 	canonicalizeSendType,
 	normalizeSendType,
-	BOULDER_ROUTE_TYPES,
-	BOULDER_SEND_TYPES,
 	saveClimbNote as $saveClimbNote,
 	deleteClimbNote as $deleteClimbNote,
 	saveAscent as $saveAscent,
@@ -67,6 +65,11 @@ import {
 	buildRoutesSectionHtml,
 	buildSessionSendsHtml,
 } from "./route-line-ui.js";
+import {
+	GYM_ROUTE_TYPES,
+	coerceSendTypeForRouteType,
+	isStyleTabHidden,
+} from "./send-style.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -1295,48 +1298,18 @@ function bindStarPicker() {
 	});
 }
 
-// Gym route types — gym name lives in the `crag` field (ADR 0005); gym
-// notes are hard-gated from the central route DB.
-const GYM_ROUTE_TYPES = new Set(["Gym", "Gym Boulder"]);
-/** Send types meaningful for rope climbing in a gym — pinkpoint/all free
- * are outdoor-specific (gear/whole-free ascent). */
-const GYM_ROPE_SEND_TYPES = new Set(["redpoint", "on sight", "top rope"]);
-const ROPE_SEND_TYPES = new Set([
-	"redpoint",
-	"on sight",
-	"top rope",
-	"all free",
-	"pinkpoint",
-]);
-
-/** iOS GymSessionWizard parity: coerce the send type on a route-type switch
- * (boulder → Flash unless already boulder-native; rope → Redpoint unless
- * already rope-native). Project is never coerced. Gyms additionally drop
- * pinkpoint/all free — they are meaningless indoors. */
-function coerceSendTypeForRouteType(current, routeType) {
-	if (BOULDER_ROUTE_TYPES.has(routeType))
-		return BOULDER_SEND_TYPES.includes(current) ? current : "flash";
-	if (GYM_ROUTE_TYPES.has(routeType))
-		return GYM_ROPE_SEND_TYPES.has(current) ? current : "redpoint";
-	return ROPE_SEND_TYPES.has(current) ? current : "redpoint";
-}
+// Gym route types and send-type coercion/visibility rules live in the pure
+// send-style.js module (unit-tested) — ui.js only applies them to the DOM.
 
 /** Tab visibility: boulder shows Flash/Top, rope shows rope styles (gyms
  * without pinkpoint/all free); a legacy send type that matches no visible
  * tab stays selectable (iOS keeps legacy types selectable on edits). */
 function syncStyleTabVisibility(current, routeType) {
-	const isBoulder = BOULDER_ROUTE_TYPES.has(routeType);
-	const isGym = GYM_ROUTE_TYPES.has(routeType);
 	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		const style = tab.dataset.style;
-		const isBoulderTab = style === "Flash" || style === "Top";
-		const isOutdoorOnly =
-			style === "Pinkpoint" || style === "All Free";
-		const allowed = isBoulder
-			? isBoulderTab
-			: !isBoulderTab && !(isGym && isOutdoorOnly);
-		const matchesCurrent = canonicalizeSendType(style) === current;
-		tab.classList.toggle("hidden", !(allowed || matchesCurrent));
+		tab.classList.toggle(
+			"hidden",
+			isStyleTabHidden(tab.dataset.style, current, routeType),
+		);
 	});
 }
 

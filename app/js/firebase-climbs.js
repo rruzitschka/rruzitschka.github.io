@@ -20,47 +20,17 @@ import { getCurrentUser } from "./firebase-auth.js";
 // recordName for ascents is encoded as "noteId/ascentId" so deleteAscent
 // can reconstruct the Firestore sub-collection path without a noteId parameter.
 
-// iOS stores sendType as lowercase; web UI expects Title Case.
-// Firestore canonical format is lowercase (iOS-native). The web normalises
-// Title Case → lowercase before every write so both clients stay consistent.
-const SEND_TYPE_NORMALIZE = {
-	redpoint: "Redpoint",
-	onsight: "On Sight",
-	"on sight": "On Sight",
-	"top rope": "Top Rope",
-	toprope: "Top Rope",
-	"all free": "All Free",
-	allfree: "All Free",
-	project: "Project",
-	pinkpoint: "Pinkpoint",
-	flash: "Flash",
-	top: "Top",
-};
-export function normalizeSendType(raw) {
-	return SEND_TYPE_NORMALIZE[raw?.toLowerCase()] ?? raw ?? "Redpoint";
-}
-
-// Canonical Firestore format (lowercase, iOS-native).
-const SEND_TYPE_CANONICAL = {
-	Redpoint: "redpoint",
-	"On Sight": "on sight",
-	"Top Rope": "top rope",
-	"All Free": "all free",
-	Project: "project",
-	Pinkpoint: "pinkpoint",
-	Flash: "flash",
-	Top: "top",
-};
-/** Convert a display-facing Title Case sendType to the lowercase value stored in Firestore. */
-export function canonicalizeSendType(raw) {
-	return SEND_TYPE_CANONICAL[raw] ?? raw?.toLowerCase() ?? "redpoint";
-}
-
-/** Route types whose sends use the boulder-native send types (flash / top).
- * Mirrors the iOS boulderSendTypes behaviour. */
-export const BOULDER_ROUTE_TYPES = ["Boulder", "Gym Boulder"];
-/** Send types that are native to boulder logging (lowercase, iOS-native). */
-export const BOULDER_SEND_TYPES = ["flash", "top"];
+// Send-type vocabulary and route-type compatibility rules live in the pure
+// send-style.js module (unit-tested); re-exported here for compatibility.
+import { normalizeSendType, canonicalizeSendType } from "./send-style.js";
+export {
+	normalizeSendType,
+	canonicalizeSendType,
+	BOULDER_ROUTE_TYPES,
+	BOULDER_SEND_TYPES,
+	isBoulderRouteType,
+	isGymRouteType,
+} from "./send-style.js";
 
 // Canonical Firestore format for projectStatus (lowercase, iOS-native).
 // Web uses different vocabulary (Working/Close/Abandoned); this maps to iOS values.
