@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import {
 	fetchClimbs as $fetchClimbs,
 	fetchAscents as $fetchAscents,
+	fetchSessionSends as $fetchSessionSends,
 	saveClimbNote as $saveClimbNote,
 	deleteClimbNote as $deleteClimbNote,
 	saveAscent as $saveAscent,
@@ -54,6 +55,13 @@ import {
 	setFindRouteLinked,
 	setFindRouteUnlinked,
 } from "./route-link-ui.js";
+import {
+	syncGymFieldVisibility,
+	addRouteLine,
+	setGymFields,
+	gymSessionFieldsForSave,
+	buildRoutesSectionHtml,
+} from "./route-line-ui.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -64,6 +72,7 @@ const initGradePicker = (...a) => window.initGradePicker(...a);
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
 let fetchAscents = $fetchAscents;
+let fetchSessionSends = $fetchSessionSends;
 let fetchAllClimbAscents = $fetchAllClimbAscents;
 let saveClimbNote = $saveClimbNote;
 let deleteClimbNote = $deleteClimbNote;
@@ -94,39 +103,43 @@ const completedProject = $completedProject;
 const reportRating = $reportRating;
 const fetchRouteData = $fetchRouteData;
 
+// Service name → setter for the mutable bindings above (keeps
+// setMockServices constant-size when new services are added).
+const SERVICE_MOCK_SETTERS = {
+	fetchClimbs: (fn) => (fetchClimbs = fn),
+	fetchAscents: (fn) => (fetchAscents = fn),
+	fetchSessionSends: (fn) => (fetchSessionSends = fn),
+	fetchAllClimbAscents: (fn) => (fetchAllClimbAscents = fn),
+	saveClimbNote: (fn) => (saveClimbNote = fn),
+	deleteClimbNote: (fn) => (deleteClimbNote = fn),
+	saveAscent: (fn) => (saveAscent = fn),
+	deleteAscent: (fn) => (deleteAscent = fn),
+	fetchPhotos: (fn) => (fetchPhotos = fn),
+	computeStats: (fn) => (computeStats = fn),
+	filterClimbs: (fn) => (filterClimbs = fn),
+	fetchTrainingSessions: (fn) => (fetchTrainingSessions = fn),
+	saveTrainingSession: (fn) => (saveTrainingSession = fn),
+	deleteTrainingSession: (fn) => (deleteTrainingSession = fn),
+	computeTrainingStats: (fn) => (computeTrainingStats = fn),
+	getCurrentUser: (fn) => (getCurrentUser = fn),
+	deleteAccount: (fn) => (deleteAccount = fn),
+	apiKeysList: (fn) => (apiKeysList = fn),
+	apiKeysCreate: (fn) => (apiKeysCreate = fn),
+	apiKeysRevoke: (fn) => (apiKeysRevoke = fn),
+	searchRoutes: (fn) => (searchRoutes = fn),
+	createCentralRoute: (fn) => (createCentralRoute = fn),
+	updateCentralRoute: (fn) => (updateCentralRoute = fn),
+	checkAdminStatus: (fn) => (checkAdminStatus = fn),
+};
+
 /**
  * Override service bindings for mock mode.
  * Call this before loadData() when mock=true.
  */
 export function setMockServices(mocks) {
-	if (mocks.fetchClimbs) fetchClimbs = mocks.fetchClimbs;
-	if (mocks.fetchAscents) fetchAscents = mocks.fetchAscents;
-	if (mocks.fetchAllClimbAscents)
-		fetchAllClimbAscents = mocks.fetchAllClimbAscents;
-	if (mocks.saveClimbNote) saveClimbNote = mocks.saveClimbNote;
-	if (mocks.deleteClimbNote) deleteClimbNote = mocks.deleteClimbNote;
-	if (mocks.saveAscent) saveAscent = mocks.saveAscent;
-	if (mocks.deleteAscent) deleteAscent = mocks.deleteAscent;
-	if (mocks.fetchPhotos) fetchPhotos = mocks.fetchPhotos;
-	if (mocks.computeStats) computeStats = mocks.computeStats;
-	if (mocks.filterClimbs) filterClimbs = mocks.filterClimbs;
-	if (mocks.fetchTrainingSessions)
-		fetchTrainingSessions = mocks.fetchTrainingSessions;
-	if (mocks.saveTrainingSession)
-		saveTrainingSession = mocks.saveTrainingSession;
-	if (mocks.deleteTrainingSession)
-		deleteTrainingSession = mocks.deleteTrainingSession;
-	if (mocks.computeTrainingStats)
-		computeTrainingStats = mocks.computeTrainingStats;
-	if (mocks.getCurrentUser) getCurrentUser = mocks.getCurrentUser;
-	if (mocks.deleteAccount) deleteAccount = mocks.deleteAccount;
-	if (mocks.apiKeysList) apiKeysList = mocks.apiKeysList;
-	if (mocks.apiKeysCreate) apiKeysCreate = mocks.apiKeysCreate;
-	if (mocks.apiKeysRevoke) apiKeysRevoke = mocks.apiKeysRevoke;
-	if (mocks.searchRoutes) searchRoutes = mocks.searchRoutes;
-	if (mocks.createCentralRoute) createCentralRoute = mocks.createCentralRoute;
-	if (mocks.updateCentralRoute) updateCentralRoute = mocks.updateCentralRoute;
-	if (mocks.checkAdminStatus) checkAdminStatus = mocks.checkAdminStatus;
+	for (const [key, set] of Object.entries(SERVICE_MOCK_SETTERS)) {
+		if (mocks[key]) set(mocks[key]);
+	}
 }
 
 // ---------- Module-level state ----------
@@ -2075,6 +2088,28 @@ function setIntensity(value) {
 	});
 }
 
+// ---------- Gym session route lines (see route-line-ui.js) ----------
+
+const GYM_SESSION_TYPE = "Gym Session";
+
+// Gym session whose detail modal is showing the attached-sends line
+// (fetched lazily once the modal markup is in the DOM).
+let pendingSendCountSession = null;
+
+/** Fills the attached-sends placeholder in the open session detail modal.
+ * sessionID links are authoritative — any same-day check is iOS-only at
+ * attach time. */
+async function updateSessionSendCount(sessionId) {
+	const el = document.getElementById("session-send-count");
+	if (!el) return;
+	try {
+		const sends = await fetchSessionSends(sessionId);
+		el.textContent = String(sends.length);
+	} catch {
+		el.textContent = "—";
+	}
+}
+
 function showTrainingDetailModal(session) {
 	const overlay = document.getElementById("modal-overlay");
 	const content = document.getElementById("modal-content");
@@ -2108,12 +2143,20 @@ function showTrainingDetailModal(session) {
         <td style="padding:0.35rem 0;color:#64748b">Duration</td>
         <td style="padding:0.35rem 0">${durationStr}</td>
       </tr>
-      <tr>
-        <td style="padding:0.35rem 0;color:#64748b">Intensity</td>
-        <td style="padding:0.35rem 0">${intensityDots}</td>
-      </tr>
-    </table>
-  `;
+		<tr>
+			<td style="padding:0.35rem 0;color:#64748b">Intensity</td>
+			<td style="padding:0.35rem 0">${intensityDots}</td>
+		</tr>
+		${session.gym ? `<tr><td style="padding:0.35rem 0;color:#64748b">Gym</td><td style="padding:0.35rem 0">${escapeHtml(session.gym)}</td></tr>` : ""}
+	</table>
+	`;
+
+	html += buildRoutesSectionHtml(session.routes);
+
+	if (session.type === GYM_SESSION_TYPE) {
+		html += `<div style="margin-bottom:1.25rem;font-size:0.85rem;color:#64748b">Attached sends: <strong id="session-send-count">…</strong></div>`;
+		pendingSendCountSession = session;
+	}
 
 	if (session.notes) {
 		html += `
@@ -2131,6 +2174,11 @@ function showTrainingDetailModal(session) {
 	content.innerHTML = html;
 	overlay.style.display = "flex";
 	document.body.style.overflow = "hidden";
+
+	if (pendingSendCountSession) {
+		updateSessionSendCount(pendingSendCountSession.id);
+		pendingSendCountSession = null;
+	}
 
 	document
 		.getElementById("training-detail-edit-btn")
@@ -2150,6 +2198,8 @@ function showAddTrainingOverlay() {
 		.slice(0, 10);
 	document.getElementById("to-duration").value = "60";
 	document.getElementById("to-notes").value = "";
+	setGymFields(null, null);
+	syncGymFieldVisibility();
 	setIntensity(3);
 	document.getElementById("training-overlay-delete").classList.add("hidden");
 	overlay.classList.remove("hidden");
@@ -2166,6 +2216,8 @@ function showEditTrainingOverlay(session) {
 		: "";
 	document.getElementById("to-duration").value = session.duration ?? 60;
 	document.getElementById("to-notes").value = session.notes ?? "";
+	setGymFields(session.gym, session.routes);
+	syncGymFieldVisibility();
 	setIntensity(session.intensity ?? 3);
 	document.getElementById("training-overlay-delete").classList.remove("hidden");
 }
@@ -2189,6 +2241,13 @@ function bindTrainingOverlayHandlers() {
 			setIntensity(Number(btn.dataset.value)),
 		);
 	});
+
+	document
+		.getElementById("to-type")
+		.addEventListener("change", syncGymFieldVisibility);
+	document
+		.getElementById("to-add-route")
+		.addEventListener("click", () => addRouteLine());
 
 	document
 		.getElementById("training-overlay-save")
@@ -2216,6 +2275,9 @@ function bindTrainingOverlayHandlers() {
 						? Number(activeIntensityBtn.dataset.value)
 						: 3,
 					notes: document.getElementById("to-notes").value.trim() || null,
+					...gymSessionFieldsForSave(
+						document.getElementById("to-type").value,
+					),
 				});
 				closeOverlay();
 				trainingLoaded = false;
@@ -2329,7 +2391,7 @@ function renderTrainingPage(sessions, period) {
       <div class="type-icon">${emoji}</div>
       <div class="session-info">
         <div class="session-type">${escapeHtml(s.type)}</div>
-        <div class="session-meta">${dateStr}${s.notes ? " · " + escapeHtml(s.notes.slice(0, 40)) + (s.notes.length > 40 ? "…" : "") : ""}</div>
+        <div class="session-meta">${dateStr}${s.gym ? " · " + escapeHtml(s.gym) : ""}${s.notes ? " · " + escapeHtml(s.notes.slice(0, 40)) + (s.notes.length > 40 ? "…" : "") : ""}</div>
       </div>
       <div class="session-right">
         <div class="intensity-dots">${dots}</div>

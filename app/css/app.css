@@ -1612,6 +1612,34 @@ body {
 	color: var(--primary-color);
 }
 
+/* Warm-up route lines (training overlay, Gym Session) */
+.route-line {
+	display: flex;
+	gap: 0.4rem;
+	align-items: center;
+	margin-bottom: 0.4rem;
+}
+.route-line input {
+	flex: 1;
+	min-width: 0;
+}
+.route-line select {
+	width: auto;
+	flex: none;
+}
+.route-line-remove {
+	flex: none;
+	border: none;
+	background: none;
+	color: #94a3b8;
+	font-size: 1rem;
+	cursor: pointer;
+	padding: 0.25rem;
+}
+.route-line-remove:hover {
+	color: var(--danger-color);
+}
+
 /* --- Ascents list (inside climb edit overlay) --- */
 .ascent-row {
 	display: flex;

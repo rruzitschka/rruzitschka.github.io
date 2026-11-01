@@ -15,6 +15,11 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase-config.js";
 import { getCurrentUser } from "./firebase-auth.js";
+import {
+	decodeRouteEntries,
+	encodeRouteEntries,
+	sanitizeRouteEntries,
+} from "./route-entries.js";
 
 export const TRAINING_TYPES = [
 	"Hangboard",
@@ -57,6 +62,8 @@ export async function fetchTrainingSessions() {
 				duration: data.duration ?? 60,
 				intensity: data.intensity ?? 3,
 				notes: data.notes ?? null,
+				gym: data.gym ?? null,
+				routes: decodeRouteEntries(data.routes),
 			};
 		});
 }
@@ -75,6 +82,14 @@ export async function saveTrainingSession(session) {
 		updatedAt: serverTimestamp(),
 	};
 	if (session.date) docData.date = Timestamp.fromDate(new Date(session.date));
+	// Gym fields are only written when the caller provides them — sessions of
+	// other types must not clear gym data that iOS wrote earlier.
+	if (session.gym !== undefined)
+		docData.gym = session.gym ? String(session.gym).trim() || null : null;
+	if (session.routes !== undefined) {
+		docData.routes =
+			encodeRouteEntries(sanitizeRouteEntries(session.routes)) ?? null;
+	}
 	await setDoc(doc(db, `users/${user.uid}/trainingSessions/${id}`), docData, {
 		merge: true,
 	});

@@ -10,6 +10,7 @@ import {
 	updateDoc,
 	query,
 	orderBy,
+	where,
 	serverTimestamp,
 	Timestamp,
 } from "firebase/firestore";
@@ -104,6 +105,38 @@ export async function fetchClimbs() {
 				centralRouteID: d.centralRouteID ?? null,
 				reportedRating: d.reportedRating ?? 0,
 				ascents: [], // loaded lazily via fetchAscents() when detail modal opens
+			};
+		});
+}
+
+/**
+ * Fetch climb notes soft-linked to a training session (iOS 4.0 gym feature:
+ * `sessionID` on climbNotes docs). The link itself is authoritative — any
+ * same-day check is iOS-only at attach time.
+ */
+export async function fetchSessionSends(sessionId) {
+	if (!sessionId) return [];
+	const user = getCurrentUser();
+	if (!user) return [];
+	const snap = await getDocs(
+		query(
+			collection(db, `users/${user.uid}/climbNotes`),
+			where("sessionID", "==", sessionId),
+		),
+	);
+	return snap.docs
+		.filter((noteDoc) => !noteDoc.data().deletedAt)
+		.map((noteDoc) => {
+			const d = noteDoc.data();
+			return {
+				recordName: noteDoc.id,
+				id: d.id ?? noteDoc.id,
+				route: d.route ?? "",
+				crag: d.crag ?? "",
+				difficulty: d.difficulty ?? "",
+				sendType: normalizeSendType(d.sendType),
+				routeType: d.routeType ?? "Sport",
+				date: d.date?.toDate() ?? null,
 			};
 		});
 }

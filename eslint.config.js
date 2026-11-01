@@ -43,8 +43,11 @@ export default [
       'app/js/firebase-*.js',
       'app/js/admin.js',
       'app/js/iso-countries.js',
+      'app/js/route-entries.js',
       'app/js/overlay-country.js',
       'app/js/route-link-ui.js',
+      'app/js/route-line-ui.js',
+      'app/js/reverse-geocode.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,
