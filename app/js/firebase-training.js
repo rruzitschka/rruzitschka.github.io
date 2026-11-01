@@ -140,20 +140,15 @@ export function computeTrainingStats(sessions, period = "allTime") {
 		byType[s.type] = (byType[s.type] ?? 0) + 1;
 	});
 
+	const PERIOD_WEEKS = { week: 1, month: 4, year: 52 };
 	const weeks =
-		period === "week"
-			? 1
-			: period === "month"
-				? 4
-				: period === "year"
-					? 52
-					: Math.max(
-							1,
-							Math.ceil(
-								(now - (filtered.at(-1)?.date ?? now)) /
-									(7 * 24 * 60 * 60 * 1000),
-							),
-						);
+		PERIOD_WEEKS[period] ??
+		Math.max(
+			1,
+			Math.ceil(
+				(now - (filtered.at(-1)?.date ?? now)) / (7 * 24 * 60 * 60 * 1000),
+			),
+		);
 	const avgPerWeek = totalSessions / weeks;
 
 	function formattedTotalTime(mins) {

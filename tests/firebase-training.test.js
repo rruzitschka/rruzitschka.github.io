@@ -35,7 +35,11 @@ vi.mock("../app/js/firebase-auth.js", () => ({
 }));
 
 // ── import SUT after mocks are in place ───────────────────────────────────
-import { fetchTrainingSessions, saveTrainingSession } from "../app/js/firebase-training.js";
+import {
+	fetchTrainingSessions,
+	saveTrainingSession,
+	computeTrainingStats,
+} from "../app/js/firebase-training.js";
 
 function makeSnap(rows) {
 	return {
@@ -161,5 +165,66 @@ describe("saveTrainingSession — gym fields", () => {
 		const docData = mockSetDoc.mock.calls[0][1];
 		expect(docData.gym).toBeUndefined();
 		expect(docData.routes).toBeUndefined();
+	});
+});
+
+describe("computeTrainingStats — period windows", () => {
+	const DAY = 24 * 60 * 60 * 1000;
+	const session = (daysAgo, type = "Gym Session") => ({
+		type,
+		duration: 60,
+		intensity: 3,
+		date: new Date(Date.now() - daysAgo * DAY),
+	});
+
+	it("counts all sessions for allTime", () => {
+		const s = computeTrainingStats([session(400), session(2)], "allTime");
+		expect(s.totalSessions).toBe(2);
+	});
+
+	it("week window: only the last 7 days", () => {
+		const sessions = [session(2), session(8)];
+		expect(computeTrainingStats(sessions, "week").totalSessions).toBe(1);
+	});
+
+	it("month window: current calendar month", () => {
+		const now = new Date();
+		const sessions = [
+			{ ...session(0), date: new Date(now.getFullYear(), now.getMonth(), 1, 12) },
+			{
+				...session(0),
+				date: new Date(now.getFullYear(), now.getMonth() - 1, 15, 12),
+			},
+		];
+		expect(computeTrainingStats(sessions, "month").totalSessions).toBe(1);
+	});
+
+	it("year window: current calendar year", () => {
+		const now = new Date();
+		const sessions = [
+			{ ...session(0), date: new Date(now.getFullYear(), 0, 2, 12) },
+			{ ...session(0), date: new Date(now.getFullYear() - 1, 6, 15, 12) },
+		];
+		expect(computeTrainingStats(sessions, "year").totalSessions).toBe(1);
+	});
+
+	it("derives totals, days and per-week average", () => {
+		const s = computeTrainingStats(
+			[session(0), session(0), session(1)],
+			"week",
+		);
+		expect(s.totalSessions).toBe(3);
+		expect(s.totalMinutes).toBe(180);
+		expect(s.trainingDays).toBe(2);
+		expect(s.avgPerWeek).toBe(3);
+		expect(s.formattedTotalTime(180)).toBe("3 h");
+		expect(s.formattedTotalTime(45)).toBe("45 min");
+		expect(s.formattedTotalTime(90)).toBe("1 h 30 min");
+	});
+
+	it("counts sessions without dates in totals (documented behaviour)", () => {
+		const s = computeTrainingStats([{ type: "Yoga", duration: 30 }], "week");
+		expect(s.totalSessions).toBe(1);
+		expect(s.trainingDays).toBe(0);
 	});
 });

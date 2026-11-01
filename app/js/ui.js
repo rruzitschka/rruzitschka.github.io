@@ -1297,15 +1297,21 @@ function bindStarPicker() {
 
 // Gym route types — gym name lives in the `crag` field (ADR 0005); gym
 // notes are hard-gated from the central route DB.
-const GYM_ROUTE_TYPES = ["Gym", "Gym Boulder"];
-const ROPE_SEND_TYPES = ["redpoint", "on sight", "top rope", "all free", "pinkpoint"];
+const GYM_ROUTE_TYPES = new Set(["Gym", "Gym Boulder"]);
+const ROPE_SEND_TYPES = new Set([
+	"redpoint",
+	"on sight",
+	"top rope",
+	"all free",
+	"pinkpoint",
+]);
 
 /** iOS GymSessionWizard parity: coerce the send type on a route-type switch
  * (boulder → Flash unless already boulder-native; rope → Redpoint unless
  * already rope-native). Project is never coerced. */
 function coerceSendTypeForRouteType(current, isBoulder) {
 	if (isBoulder && !BOULDER_SEND_TYPES.includes(current)) return "flash";
-	if (!isBoulder && !ROPE_SEND_TYPES.includes(current)) return "redpoint";
+	if (!isBoulder && !ROPE_SEND_TYPES.has(current)) return "redpoint";
 	return current;
 }
 
@@ -1333,7 +1339,7 @@ function syncStyleTabVisibility(current, isBoulder) {
  */
 function syncSendOverlayForRouteType(normalize = false) {
 	const routeType = document.getElementById("so-routetype").value;
-	const isGym = GYM_ROUTE_TYPES.includes(routeType);
+	const isGym = GYM_ROUTE_TYPES.has(routeType);
 	const isBoulder = BOULDER_ROUTE_TYPES.includes(routeType);
 	// Gym notes use the crag field for the gym name (ADR 0005)
 	document.getElementById("so-crag-label").textContent = isGym
@@ -1958,7 +1964,7 @@ function bindSendOverlayHandlers() {
 					document.getElementById("send-overlay").dataset.projectRecordName;
 
 				const routeTypeVal = document.getElementById("so-routetype").value;
-				const isGym = GYM_ROUTE_TYPES.includes(routeTypeVal);
+				const isGym = GYM_ROUTE_TYPES.has(routeTypeVal);
 				// Gym notes are hard-gated from the central route DB (ADR 0005):
 				// no central doc creation, no link (a converted note's link is
 				// cleared), no rating/counter writes.
@@ -2203,7 +2209,7 @@ let pendingSendCountSession = null;
  * is iOS-only at attach time. */
 async function updateSessionSends(sessionId) {
 	const section = document.getElementById("session-sends-section");
-	if (!section || !section.isConnected) return;
+	if (!section?.isConnected) return;
 	try {
 		const sends = await fetchSessionSends(sessionId);
 		if (!section.isConnected) return; // modal closed while fetching
@@ -2493,11 +2499,17 @@ function renderTrainingPage(sessions, period) {
 							`<div class="intensity-dot${i <= (s.intensity ?? 0) ? " filled" : ""}"></div>`,
 					)
 					.join("");
+				let meta = dateStr;
+				if (s.gym) meta += ` · ${escapeHtml(s.gym)}`;
+				if (s.notes) {
+					const ellipsis = s.notes.length > 40 ? "…" : "";
+					meta += ` · ${escapeHtml(s.notes.slice(0, 40))}${ellipsis}`;
+				}
 				return `<div class="session-row" data-record="${escapeHtml(s.recordName)}">
       <div class="type-icon">${emoji}</div>
       <div class="session-info">
         <div class="session-type">${escapeHtml(s.type)}</div>
-        <div class="session-meta">${dateStr}${s.gym ? " · " + escapeHtml(s.gym) : ""}${s.notes ? " · " + escapeHtml(s.notes.slice(0, 40)) + (s.notes.length > 40 ? "…" : "") : ""}</div>
+        <div class="session-meta">${meta}</div>
       </div>
       <div class="session-right">
         <div class="intensity-dots">${dots}</div>

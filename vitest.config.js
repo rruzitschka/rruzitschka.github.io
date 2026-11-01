@@ -12,6 +12,7 @@ export default defineConfig({
       include: [
         "app/js/admin-routes-browser.js",
         "app/js/firebase-climbs.js",
+        "app/js/route-entries.js",
         "app/js/firebase-routes.js",
         "app/js/firebase-training.js",
         "app/js/grades.js",
