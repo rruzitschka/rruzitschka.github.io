@@ -1108,6 +1108,12 @@ export async function loadData() {
 			renderClimbsTable(climbs);
 			bindFilterHandlers(climbs);
 		}
+		// Training badge must show the session count on first load, not only
+		// after the Training view is opened (user-reported). Fire-and-forget:
+		// the climbs view renders without waiting for this.
+		loadTrainingData().catch((err) =>
+			console.warn("Training sessions could not be loaded", err),
+		);
 		// Reveal admin sidebar item if current user is an admin
 		checkAdminStatus().then((isAdmin) => {
 			document
@@ -2449,9 +2455,11 @@ async function loadTrainingData() {
 		renderTrainingPage(allSessions, trainingPeriod);
 		return;
 	}
-	trainingLoaded = true;
 	allSessions = await fetchTrainingSessions();
 	window.allSessions = allSessions;
+	// Mark loaded only after a successful fetch so a failure can retry on
+	// the next Training view open.
+	trainingLoaded = true;
 	document.getElementById("badge-sessions").textContent = allSessions.length;
 	renderTrainingPage(allSessions, trainingPeriod);
 }
