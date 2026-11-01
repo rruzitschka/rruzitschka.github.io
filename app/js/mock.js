@@ -113,6 +113,11 @@ export async function saveTrainingSession(session) {
   return rn;
 }
 
+export async function fetchSessionSends(sessionId) {
+  if (!sessionId) return [];
+  return (await fetchClimbs()).filter(c => c.sessionID === sessionId);
+}
+
 export async function deleteTrainingSession(recordName) {
   const idx = MOCK_SESSIONS.findIndex(s => s.recordName === recordName);
   if (idx !== -1) MOCK_SESSIONS.splice(idx, 1);
@@ -270,11 +275,17 @@ const MOCK_CLIMBS = [
   { recordName: 'mock-20', route: 'Spit Boy', climbingArea: 'Magic Wood', crag: 'Hauptwand', difficulty: '7b', date: new Date('2025-08-20'), sendType: 'Flash', rating: 4, noteText: 'Slabby compression problem.', routeType: 'Boulder', attemptCount: 1, isProject: false },
   { recordName: 'mock-21', route: 'Super Crackinette', climbingArea: 'Saint-Léger', crag: 'Falaise Principale', difficulty: '8b+', date: new Date('2024-10-09'), sendType: 'Redpoint', rating: 5, noteText: 'World-class pocket sequence.', routeType: 'Sport', attemptCount: 20, isProject: false },
   { recordName: 'mock-22', route: 'Gecko Assis', climbingArea: 'Fontainebleau', crag: 'Cuvier Rempart', difficulty: '6b', date: new Date('2026-01-18'), sendType: 'On Sight', rating: 3, noteText: 'Good warm-up problem.', routeType: 'Boulder', attemptCount: 1, isProject: false },
+  { recordName: 'mock-23', route: 'Gym Warm-up Wall', climbingArea: null, crag: 'Boulderhalle Wien', difficulty: '6b', date: new Date('2026-03-18'), sendType: 'Flash', rating: 3, noteText: null, routeType: 'Gym Boulder', attemptCount: 1, isProject: false, sessionID: 'ts-2' },
 ];
 
 const MOCK_SESSIONS = [
   { recordName: 'mock-ts-1',  id: 'ts-1',  date: new Date('2026-03-20'), type: 'Hangboard',    duration: 45,  intensity: 4, notes: 'Max hangs protocol, 20mm edge.' },
-  { recordName: 'mock-ts-2',  id: 'ts-2',  date: new Date('2026-03-18'), type: 'Gym Session',  duration: 120, intensity: 3, notes: null },
+  { recordName: 'mock-ts-2',  id: 'ts-2',  date: new Date('2026-03-18'), type: 'Gym Session',  duration: 120, intensity: 3, notes: null,
+    gym: 'Boulderhalle Wien',
+    routes: [
+      { id: 'r-1', grade: '5', style: 'top-rope', outcome: 'sent', order: 0 },
+      { id: 'r-2', grade: '6b', style: 'lead', outcome: 'failed', order: 1 },
+    ] },
   { recordName: 'mock-ts-3',  id: 'ts-3',  date: new Date('2026-03-15'), type: 'Campus Board', duration: 30,  intensity: 5, notes: 'Limit bouldering after. Felt strong.' },
   { recordName: 'mock-ts-4',  id: 'ts-4',  date: new Date('2026-03-10'), type: 'Hangboard',    duration: 45,  intensity: 3, notes: 'Repeaters, 7s on / 3s off.' },
   { recordName: 'mock-ts-5',  id: 'ts-5',  date: new Date('2026-03-05'), type: 'Yoga',         duration: 60,  intensity: 2, notes: 'Recovery day.' },
