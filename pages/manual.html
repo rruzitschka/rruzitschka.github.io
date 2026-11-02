@@ -221,6 +221,16 @@
               >
             </li>
             <li><a href="#goals">Goals</a></li>
+            <li>
+              <a href="#training-log">Training Log
+              <span class="new-badge">Updated in 4.0</span></a>
+              <ul>
+                <li>
+                  <a href="#gym-session-wizard">Gym Session Wizard
+                  <span class="new-badge">NEW in 4.0</span></a>
+                </li>
+              </ul>
+            </li>
             <li><a href="#photos">Photos</a></li>
             <li><a href="#voice-notes">Voice Notes</a></li>
             <li>
@@ -415,10 +425,13 @@
                 grade picker
               </li>
               <li>
-                <strong>Send Type</strong>: Onsight, flash, redpoint, etc.
+                <strong>Send Type</strong>: Onsight, flash, redpoint, etc. —
+                boulder logs (Boulder and Gym Boulder) use the boulder-native
+                Flash / Top
               </li>
               <li>
-                <strong>Route Type</strong>: Sport, Boulder, or Multi-Pitch
+                <strong>Route Type</strong>: Sport, Boulder, Multi-Pitch,
+                Trad, Gym, or Gym Boulder
               </li>
               <li><strong>Rating</strong>: 1–5 stars personal rating</li>
               <li><strong>Date</strong>: When you completed the climb</li>
@@ -427,6 +440,21 @@
           </li>
           <li>Tap <strong>Save</strong> to add the climb</li>
         </ol>
+
+        <h3 id="logging-a-gym-send">
+          Logging a Gym Send <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>
+          For climbs at a climbing gym, pick the <strong>Gym</strong> (rope)
+          or <strong>Gym Boulder</strong> route type. The form then adapts:
+          the Climbing Area field is hidden, the Crag field is relabeled
+          <strong>"Gym"</strong> for the gym name, and there is no community
+          database search or GPS capture. See
+          <a href="#gym-route-types">Gym Route Types</a> for the full list of
+          differences, and
+          <a href="#gym-sends-vs-sessions">Gym Sends vs. Gym Sessions</a> for
+          how gym sends relate to gym training sessions.
+        </p>
 
         <h3 id="finding-routes-in-the-central-database">
           Finding Routes in the Central Database
@@ -722,6 +750,18 @@
           <li>
             <strong>Multi-Pitch</strong>: Routes spanning multiple pitches
           </li>
+          <li>
+            <strong>Trad</strong>: Routes climbed on removable protection
+            (gear, cams, nuts)
+          </li>
+          <li>
+            <strong>Gym</strong>: Rope climbs at a climbing gym
+            <span class="new-badge">NEW in 4.0</span>
+          </li>
+          <li>
+            <strong>Gym Boulder</strong>: Bouldering at a climbing gym
+            <span class="new-badge">NEW in 4.0</span>
+          </li>
         </ol>
 
         <h3>Color Coding</h3>
@@ -730,6 +770,9 @@
           <li><strong>Sport</strong> — Blue</li>
           <li><strong>Boulder</strong> — Orange</li>
           <li><strong>Multi-Pitch</strong> — Purple</li>
+          <li><strong>Trad</strong> — Green</li>
+          <li><strong>Gym</strong> — Mint</li>
+          <li><strong>Gym Boulder</strong> — Teal</li>
         </ul>
         <p>
           These indicators appear in send lists, project lists, detail views,
@@ -742,9 +785,52 @@
             In any send or project form, locate the
             <strong>Route Type</strong> picker
           </li>
-          <li>Select Sport, Boulder, or Multi-Pitch</li>
-          <li>New entries default to Sport</li>
+          <li>Select Sport, Boulder, Multi-Pitch, Trad, Gym, or Gym Boulder</li>
+          <li>
+            New entries default to Sport; in Settings you can pick a
+            <strong>Default SendLog Type</strong> that is preselected instead
+            (see <a href="#settings-and-preferences">Settings</a>)
+          </li>
         </ol>
+
+        <h3 id="gym-route-types">
+          Gym Route Types — What Changes
+          <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>
+          Pick <strong>Gym</strong> when logging a rope climb at a climbing
+          gym, and <strong>Gym Boulder</strong> for indoor bouldering. Both
+          are private logs that never touch the community route database —
+          unlike every other type:
+        </p>
+        <ul>
+          <li>
+            <strong>Form adapts:</strong> the "Climbing Area" field is hidden,
+            and the Crag field is relabeled <strong>"Gym"</strong> — enter
+            the gym name (e.g. "Marswiese") there.
+          </li>
+          <li>
+            <strong>No community features:</strong> no route search in the
+            central database, no GPS capture, no country flag, no community
+            rating or badge.
+          </li>
+          <li>
+            <strong>Send types follow the discipline:</strong> Gym logs use
+            the rope send types (Redpoint, Pinkpoint, On Sight, Top Rope,
+            All Free); Gym Boulder logs use the boulder-native
+            <strong>Flash / Top</strong>.
+          </li>
+          <li>
+            <strong>Grades:</strong> Gym logs use your rope grade system;
+            Gym Boulder logs use the Boulder Grade System setting (see
+            <a href="#settings-and-preferences">Settings</a>).
+          </li>
+          <li>
+            <strong>Still fully counted:</strong> gym sends appear in your
+            send list, count toward grade statistics and goals, and sync to
+            the Web App like every other log.
+          </li>
+        </ul>
 
         <h3>
           Multi-Pitch Route Planning
@@ -1054,7 +1140,7 @@
 
       <!-- 10. Training Log -->
       <div class="section" id="training-log">
-        <h2>10. Training Log <span class="new-badge">Updated in 3.11</span></h2>
+        <h2>10. Training Log <span class="new-badge">Updated in 4.0</span></h2>
 
         <p>
           The Training tab lets you record non-climbing training activities
@@ -1115,6 +1201,65 @@
           <a href="#statistics-and-progress-analysis"
             >Statistics &rarr; Training Stats Section</a
           >). The Training tab itself is a pure session log.
+        </p>
+
+        <h3 id="gym-session-wizard">
+          The Gym Session Wizard
+          <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>
+          When you pick the <strong>Gym Session</strong> type, the overlay
+          expands into a dedicated wizard:
+        </p>
+        <ol>
+          <li>
+            <strong>Gym name</strong> — a text field with autocomplete from
+            gyms you have used before
+          </li>
+          <li>
+            <strong>Routes (optional)</strong> — tap <strong>Add Route</strong>
+            for each warm-up or training line: grade (e.g. "5a"),
+            <strong>Lead</strong> or <strong>Top</strong>, and
+            <strong>Sent</strong> or <strong>Failed</strong>. Every line can be
+            deleted individually with the red minus button.
+          </li>
+          <li>
+            <strong>Attach Notable Sends</strong> — link gym sends logged on
+            the same day into the session, or create a new gym log inline.
+          </li>
+        </ol>
+        <p>
+          After saving, the session detail view shows a day summary (e.g.
+          "2 h, 5 warm-ups, 1 send") with the route lines and the attached
+          sends listed side by side.
+        </p>
+
+        <h3 id="gym-sends-vs-sessions">
+          Gym Sends vs. Gym Sessions — What's the Difference?
+          <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>Two different things live under the same roof:</p>
+        <ul>
+          <li>
+            <strong>A gym send</strong> is a normal entry in your SendLogs —
+            one route you climbed, with route name, grade and send type
+            (logged with the <a href="#gym-route-types">Gym route type</a>).
+            It counts toward your statistics.
+          </li>
+          <li>
+            <strong>A gym session</strong> (Training tab → "Gym Session") is
+            the whole visit: date, duration, intensity and notes. Its
+            <strong>route lines</strong> (grade + Lead/Top + Sent/Failed)
+            document warm-up and training volume — they are <em>not</em>
+            sends and never appear in your send list or grade statistics.
+          </li>
+        </ul>
+        <p>
+          <strong>Connecting them:</strong> when you log notable gym sends on
+          the same day, the wizard's <em>Attach Notable Sends</em> section
+          links them into the session. The session detail then shows a summary
+          — e.g. "2 h, 5 warm-ups, 1 send" — with the route lines and the
+          attached send ("Blaue Minna · 6a+ · Top Rope") listed side by side.
         </p>
 
         <h3>Training Days in the Calendar Heatmap</h3>
@@ -1341,7 +1486,8 @@
         <ul>
           <li>
             <strong>Logbook</strong> — Browse all your sends, filter by area,
-            year and route type, sort by date or grade
+            year and route type, sort by date or grade. Gym route types with
+            Flash/Top send styles are fully supported
           </li>
           <li>
             <strong>Add &amp; edit sends</strong> — Log new climbs and edit
@@ -1353,7 +1499,8 @@
           </li>
           <li>
             <strong>Training log</strong> — View, add and edit training sessions
-            (hangboard, gym, campus board, etc.)
+            (hangboard, gym, campus board, etc.), including gym session route
+            lines and attached sends
           </li>
           <li>
             <strong>Statistics</strong> — Grade distribution chart, route type
@@ -1511,6 +1658,40 @@
         <p>
           The grade picker in the app covers the full range for all three
           systems.
+        </p>
+
+        <h3>
+          Boulder Grade System
+          <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>
+          Choose which grade scale the grade picker uses for
+          <strong>Gym Boulder</strong> logs:
+        </p>
+        <ol>
+          <li>
+            <strong>Fontainebleau</strong> — the European indoor standard
+            (3 to 8c+)
+          </li>
+          <li>
+            <strong>V Scale</strong> — the Hueco scale (VB to V17)
+          </li>
+        </ol>
+        <p>
+          The setting applies to Gym Boulder logs only. Outdoor
+          <strong>Boulder</strong> logs keep your rope grade system
+          (French/UIAA/YDS), because the community route database grades
+          outdoor boulders on the French scale.
+        </p>
+
+        <h3>
+          Default SendLog Type
+          <span class="new-badge">NEW in 4.0</span>
+        </h3>
+        <p>
+          Preselects the route type in the new-send form — Sport (default),
+          Boulder, Multi-Pitch, Trad, Gym, or Gym Boulder. Useful if you
+          mostly climb in one style; you can always change the type per log.
         </p>
 
         <h3>Speech Recognition</h3>

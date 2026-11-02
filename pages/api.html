@@ -580,9 +580,9 @@
                         <tr><td><code>route</code></td><td>string</td><td>Route name</td></tr>
                         <tr><td><code>climbingArea</code></td><td>string</td><td>Broader area / region</td></tr>
                         <tr><td><code>crag</code></td><td>string | null</td><td>Specific crag or wall</td></tr>
-                        <tr><td><code>difficulty</code></td><td>string</td><td>Grade (French, UIAA, or YDS depending on user preference)</td></tr>
-                        <tr><td><code>sendType</code></td><td>string</td><td><code>Redpoint</code> · <code>Pinkpoint</code> · <code>On Sight</code> · <code>Flash</code> · <code>Top Rope</code> · <code>All Free</code> · <code>Project</code></td></tr>
-                        <tr><td><code>routeType</code></td><td>string</td><td><code>Sport</code> · <code>Boulder</code> · <code>Multi-Pitch</code></td></tr>
+                        <tr><td><code>difficulty</code></td><td>string</td><td>Grade (French, UIAA, or YDS depending on user preference; Fontainebleau or V Scale for Gym Boulder)</td></tr>
+                        <tr><td><code>sendType</code></td><td>string</td><td><code>Redpoint</code> · <code>Pinkpoint</code> · <code>On Sight</code> · <code>Flash</code> · <code>Top</code> · <code>Top Rope</code> · <code>All Free</code> · <code>Project</code></td></tr>
+                        <tr><td><code>routeType</code></td><td>string</td><td><code>Sport</code> · <code>Boulder</code> · <code>Multi-Pitch</code> · <code>Trad</code> · <code>Gym</code> · <code>Gym Boulder</code></td></tr>
                         <tr><td><code>noteText</code></td><td>string | null</td><td>Free-text notes</td></tr>
                         <tr><td><code>rating</code></td><td>integer</td><td>0–5 stars</td></tr>
                         <tr><td><code>attemptCount</code></td><td>integer</td><td>Number of attempts logged</td></tr>
@@ -591,12 +591,13 @@
                         <tr><td><code>projectStatus</code></td><td>string | null</td><td><code>Working</code> · <code>Close</code> · <code>On Hold</code></td></tr>
                         <tr><td><code>projectNotes</code></td><td>string | null</td><td>Project-specific notes</td></tr>
                         <tr><td><code>highPoint</code></td><td>string | null</td><td>Highest point reached (projects)</td></tr>
-                        <tr><td><code>centralRouteID</code></td><td>string | null</td><td>ID of the linked entry in the SendLog central route database, or <code>null</code> if not linked</td></tr>
+                        <tr><td><code>centralRouteID</code></td><td>string | null</td><td>ID of the linked entry in the SendLog central route database, or <code>null</code> if not linked. Always <code>null</code> for <code>Gym</code>/<code>Gym Boulder</code> logs (gym name lives in <code>crag</code>)</td></tr>
                         <tr><td><code>numberOfPitches</code></td><td>integer | null</td><td>Number of pitches (Multi-Pitch route planning), or <code>null</code> if not set</td></tr>
                         <tr><td><code>approachNotes</code></td><td>string | null</td><td>Approach notes (Multi-Pitch route planning)</td></tr>
                         <tr><td><code>descentNotes</code></td><td>string | null</td><td>Descent notes (Multi-Pitch route planning)</td></tr>
                         <tr><td><code>gearNotes</code></td><td>string | null</td><td>Gear notes (Multi-Pitch route planning)</td></tr>
                         <tr><td><code>climbDuration</code></td><td>integer | null</td><td>Duration in minutes of the first ascent, or <code>null</code> if not recorded</td></tr>
+                        <tr><td><code>sessionID</code></td><td>string | null</td><td>UUID of the gym training session this send is attached to (soft link), or <code>null</code></td></tr>
                         <tr><td><code>updatedAt</code></td><td>ISO 8601 | null</td><td>Last modification timestamp</td></tr>
                     </tbody>
                 </table>
@@ -753,6 +754,8 @@
                     <tbody>
                         <tr><td><code>id</code></td><td>string</td><td>Session UUID</td></tr>
                         <tr><td><code>type</code></td><td>string</td><td><code>Hangboard</code> · <code>Campus Board</code> · <code>Gym Session</code> · <code>Running</code> · <code>Yoga</code> · or custom</td></tr>
+                        <tr><td><code>gym</code></td><td>string | null</td><td>Gym name (<code>Gym Session</code> only, iOS 4.0+)</td></tr>
+                        <tr><td><code>routes</code></td><td>string | null</td><td>JSON array of warm-up route lines (<code>Gym Session</code> only): objects with <code>id</code>, <code>grade</code>, <code>style</code> (<code>lead</code> | <code>top-rope</code>), <code>outcome</code> (<code>sent</code> | <code>failed</code> | <code>attempt</code>), <code>order</code></td></tr>
                         <tr><td><code>duration</code></td><td>integer</td><td>Duration in minutes</td></tr>
                         <tr><td><code>intensity</code></td><td>integer</td><td>1–5 intensity rating</td></tr>
                         <tr><td><code>notes</code></td><td>string | null</td><td>Free-text notes</td></tr>
