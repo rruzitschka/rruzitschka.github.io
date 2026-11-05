@@ -54,7 +54,7 @@ on a held-back branch until the release.
 | `route-link-ui.js` | Find-route button state for the soft-link UI |
 | `overlay-country.js` | Country select sync for overlays |
 | `reverse-geocode.js` | BigDataCloud reverse geocoding (admin GPS pin) |
-| `admin-routes-browser.js` | Admin route browser view |
+| `admin-routes-browser.js` | Admin route browser query helpers (search folding, filter order, sort — nameSearch asc default, createdAt desc "newest first" browse-all) |
 
 ### View/controller modules
 
