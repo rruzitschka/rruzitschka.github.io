@@ -288,6 +288,7 @@ const ADMIN_ROUTE_TYPES = ["Sport", "Boulder", "Multi-Pitch", "Trad"];
 const adminBrowserState = {
 	searchText: "",
 	searchField: "any",
+	sortBy: "name", // "name" | "createdAt" — newest-first, browse-all only
 	routeType: "",
 	country: "",
 	isOrphaned: false,
@@ -305,6 +306,21 @@ const TYPE_CHIP_COLORS = {
 	"Multi-Pitch": { bg: "#f5f3ff", color: "#7c3aed" },
 	Trad: { bg: "#eff6ff", color: "#2563eb" },
 };
+
+/** Sort dropdown options for the admin routes browser filter bar. */
+const ADMIN_SORT_OPTIONS = [
+	{ value: "name", label: "Sort: Name (A–Z)" },
+	{ value: "createdAt", label: "Sort: Newest first" },
+];
+
+/** Render the sort dropdown for the admin routes browser filter bar. */
+function renderAdminSortSelect(selected) {
+	const options = ADMIN_SORT_OPTIONS.map(
+		(o) => `<option value="${o.value}"${o.value === selected ? " selected" : ""}>${o.label}</option>`,
+	).join("");
+	return `<select id="admin-b-sort" class="form-input" style="width:auto"
+                title="Sort order — “Newest first” applies when not searching">${options}</select>`;
+}
 
 /**
  * Distinct ISO country codes across `routes`, scanned once per session and
@@ -342,6 +358,8 @@ function readAdminBrowserFilters() {
 		document.getElementById("admin-b-search")?.value.trim() ?? "";
 	adminBrowserState.searchField =
 		document.getElementById("admin-b-field")?.value ?? "any";
+	adminBrowserState.sortBy =
+		document.getElementById("admin-b-sort")?.value ?? "name";
 	adminBrowserState.routeType =
 		document.getElementById("admin-b-type")?.value ?? "";
 	adminBrowserState.country =
@@ -363,6 +381,7 @@ async function loadAdminBrowserPage(page) {
 		const { routes, nextCursors, total } = await adminQueryRoutes({
 			searchText: adminBrowserState.searchText,
 			searchField: adminBrowserState.searchField,
+			sortBy: adminBrowserState.sortBy,
 			routeType: adminBrowserState.routeType || null,
 			country: adminBrowserState.country || null,
 			isOrphaned: adminBrowserState.isOrphaned,
@@ -726,6 +745,7 @@ function renderAdminSearch() {
 				)
 				.join("")}
         </select>
+          ${renderAdminSortSelect(adminBrowserState.sortBy)}
       </div>
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
         <select id="admin-b-type" class="form-input" style="width:auto">
@@ -800,7 +820,7 @@ function renderAdminSearch() {
 		}, 300);
 	});
 
-	["admin-b-field", "admin-b-type", "admin-b-country"].forEach((id) => {
+	["admin-b-field", "admin-b-sort", "admin-b-type", "admin-b-country"].forEach((id) => {
 		document
 			.getElementById(id)
 			.addEventListener("change", () => {

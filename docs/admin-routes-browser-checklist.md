@@ -21,7 +21,12 @@ the matching index is still building; retry later.
 - [ ] Count label shows the route total (matches Statistics tab's
       "Community Routes").
 - [ ] Rows sorted by name A–Z, case/accent-insensitive ("café" between "Caba"
-      and "Cedar", not at the end).
+      and "Cedar", not at the end) — with the sort dropdown on "Name (A–Z)".
+- [ ] Sort dropdown → "Newest first": browse-all list is ordered by creation
+      date, newest routes on top (Firestore `createdAt desc` + the four
+      `…→ createdAt DESC` composite indexes in `firestore.indexes.json`).
+      With active search text the sort silently falls back to name order
+      (multi-stream search cannot order by createdAt).
 - [ ] 25 rows per page; **Next →** pages forward 1→2→3; **← Previous** back;
       buttons disable at the ends.
 - [ ] Page footer "Page X of N" is consistent with the count.

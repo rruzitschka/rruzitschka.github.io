@@ -5,7 +5,10 @@
 // shapes ({ kind: "where" | "orderBy" | "limit" | "startAfter", ... }) are
 // mapped onto Firestore constraints by mapQueryDescriptors() there.
 //
-// Sort order is nameSearch asc (folded, locale-stable) — fixed for v1.
+// Default sort order is nameSearch asc (folded, locale-stable). An optional
+// createdAt-desc sort ("newest first") is available for browse-all queries —
+// it is ignored whenever prefix-range bounds are present, because Firestore
+// requires the orderBy to lead with the range field.
 
 "use strict";
 
@@ -58,6 +61,27 @@ export function searchBounds(term, field) {
 
 // ── Query assembly ───────────────────────────────────────────────────────────
 
+/** Sort key for the admin routes browser: name (A–Z) or newest first. */
+export const SORT_BY_NAME = "name";
+export const SORT_BY_CREATED_AT = "createdAt";
+
+/**
+ * Resolve the query orderBy for a route-list request.
+ * With prefix-range bounds, Firestore requires the orderBy to lead with the
+ * range field → bounds win over the requested sort. Browse-all honours the
+ * requested sort: createdAt desc (newest first) or the nameSearch default.
+ *
+ * @param {{ field: string }|null} bounds prefix-range bounds or null
+ * @param {string} sortBy "name" | "createdAt"
+ * @returns {{ field: string, direction: "asc"|"desc" }}
+ */
+export function routeQueryOrder(bounds, sortBy) {
+	if (bounds) return { field: bounds.field, direction: "asc" };
+	return sortBy === SORT_BY_CREATED_AT
+		? { field: "createdAt", direction: "desc" }
+		: { field: "nameSearch", direction: "asc" };
+}
+
 /**
  * Sentinel for the "routes without a country" filter option in the Country
  * dropdown. Matches docs where country is explicitly null — so every write
@@ -74,6 +98,11 @@ export const COUNTRY_NONE = "__none__";
  * `isOrphaned` is always sent explicitly (true/false) so it is always part of
  * the query — set it to null only for count-free internal use.
  *
+ * Sort: default is nameSearch asc. `sortBy: "createdAt"` orders newest-first
+ * (createdAt desc) — but ONLY when there are no prefix-range bounds (browse-
+ * all). With bounds, Firestore requires the orderBy to lead with the range
+ * field, so the requested sort is silently ignored in that case.
+ *
  * @param {{
  *   searchText?: string,
  *   searchField?: "name"|"crag"|"area",   // required when searchText is set
@@ -81,6 +110,7 @@ export const COUNTRY_NONE = "__none__";
  *   country?: string|null,   // COUNTRY_NONE sentinel → country == null
  *   isOrphaned?: boolean|null,
  *   pageSize?: number,
+ *   sortBy?: "name"|"createdAt",   // newest-first; only effective browse-all
  * }} filters
  * @param {object|null} [cursorDoc] Firestore document snapshot to start after
  * @returns {Array<object>} constraint descriptors for mapQueryDescriptors()
@@ -93,10 +123,11 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 		country = null,
 		isOrphaned = null,
 		pageSize = 25,
+		sortBy = SORT_BY_NAME,
 	} = filters;
 
 	const bounds = searchBounds(searchText, searchField ?? "name");
-	const firestoreField = bounds?.field ?? "nameSearch";
+	const order = routeQueryOrder(bounds, sortBy);
 
 	const constraints = [];
 
@@ -126,7 +157,7 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 	}
 
 	constraints.push(
-		{ kind: "orderBy", field: firestoreField, direction: "asc" },
+		{ kind: "orderBy", field: order.field, direction: order.direction },
 		{ kind: "limit", count: pageSize },
 	);
 	if (cursorDoc) {
@@ -146,9 +177,8 @@ export function buildRouteQuery(filters, cursorDoc = null) {
 export function routeQueryStreamKeys(searchText, searchField) {
 	const folded = foldedForSearch(searchText).trim();
 	if (!folded) return ["name"];
-	if (searchField && searchField !== "any" && SEARCH_FIELD_MAP[searchField]) {
-		return [searchField];
-	}
+	const isSingleField = searchField === "any" ? null : SEARCH_FIELD_MAP[searchField];
+	if (isSingleField) return [searchField];
 	return ["name", "crag", "area"];
 }
 
@@ -180,15 +210,45 @@ export function mapQueryDescriptors(descriptors, fns) {
 // ── Stream merge ─────────────────────────────────────────────────────────────
 
 /**
- * Merge parallel search-stream results: dedupe by id, sort by nameSearch
- * (folded asc, id tie-break), slice to one page.
+ * createdAt as a comparable number (ms). Handles Firestore Timestamps
+ * (toMillis), JS Dates (getTime) and null/missing values (0 → sorts last
+ * in a desc comparison).
+ */
+function createdAtMillis(value) {
+	return value?.toMillis?.() ?? value?.getTime?.() ?? 0;
+}
+
+/** Merge comparator: newest first (createdAt desc), id tie-break. */
+function byCreatedAtDesc(a, b) {
+	return (
+		createdAtMillis(b.createdAt) - createdAtMillis(a.createdAt) ||
+		(a.id ?? "").localeCompare(b.id ?? "")
+	);
+}
+
+/** Merge comparator: nameSearch folded asc, id tie-break. */
+function byNameSearchAsc(a, b) {
+	return (
+		(a.nameSearch ?? "").localeCompare(b.nameSearch ?? "") ||
+		(a.id ?? "").localeCompare(b.id ?? "")
+	);
+}
+
+/**
+ * Merge parallel search-stream results: dedupe by id, sort, slice to one page.
  * Exhausted (empty) streams are simply contributions of zero rows.
+ *
+ * Default sort is nameSearch (folded asc, id tie-break) — the merged ordering
+ * for multi-stream search. `sortBy: "createdAt"` sorts newest-first (createdAt
+ * desc, id tie-break); only meaningful for browse-all, where a single stream
+ * arrives pre-sorted and the merge just re-affirms the page order.
  *
  * @param {Array<Array<object>>} streams arrays of route-shaped docs
  * @param {number} pageSize
+ * @param {string} [sortBy] "name" (default) | "createdAt"
  * @returns {object[]} merged page
  */
-export function mergeRouteStreams(streams, pageSize = 25) {
+export function mergeRouteStreams(streams, pageSize = 25, sortBy = SORT_BY_NAME) {
 	const seen = new Set();
 	const merged = [];
 	for (const stream of streams) {
@@ -198,10 +258,8 @@ export function mergeRouteStreams(streams, pageSize = 25) {
 			merged.push(route);
 		}
 	}
-	merged.sort(
-		(a, b) =>
-			(a.nameSearch ?? "").localeCompare(b.nameSearch ?? "") ||
-			(a.id ?? "").localeCompare(b.id ?? ""),
-	);
+	const comparator =
+		sortBy === SORT_BY_CREATED_AT ? byCreatedAtDesc : byNameSearchAsc;
+	merged.sort(comparator);
 	return merged.slice(0, pageSize);
 }

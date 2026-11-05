@@ -119,6 +119,26 @@ describe("adminQueryRoutes()", () => {
 		expect(res.total).toBe(4); // upper bound (sum of stream counts)
 	});
 
+	it("browse-all with sortBy=createdAt orders the stream by createdAt desc and maps createdAt onto rows", async () => {
+		mockGetDocs.mockResolvedValueOnce(
+			makeSnap([
+				{
+					id: "r1",
+					data: routeData("r1", "alps", { createdAt: { toDate: () => new Date("2025-01-02T00:00:00Z") } }),
+				},
+			]),
+		);
+		mockGetCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 1 }) });
+
+		const res = await adminQueryRoutes({ searchText: "", isOrphaned: false, sortBy: "createdAt" });
+
+		// query(collection, ...constraints) — first arg is the collection ref
+		const constraints = mockGetDocs.mock.calls[0][0]._args.slice(1);
+		const orderByArg = constraints.find((c) => c._orderBy);
+		expect(orderByArg._orderBy).toEqual(["createdAt", "desc"]);
+		expect(res.routes[0].createdAt).toEqual(new Date("2025-01-02T00:00:00Z"));
+	});
+
 	it("full page sets per-stream cursor and does not mark exhausted", async () => {
 		const page = Array.from({ length: 25 }, (_, i) => ({
 			id: `r${i}`,

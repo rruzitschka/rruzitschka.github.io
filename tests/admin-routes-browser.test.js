@@ -9,9 +9,12 @@ import {
 	COUNTRY_NONE,
 	foldedForSearch,
 	SEARCH_FIELD_MAP,
+	SORT_BY_CREATED_AT,
+	SORT_BY_NAME,
 	searchBounds,
 	buildRouteQuery,
 	routeQueryStreamKeys,
+	routeQueryOrder,
 	mapQueryDescriptors,
 	mergeRouteStreams,
 } from "../app/js/admin-routes-browser.js";
@@ -143,6 +146,56 @@ it("COUNTRY_NONE combined with real codes stays distinct from them", () => {
 	it("default pageSize is 25", () => {
 		expect(buildRouteQuery({}).find((d) => d.kind === "limit").count).toBe(25);
 	});
+
+	it("sortBy=createdAt browse-all → createdAt desc orderBy", () => {
+		const c = buildRouteQuery({ isOrphaned: false, sortBy: SORT_BY_CREATED_AT, pageSize: 25 });
+		expect(c[0]).toEqual({ kind: "where", field: "isOrphaned", op: "==", value: false });
+		expect(c[1]).toEqual({ kind: "orderBy", field: "createdAt", direction: "desc" });
+	});
+
+	it("sortBy=createdAt with search bounds is ignored (orderBy leads with range field)", () => {
+		const c = buildRouteQuery({
+			searchText: "Café",
+			searchField: "name",
+			sortBy: SORT_BY_CREATED_AT,
+			pageSize: 25,
+		});
+		expect(c.find((d) => d.kind === "orderBy")).toEqual({
+			kind: "orderBy",
+			field: "nameSearch",
+			direction: "asc",
+		});
+	});
+
+	it("SORT_BY constants match the accepted string values", () => {
+		expect(SORT_BY_NAME).toBe("name");
+		expect(SORT_BY_CREATED_AT).toBe("createdAt");
+	});
+});
+
+// ── routeQueryOrder ──────────────────────────────────────────────────────
+
+describe("routeQueryOrder()", () => {
+	it("bounds win over the requested sort (orderBy leads with range field)", () => {
+		expect(routeQueryOrder({ field: "cragSearch" }, SORT_BY_CREATED_AT)).toEqual({
+			field: "cragSearch",
+			direction: "asc",
+		});
+	});
+
+	it("browse-all default is nameSearch asc", () => {
+		expect(routeQueryOrder(null, SORT_BY_NAME)).toEqual({
+			field: "nameSearch",
+			direction: "asc",
+		});
+	});
+
+	it("browse-all with sortBy=createdAt is createdAt desc", () => {
+		expect(routeQueryOrder(null, SORT_BY_CREATED_AT)).toEqual({
+			field: "createdAt",
+			direction: "desc",
+		});
+	});
 });
 
 // ── routeQueryStreamKeys ─────────────────────────────────────────────────────
@@ -232,5 +285,41 @@ describe("mergeRouteStreams()", () => {
 	it("uses id as tie-break for equal nameSearch", () => {
 		const merged = mergeRouteStreams([[route("zz", "same"), route("aa", "same")]], 25);
 		expect(merged.map((r) => r.id)).toEqual(["aa", "zz"]);
+	});
+
+	it("sortBy=createdAt sorts newest-first with id tie-break", () => {
+		const ts = (iso) => ({ toMillis: () => Date.parse(iso) });
+		const merged = mergeRouteStreams(
+			[
+				[route("old", "a", { createdAt: ts("2024-01-01T00:00:00Z") })],
+				[route("new", "b", { createdAt: ts("2025-06-01T00:00:00Z") })],
+				[route("mid", "c", { createdAt: ts("2024-06-01T00:00:00Z") })],
+				[route("none", "d", { createdAt: null })],
+			],
+			25,
+			SORT_BY_CREATED_AT,
+		);
+		expect(merged.map((r) => r.id)).toEqual(["new", "mid", "old", "none"]);
+	});
+
+	it("sortBy=createdAt accepts Firestore Timestamp and Date values", () => {
+		const merged = mergeRouteStreams(
+			[
+				[route("ts", "a", { createdAt: { toMillis: () => 200 } })],
+				[route("date", "b", { createdAt: new Date(100) })],
+			],
+			25,
+			SORT_BY_CREATED_AT,
+		);
+		expect(merged.map((r) => r.id)).toEqual(["ts", "date"]);
+	});
+
+	it("unknown sortBy falls back to nameSearch sort", () => {
+		const merged = mergeRouteStreams(
+			[[route("b", "berg"), route("a", "alps")]],
+			25,
+			"bogus-sort",
+		);
+		expect(merged.map((r) => r.id)).toEqual(["a", "b"]);
 	});
 });

@@ -276,6 +276,7 @@ function routeFromDocSnap(d) {
 		attemptCount: data.attemptCount ?? 0,
 		isOrphaned: data.isOrphaned ?? false,
 		createdBy: data.createdBy ?? null,
+		createdAt: data.createdAt?.toDate?.() ?? null,
 		updatedBy: data.updatedBy ?? null,
 		updatedAt: data.updatedAt?.toDate?.() ?? null,
 		latitude: data.latitude ?? null,
@@ -350,6 +351,7 @@ async function adminRouteCount(filters) {
  *   country?: string|null,
  *   isOrphaned?: boolean|null,   // always pass true/false from the UI
  *   pageSize?: number,
+ *   sortBy?: "name"|"createdAt",   // newest-first; only effective browse-all
  *   cursors?: {{ docs: Object<string, object>, exhausted: string[] }} | null,
  * }} [options]
  * @returns {Promise<{ routes: object[], nextCursors: object, total: number }>}
@@ -361,9 +363,14 @@ export async function adminQueryRoutes({
 	country = null,
 	isOrphaned = null,
 	pageSize = 25,
+	sortBy = "name",
 	cursors = null,
 } = {}) {
 	const filters = { searchText, searchField, routeType, country, isOrphaned, pageSize };
+	// Newest-first sort is a browse-all feature only: with search text the
+	// streams are prefix-range bounded (orderBy must lead with the range field)
+	// and the "any" case merges multiple streams client-side.
+	const effectiveSortBy = searchText ? "name" : sortBy;
 	const fieldKeys = routeQueryStreamKeys(searchText, searchField);
 	const exhausted = new Set(cursors?.exhausted ?? []);
 	const active = fieldKeys.filter((k) => !exhausted.has(k));
@@ -371,7 +378,7 @@ export async function adminQueryRoutes({
 	const streamSnaps = await Promise.all(
 		active.map(async (k) => {
 			const descriptors = buildRouteQuery(
-				{ ...filters, searchField: k },
+				{ ...filters, searchField: k, sortBy: effectiveSortBy },
 				cursors?.docs?.[k] ?? null,
 			);
 			const q = query(
@@ -397,7 +404,7 @@ export async function adminQueryRoutes({
 	const total = await adminRouteCount(filters);
 
 	return {
-		routes: mergeRouteStreams(streams, pageSize),
+		routes: mergeRouteStreams(streams, pageSize, effectiveSortBy),
 		nextCursors: { docs: nextDocs, exhausted: [...nextExhausted] },
 		total,
 	};
