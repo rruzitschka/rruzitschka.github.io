@@ -52,6 +52,8 @@ on a held-back branch until the release.
 | --- | --- |
 | `route-line-ui.js` | Training overlay gym route lines + session-detail renderers |
 | `route-link-ui.js` | Find-route button state for the soft-link UI |
+| `ui-theme.js` | New-UI pure helpers: route-type chips, compact climb rows (shorthand styles, locale dates), shared Route Detail card renderer |
+| `climb-inspector-ui.js` | New-UI DOM wiring: route-type chip bar (synced with #filter-routetype), right-hand Route Detail Inspector, theme switch (removed toggle — new UI is unconditional) |
 | `overlay-country.js` | Country select sync for overlays |
 | `reverse-geocode.js` | BigDataCloud reverse geocoding (admin GPS pin) |
 | `admin-routes-browser.js` | Admin route browser query helpers (search folding, filter order, sort — nameSearch asc default, createdAt desc "newest first" browse-all) |
