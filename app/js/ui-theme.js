@@ -1,58 +1,9 @@
-// ui-theme.js — Pure helpers for the Chalk & Sky / Classic UI theme switch,
-// iOS route-type filter chips, and the right-hand Route Detail Inspector.
+// ui-theme.js — Pure helpers for the SendLog web app's new UI: iOS route-type
+// filter chips, compact climb rows, and the Route Detail Inspector.
 //
 // Kept DOM-free and Firestore-free so every helper is unit-testable with vitest.
 
 "use strict";
-
-export const THEME_STORAGE_KEY = "sendlog_ui_theme";
-export const THEME_CHALK_SKY = "chalk-sky";
-export const THEME_CLASSIC = "classic";
-
-/**
- * Resolve the active UI theme from a stored value.
- * Defaults to "chalk-sky" (the new design) unless "classic" was explicitly saved.
- *
- * @param {string|null|undefined} storedValue
- * @returns {"chalk-sky"|"classic"}
- */
-export function resolveTheme(storedValue) {
-	return storedValue === THEME_CLASSIC ? THEME_CLASSIC : THEME_CHALK_SKY;
-}
-
-/**
- * Return the opposite theme for the header toggle switch.
- *
- * @param {string} currentTheme
- * @returns {"chalk-sky"|"classic"}
- */
-export function nextTheme(currentTheme) {
-	return resolveTheme(currentTheme) === THEME_CHALK_SKY
-		? THEME_CLASSIC
-		: THEME_CHALK_SKY;
-}
-
-/**
- * Label and tooltip for the top-header theme toggle button.
- *
- * @param {string} currentTheme
- * @returns {{ text: string, title: string, isChalkSky: boolean }}
- */
-export function themeToggleMeta(currentTheme) {
-	const active = resolveTheme(currentTheme);
-	if (active === THEME_CHALK_SKY) {
-		return {
-			text: "Classic UI",
-			title: "Switch to the classic light interface",
-			isChalkSky: true,
-		};
-	}
-	return {
-		text: "New UI",
-		title: "Switch to the Chalk & Sky interface",
-		isChalkSky: false,
-	};
-}
 
 // ── iOS Route-type colors (mirrors StatsView.getRouteTypeColor in iOS) ──────
 
@@ -179,16 +130,28 @@ function renderInspectorProjectSection(climb) {
 
 const CLOUD_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
 
-function renderClassicRouteIndicators({ centralRouteID, hasGps, countryCode, countryName, flagEmoji }) {
-	const gpsSpan =
-		centralRouteID && hasGps
-			? ' <span class="classic-only" title="Route start GPS available" style="font-size:0.8rem">📍</span>'
-			: "";
-	const countrySpan =
-		centralRouteID && countryCode
-			? ` <span class="classic-only" style="font-size:0.9rem" title="${escapeInspectorHtml(countryName || countryCode)}">${flagEmoji || escapeInspectorHtml(countryCode)}</span>`
-			: ' <span class="classic-only" title="No country set" style="opacity:0.3">🌐</span>';
-	return `${gpsSpan}${countrySpan}`;
+function renderChalkSkyRouteIndicators({ centralRouteID, countryCode, countryName }) {
+	if (!centralRouteID) return "";
+	const cloud = `<span class="cs-route-cloud" title="In community database">${CLOUD_SVG}</span>`;
+	const iso = countryCode
+		? `<span class="cs-route-iso" title="${escapeInspectorHtml(countryName || countryCode)}">${escapeInspectorHtml(countryCode)}</span>`
+		: "";
+	return `<span class="cs-route-meta">${cloud}${iso}</span>`;
+}
+
+/**
+ * Render route-row indicators for community-linked climbs: cloud SVG for the
+ * community DB + ISO country pill.
+ *
+ * @param {{
+ *   centralRouteID?: string|null,
+ *   countryCode?: string|null,
+ *   countryName?: string|null,
+ * }} [info]
+ * @returns {string}
+ */
+export function renderRouteCellIndicatorsHtml(info = {}) {
+	return renderChalkSkyRouteIndicators(info);
 }
 
 /**
@@ -200,35 +163,7 @@ function renderClassicRouteIndicators({ centralRouteID, hasGps, countryCode, cou
  */
 export function renderCommunityOwnerIndicatorHtml(isOwner) {
 	if (!isOwner) return "";
-	return `<span class="cs-only cs-owner-indicator" title="You created this route">${CLOUD_SVG}<span>Owner</span></span><span class="classic-only" title="You created this route"> 👤</span>`;
-}
-
-function renderChalkSkyRouteIndicators({ centralRouteID, countryCode, countryName }) {
-	if (!centralRouteID) return "";
-	const cloud = `<span class="cs-route-cloud" title="In community database">${CLOUD_SVG}</span>`;
-	const iso = countryCode
-		? `<span class="cs-route-iso" title="${escapeInspectorHtml(countryName || countryCode)}">${escapeInspectorHtml(countryCode)}</span>`
-		: "";
-	return `<span class="cs-only cs-route-meta">${cloud}${iso}</span>`;
-}
-
-/**
- * Render route-row indicators for both Classic (emojis) and Chalk & Sky
- * (cloud SVG for community DB + ISO country pill).
- *
- * @param {{
- *   centralRouteID?: string|null,
- *   hasGps?: boolean,
- *   countryCode?: string|null,
- *   countryName?: string|null,
- *   flagEmoji?: string|null,
- * }} [info]
- * @returns {string}
- */
-export function renderRouteCellIndicatorsHtml(info = {}) {
-	return (
-		renderClassicRouteIndicators(info) + renderChalkSkyRouteIndicators(info)
-	);
+	return `<span class="cs-owner-indicator" title="You created this route">${CLOUD_SVG}<span>Owner</span></span>`;
 }
 
 // ── Compact climb-row rendering (Chalk & Sky only) ──────────────────────

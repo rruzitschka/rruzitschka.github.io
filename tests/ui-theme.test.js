@@ -5,12 +5,6 @@
 import { describe, it, expect } from "vitest";
 
 import {
-	THEME_STORAGE_KEY,
-	THEME_CHALK_SKY,
-	THEME_CLASSIC,
-	resolveTheme,
-	nextTheme,
-	themeToggleMeta,
 	ROUTE_TYPE_DOT_MAP,
 	routeTypeDotClass,
 	escapeInspectorHtml,
@@ -29,40 +23,6 @@ import {
 	renderInspectorPhotosHtml,
 	renderInspectorHtml,
 } from "../app/js/ui-theme.js";
-
-describe("theme resolution & toggle helpers", () => {
-	it("defaults to chalk-sky when stored value is missing or unknown", () => {
-		expect(THEME_STORAGE_KEY).toBe("sendlog_ui_theme");
-		expect(resolveTheme(null)).toBe(THEME_CHALK_SKY);
-		expect(resolveTheme(undefined)).toBe(THEME_CHALK_SKY);
-		expect(resolveTheme("")).toBe(THEME_CHALK_SKY);
-		expect(resolveTheme("bogus")).toBe(THEME_CHALK_SKY);
-		expect(resolveTheme(THEME_CHALK_SKY)).toBe(THEME_CHALK_SKY);
-	});
-
-	it("returns classic when stored value is classic", () => {
-		expect(resolveTheme(THEME_CLASSIC)).toBe(THEME_CLASSIC);
-	});
-
-	it("nextTheme flips between chalk-sky and classic", () => {
-		expect(nextTheme(THEME_CHALK_SKY)).toBe(THEME_CLASSIC);
-		expect(nextTheme(THEME_CLASSIC)).toBe(THEME_CHALK_SKY);
-		expect(nextTheme(null)).toBe(THEME_CLASSIC);
-	});
-
-	it("themeToggleMeta returns label and tooltip for each theme", () => {
-		expect(themeToggleMeta(THEME_CHALK_SKY)).toEqual({
-			text: "Classic UI",
-			title: "Switch to the classic light interface",
-			isChalkSky: true,
-		});
-		expect(themeToggleMeta(THEME_CLASSIC)).toEqual({
-			text: "New UI",
-			title: "Switch to the Chalk & Sky interface",
-			isChalkSky: false,
-		});
-	});
-});
 
 describe("route-type dots & filter chips", () => {
 	it("maps iOS route types to dot classes with fallback", () => {
@@ -100,7 +60,6 @@ describe("route-type dots & filter chips", () => {
 		const html = renderCommunityOwnerIndicatorHtml(true);
 		expect(html).toContain("cs-owner-indicator");
 		expect(html).toContain(">Owner</span>");
-		expect(html).toContain("classic-only");
 	});
 
 	it("renderRouteCellIndicatorsHtml renders cloud SVG and ISO country pill for community routes", () => {
@@ -114,7 +73,6 @@ describe("route-type dots & filter chips", () => {
 		expect(linked).toContain("cs-route-cloud");
 		expect(linked).toContain("In community database");
 		expect(linked).toContain('class="cs-route-iso" title="Austria">AT</span>');
-		expect(linked).toContain("📍");
 
 		const linkedNoCountry = renderRouteCellIndicatorsHtml({
 			centralRouteID: "r2",
@@ -126,7 +84,6 @@ describe("route-type dots & filter chips", () => {
 
 		const unlinked = renderRouteCellIndicatorsHtml({});
 		expect(unlinked).not.toContain("cs-route-cloud");
-		expect(unlinked).toContain("🌐");
 	});
 });
 

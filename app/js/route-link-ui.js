@@ -19,9 +19,8 @@ export function setFindRouteLinked(btnId, routeName, createdBy) {
 	const btn = document.getElementById(btnId);
 	if (!btn) return;
 	const isOwned = Boolean(createdBy && createdBy === auth.currentUser?.uid);
-	const classicLabel = isOwned ? "✓ 👤" : "✓";
 	const ownerLabel = isOwned ? `<span>Owner</span>` : "";
-	btn.innerHTML = `<span class="classic-only">${classicLabel}</span><span class="cs-only cs-route-link-pill linked" title="In community database">${CLOUD_ICON_SVG}${ownerLabel}</span>`;
+	btn.innerHTML = `<span class="cs-route-link-pill linked" title="In community database">${CLOUD_ICON_SVG}${ownerLabel}</span>`;
 	btn.title = buildLinkedTitle(routeName, isOwned);
 	btn.style.color = "var(--success-color, green)";
 }
@@ -30,7 +29,7 @@ export function setFindRouteLinked(btnId, routeName, createdBy) {
 export function setFindRouteUnlinked(btnId) {
 	const btn = document.getElementById(btnId);
 	if (!btn) return;
-	btn.innerHTML = `<span class="classic-only">🔍</span><span class="cs-only cs-route-link-pill">${SEARCH_ICON_SVG}<span>Find in Community DB</span></span>`;
+	btn.innerHTML = `<span class="cs-route-link-pill">${SEARCH_ICON_SVG}<span>Find in Community DB</span></span>`;
 	btn.title = "Find Route in Database";
 	btn.style.color = "";
 }

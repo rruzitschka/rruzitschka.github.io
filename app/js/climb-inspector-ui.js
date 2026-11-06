@@ -1,19 +1,11 @@
-// climb-inspector-ui.js — DOM wiring for the Chalk & Sky / Classic UI switch,
-// the iOS-style route-type filter chip bar, and the right-hand Route Detail
-// Inspector. Split out of ui.js (like route-link-ui.js / overlay-country.js)
+// climb-inspector-ui.js — DOM wiring for the iOS-style route-type filter chip
+// bar and the right-hand Route Detail Inspector. Split out of ui.js (like route-link-ui.js / overlay-country.js)
 // so ui.js stays focused and pure helpers remain in ui-theme.js.
 
 "use strict";
 
 import {
-	THEME_STORAGE_KEY,
-	THEME_CHALK_SKY,
-	resolveTheme,
-	nextTheme,
-	themeToggleMeta,
-	escapeInspectorHtml,
 	renderRouteTypeChipsHtml,
-	renderRouteCellIndicatorsHtml,
 	renderInspectorEmptyHtml,
 	renderInspectorAscentsHtml,
 	renderInspectorGpsHtml,
@@ -22,80 +14,11 @@ import {
 	formatCommunityRating,
 	combineAscentsWithOriginalSend,
 	buildCompactClimbRowCellsHtml,
-	renderAreaCragCell,
 } from "./ui-theme.js";
 import { isoCountryName, countryFlagEmoji } from "./iso-countries.js";
 
 let _selectedRecordName = null;
 let _lastClimbTypes = [];
-
-function readStoredTheme() {
-	try {
-		return resolveTheme(globalThis.localStorage?.getItem(THEME_STORAGE_KEY));
-	} catch {
-		return THEME_CHALK_SKY;
-	}
-}
-
-function writeStoredTheme(theme) {
-	try {
-		globalThis.localStorage?.setItem(THEME_STORAGE_KEY, theme);
-	} catch {
-		// localStorage unavailable (private browsing / test harness)
-	}
-}
-
-function refreshStatsChartsIfVisible() {
-	const statsView = document.getElementById("stats-view");
-	if (!statsView || statsView.classList.contains("hidden")) return;
-	if (typeof globalThis.renderStatsPage !== "function") return;
-	globalThis.renderStatsPage(
-		globalThis.allClimbs ?? [],
-		globalThis.allSessions ?? [],
-	);
-}
-
-/**
- * Apply the given theme ("chalk-sky" | "classic") to <html> and refresh the
- * top-header toggle button label/tooltip.
- *
- * @param {string} theme
- */
-export function applyThemeToDom(theme) {
-	const resolved = resolveTheme(theme);
-	document.documentElement.dataset.theme = resolved;
-	const btn = document.getElementById("theme-toggle-btn");
-	const lbl = document.getElementById("theme-toggle-label");
-	const meta = themeToggleMeta(resolved);
-	if (btn) btn.title = meta.title;
-	if (lbl) lbl.textContent = meta.text;
-	refreshStatsChartsIfVisible();
-}
-
-/**
- * Return true when the Chalk & Sky UI is currently active on <html>.
- *
- * @returns {boolean}
- */
-export function isChalkSkyActive() {
-	return resolveTheme(document.documentElement.dataset.theme) === THEME_CHALK_SKY;
-}
-
-/**
- * Initialize the UI theme from localStorage (defaults to "chalk-sky") and bind
- * the top-header toggle button once.
- */
-export function initThemeSwitch() {
-	applyThemeToDom(readStoredTheme());
-	const btn = document.getElementById("theme-toggle-btn");
-	if (!btn || btn.dataset.bound === "1") return;
-	btn.dataset.bound = "1";
-	btn.addEventListener("click", () => {
-		const next = nextTheme(document.documentElement.dataset.theme);
-		writeStoredTheme(next);
-		applyThemeToDom(next);
-	});
-}
 
 // ── Route-type filter chip bar (replaces #filter-routetype in Chalk & Sky) ──
 
@@ -296,21 +219,6 @@ export function selectClimbInInspector(climb, deps) {
 	loadInspectorPhotos(climb, deps.fetchPhotos);
 }
 
-function resolveRowCountryInfo(centralRouteID, routeCountries) {
-	const code = lookupMapValue(routeCountries, centralRouteID);
-	if (!code) return { countryCode: null, countryName: null, flagEmoji: null };
-	return {
-		countryCode: code,
-		countryName: isoCountryName(code),
-		flagEmoji: countryFlagEmoji(code),
-	};
-}
-
-function renderCommunityRatingSuffix(centralRouteID, communityRatings) {
-	const rating = lookupMapValue(communityRatings, centralRouteID);
-	if (typeof rating !== "number") return "";
-	return `<small style="color:#94a3b8;margin-left:3px;">(${rating.toFixed(1)})</small>`;
-}
 
 /**
  * Build the innerHTML of a climb <tr> row. Compact layout (no Rating column,
@@ -322,38 +230,13 @@ function renderCommunityRatingSuffix(centralRouteID, communityRatings) {
  * @returns {string}
  */
 export function buildClimbRowCellsHtml(climb, rowMeta, deps) {
-	if (isChalkSkyActive()) {
-		return buildCompactClimbRowCellsHtml(climb, rowMeta, {
-			gpsData: deps.gpsData,
-			routeCountries: deps.routeCountries,
-			countryName: isoCountryName,
-			flagEmoji: countryFlagEmoji,
-			longDateText: rowMeta.dateText,
-		});
-	}
-	const routeID = climb.centralRouteID;
-	const hasGps = Boolean(routeID && deps.gpsData?.has(routeID));
-	const countryInfo = resolveRowCountryInfo(routeID, deps.routeCountries);
-	const indicators = renderRouteCellIndicatorsHtml({
-		centralRouteID: routeID,
-		hasGps,
-		...countryInfo,
+	return buildCompactClimbRowCellsHtml(climb, rowMeta, {
+		gpsData: deps.gpsData,
+		routeCountries: deps.routeCountries,
+		countryName: isoCountryName,
+		flagEmoji: countryFlagEmoji,
+		longDateText: rowMeta.dateText,
 	});
-	const routeName = escapeInspectorHtml(climb.route || "—");
-	const routeType = escapeInspectorHtml(climb.routeType || "—");
-	const grade = escapeInspectorHtml(climb.difficulty || "—");
-	const sendType = escapeInspectorHtml(climb.sendType || "—");
-	const commSuffix = renderCommunityRatingSuffix(routeID, deps.communityRatings);
-
-	return `
-      <td><div class="cs-route-cell"><strong>${routeName}</strong>${indicators}</div></td>
-      <td>${renderAreaCragCell(climb)}</td>
-      <td><span class="type-badge">${routeType}</span></td>
-      <td><span class="badge ${rowMeta.gradeClass}">${grade}</span></td>
-      <td>${rowMeta.dateText}</td>
-      <td><span class="badge ${rowMeta.sendClass}">${sendType}</span></td>
-      <td>${rowMeta.starsHtml}${commSuffix}</td>
-    `;
 }
 
 /**

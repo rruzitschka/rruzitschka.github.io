@@ -7,20 +7,6 @@
    ============================================================================ */
 
 /* ── Classic-mode rules: hide Chalk & Sky additions so classic is untouched ── */
-html:not([data-theme="chalk-sky"]) .cs-only,
-html:not([data-theme="chalk-sky"]) #routetype-chips-bar,
-html:not([data-theme="chalk-sky"]) #climb-inspector {
-	display: none !important;
-}
-
-html:not([data-theme="chalk-sky"]) .logbook-workspace,
-html:not([data-theme="chalk-sky"]) .logbook-table-card {
-	display: contents;
-}
-
-.req-star {
-	color: #f87171;
-}
 
 .form-group.hidden,
 .ascent-add-row.hidden {
@@ -39,26 +25,7 @@ html:not([data-theme="chalk-sky"]) .logbook-table-card {
 }
 
 /* Header theme toggle button (visible in both Classic and Chalk & Sky) */
-.btn-theme-toggle {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	background: rgba(255, 255, 255, 0.08);
-	color: #f1f5f9;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	padding: 0.35rem 0.75rem;
-	border-radius: 7px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	cursor: pointer;
-	font-family: inherit;
-	transition: background 0.15s ease, border-color 0.15s ease;
-}
 
-.btn-theme-toggle:hover {
-	background: rgba(255, 255, 255, 0.16);
-	border-color: rgba(255, 255, 255, 0.35);
-}
 
 /* ── Chalk & Sky root tokens & visibility ────────────────────────────────── */
 html[data-theme="chalk-sky"] {
@@ -92,7 +59,6 @@ html[data-theme="chalk-sky"] {
 	--border-dark: #484f58;
 }
 
-html[data-theme="chalk-sky"] .classic-only,
 html[data-theme="chalk-sky"] #filter-routetype {
 	display: none !important;
 }
@@ -157,8 +123,7 @@ html[data-theme="chalk-sky"] .app-user-chip::before {
 }
 
 html[data-theme="chalk-sky"] .btn-account,
-html[data-theme="chalk-sky"] .btn-signout,
-html[data-theme="chalk-sky"] .btn-theme-toggle {
+html[data-theme="chalk-sky"] .btn-signout {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -172,8 +137,7 @@ html[data-theme="chalk-sky"] .btn-theme-toggle {
 }
 
 html[data-theme="chalk-sky"] .btn-account:hover,
-html[data-theme="chalk-sky"] .btn-signout:hover,
-html[data-theme="chalk-sky"] .btn-theme-toggle:hover {
+html[data-theme="chalk-sky"] .btn-signout:hover {
 	background: var(--cs-border-subtle);
 	border-color: #484f58;
 }
@@ -1515,189 +1479,29 @@ html[data-theme="chalk-sky"] [style*="background: #f1f5f9"] {
 /* ── Classic-mode fallbacks for the shared Route Detail card ─────────────────
    The climb detail modal renders the same insp-* card as the Chalk & Sky
    inspector in BOTH themes — give Classic its light look here. */
-html:not([data-theme="chalk-sky"]) .insp-top {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-	gap: 8px;
-	margin-bottom: 4px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-title {
-	font-size: 16px;
-	font-weight: 700;
-	color: #1e293b;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-grade-wrap {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-grade-pill {
-	background: #eff6ff;
-	color: #1d4ed8;
-	padding: 2px 8px;
-	border-radius: 6px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-cloud-pill {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	padding: 2px 8px;
-	border-radius: 6px;
-	background: #f1f5f9;
-	color: #475569;
-}
 
-html:not([data-theme="chalk-sky"]) .detail-chip-owner {
-	color: #1d4ed8;
-	font-weight: 700;
-	font-size: 11px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-meta {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 6px;
-	font-size: 11.5px;
-	color: #64748b;
-	margin-bottom: 12px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-iso-pill {
-	font-size: 10px;
-	font-weight: 700;
-	padding: 1px 5px;
-	border-radius: 4px;
-	background: #f1f5f9;
-	color: #334155;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-type {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	color: #334155;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 8px;
-	padding: 9px 10px;
-	background: #f8fafc;
-	border-radius: 8px;
-	margin-bottom: 12px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-cell-l {
-	font-size: 10px;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	color: #64748b;
-	font-weight: 600;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-cell-v {
-	font-size: 12.5px;
-	font-weight: 700;
-	margin-top: 3px;
-	color: #1e293b;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-sec {
-	font-size: 10.5px;
-	text-transform: uppercase;
-	letter-spacing: 0.6px;
-	color: #64748b;
-	font-weight: 700;
-	margin: 10px 0 6px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-note-body {
-	padding: 7px 9px;
-	border-radius: 7px;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
-	font-size: 12.5px;
-	color: #1e293b;
-	white-space: pre-wrap;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-list {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-item {
-	padding: 7px 9px;
-	border-radius: 7px;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
-	font-size: 12.5px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-row1 {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 2px;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-date {
-	font-weight: 600;
-	color: #1e293b;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-style {
-	font-size: 11px;
-	color: #2563eb;
-	font-weight: 600;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-ascent-note {
-	font-size: 11.5px;
-	color: #64748b;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-maps-link {
-	font-family: ui-monospace, "SF Mono", Menlo, monospace;
-	font-size: 11px;
-	color: #2563eb;
-	text-decoration: none;
-	text-transform: none;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-photos-strip {
-	display: flex;
-	gap: 6px;
-	overflow-x: auto;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-photos-strip img {
-	height: 90px;
-	width: auto;
-	max-width: 130px;
-	object-fit: cover;
-	border-radius: 6px;
-	border: 1px solid #e2e8f0;
-	display: block;
-}
 
-html:not([data-theme="chalk-sky"]) .insp-empty {
-	font-size: 12.5px;
-	color: #64748b;
-	padding: 18px 4px;
-	text-align: center;
-}
 
 /* ── Skeletons, Toast & Login Card ───────────────────────────────────────── */
 html[data-theme="chalk-sky"] .skeleton {

@@ -70,7 +70,6 @@ import {
 	isStyleTabHidden,
 } from "./send-style.js";
 import {
-	initThemeSwitch,
 	syncRouteTypeChipBar,
 	syncTableCardHeader,
 	buildClimbRowCellsHtml,
@@ -540,7 +539,6 @@ function bindFilterHandlers(initialClimbs) {
 
 // Modules run after DOM is parsed; execute init immediately (no DOMContentLoaded needed)
 {
-	initThemeSwitch();
 	document
 		.getElementById("modal-close")
 		?.addEventListener("click", hideDetailModal);

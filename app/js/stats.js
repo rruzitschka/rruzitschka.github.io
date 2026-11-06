@@ -478,11 +478,11 @@ function renderStreakCards(allClimbs, allSessions) {
 	const longest = spCalcLongestStreak(allClimbs);
 	document.getElementById("sp-streak-cards").innerHTML = `
     <div class="stat-card">
-      <div class="stat-value"><span class="classic-only">🔥 </span>${weekly}</div>
+      <div class="stat-value">${weekly}</div>
       <div class="stat-label">Weekly Streak</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value"><span class="classic-only">🏆 </span>${longest}</div>
+      <div class="stat-value">${longest}</div>
       <div class="stat-label">Longest Streak (days)</div>
     </div>
   `;
