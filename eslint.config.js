@@ -49,6 +49,8 @@ export default [
       'app/js/route-link-ui.js',
       'app/js/route-line-ui.js',
       'app/js/reverse-geocode.js',
+      'app/js/ui-theme.js',
+      'app/js/climb-inspector-ui.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

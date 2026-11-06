@@ -48,7 +48,6 @@ import {
 	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
-import { isoCountryName, countryFlagEmoji } from "./iso-countries.js";
 import {
 	syncCountrySelects as _syncCountrySelects,
 	overlayCountryChange,
@@ -70,6 +69,15 @@ import {
 	coerceSendTypeForRouteType,
 	isStyleTabHidden,
 } from "./send-style.js";
+import {
+	initThemeSwitch,
+	syncRouteTypeChipBar,
+	syncTableCardHeader,
+	buildClimbRowCellsHtml,
+	bindClimbRowClick,
+	syncInspectorForPage,
+} from "./climb-inspector-ui.js";
+import { renderCommunityOwnerIndicatorHtml } from "./ui-theme.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -235,6 +243,19 @@ function renderClimbsTable(climbs) {
 	const tbody = document.getElementById("climbs-tbody");
 	const table = document.getElementById("climbs-table");
 	const empty = document.getElementById("empty-state");
+	const inspectorDeps = {
+		gpsData: _gpsData,
+		routeCountries: _routeCountries,
+		communityRatings: _communityRatings,
+		sendClasses: SEND_CLASSES,
+		formatDate,
+		currentUID: () => auth.currentUser?.uid ?? null,
+		getRoute,
+		fetchAscents,
+		fetchPhotos,
+		showEditSendOverlay,
+		showEditProjectOverlay,
+	};
 
 	tbody.innerHTML = "";
 
@@ -242,6 +263,8 @@ function renderClimbsTable(climbs) {
 		table.style.display = "none";
 		empty.style.display = "block";
 		renderPagination(0, 0);
+		syncTableCardHeader(0, 0, 0);
+		syncInspectorForPage([], inspectorDeps);
 		return;
 	}
 
@@ -254,30 +277,22 @@ function renderClimbsTable(climbs) {
 	const pageClimbs = _filteredClimbs.slice(start, start + ITEMS_PER_PAGE);
 
 	for (const climb of pageClimbs) {
-		const gradeClass = gradeBadgeClass(climb.difficulty);
-		const sendClass = SEND_CLASSES[climb.sendType] ?? "send-proj";
+		const rowMeta = {
+			gradeClass: gradeBadgeClass(climb.difficulty),
+			sendClass: SEND_CLASSES[climb.sendType] ?? "send-proj",
+			dateText: formatDate(climb.date),
+			starsHtml: renderStars(climb.rating),
+		};
 		const tr = document.createElement("tr");
 		tr.style.cursor = "pointer";
-		tr.innerHTML = `
-      <td><strong>${escapeHtml(climb.route || "—")}</strong>${climb.centralRouteID && _gpsData.has(climb.centralRouteID) ? ' <span title="Route start GPS available" style="font-size:0.8rem">📍</span>' : ""}${climb.centralRouteID && _routeCountries.has(climb.centralRouteID)
-				? ` <span style="font-size:0.9rem" title="${isoCountryName(_routeCountries.get(climb.centralRouteID)) ?? _routeCountries.get(climb.centralRouteID)}">${countryFlagEmoji(_routeCountries.get(climb.centralRouteID))}</span>`
-				: ' <span title="No country set" style="opacity:0.3">🌐</span>'}</td>
-      <td>${escapeHtml(climb.climbingArea || "—")}${climb.crag ? ` <small style="color:#64748b">/ ${escapeHtml(climb.crag)}</small>` : ""}</td>
-      <td><span class="type-badge">${escapeHtml(climb.routeType || "—")}</span></td>
-      <td><span class="badge ${gradeClass}">${escapeHtml(climb.difficulty || "—")}</span></td>
-      <td>${formatDate(climb.date)}</td>
-      <td><span class="badge ${sendClass}">${escapeHtml(climb.sendType || "—")}</span></td>
-      <td>${renderStars(climb.rating)}${
-				climb.centralRouteID && _communityRatings.has(climb.centralRouteID)
-					? `<small style="color:#94a3b8;margin-left:3px;">(${_communityRatings.get(climb.centralRouteID).toFixed(1)})</small>`
-					: ""
-			}</td>
-    `;
-		tr.addEventListener("click", () => showDetailModal(climb));
+		tr.innerHTML = buildClimbRowCellsHtml(climb, rowMeta, inspectorDeps);
+		bindClimbRowClick(tr, climb, inspectorDeps);
 		tbody.appendChild(tr);
 	}
 
 	renderPagination(_filteredClimbs.length, totalPages);
+	syncTableCardHeader(_filteredClimbs.length, start, pageClimbs.length);
+	syncInspectorForPage(pageClimbs, inspectorDeps);
 }
 
 function renderPagination(total, totalPages) {
@@ -308,203 +323,6 @@ function renderPagination(total, totalPages) {
 }
 
 // ---------- Detail Modal ----------
-
-function showDetailModal(climb) {
-	const overlay = document.getElementById("modal-overlay");
-	const content = document.getElementById("modal-content");
-
-	const sendClass = SEND_CLASSES[climb.sendType] ?? "send-proj";
-
-	let html = `
-    <div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.3rem;flex-wrap:wrap">
-      <h2 style="margin:0;line-height:1.3">
-        ${escapeHtml(climb.route || "—")}
-        <span style="font-weight:400;color:inherit">${escapeHtml(climb.difficulty || "—")}</span>
-      </h2>
-      ${climb.routeType ? `<span style="font-size:0.9rem;color:#64748b;font-weight:500">${escapeHtml(climb.routeType)}</span>` : ""}
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${climb.centralRouteID ? "0.4rem" : "1.25rem"}">
-      <span style="color:#64748b;font-size:0.95rem">
-        ${escapeHtml(climb.climbingArea || "")}${climb.crag ? ` &rsaquo; ${escapeHtml(climb.crag)}` : ""}
-      </span>
-      <span class="badge ${sendClass}">${escapeHtml(climb.sendType || "—")}</span>
-    </div>
-    ${
-			climb.centralRouteID
-				? `<div style="margin-bottom:1rem">
-      <span id="detail-central-route-chip" style="
-        display:inline-flex;align-items:center;gap:4px;
-        font-size:0.75rem;color:#64748b;
-        background:#f1f5f9;border-radius:6px;
-        padding:2px 8px;">☁ In community database
-      </span>
-    </div>`
-				: ""
-		}
-    <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
-      <tr>
-        <td style="padding:0.35rem 0;color:#64748b;width:40%">Date</td>
-        <td style="padding:0.35rem 0">${formatDate(climb.date)}</td>
-      </tr>
-      <tr>
-        <td style="padding:0.35rem 0;color:#64748b">Rating</td>
-        <td style="padding:0.35rem 0">${renderStars(climb.rating)}<span id="detail-community-rating" style="font-size:0.8rem;color:#94a3b8;margin-left:4px;"></span></td>
-      </tr>
-    </table>
-  `;
-
-	if (climb.noteText) {
-		html += `
-      <div style="margin-bottom:1.25rem">
-        <div style="font-weight:600;margin-bottom:0.35rem">Notes</div>
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;white-space:pre-wrap;font-size:0.93rem">${escapeHtml(climb.noteText)}</div>
-      </div>
-    `;
-	}
-
-	if (climb.isProject || climb.projectStatus) {
-		html += `
-      <div style="background:#f1f5f9;border-radius:8px;padding:1rem;margin-bottom:1rem">
-        <div style="font-weight:600;margin-bottom:0.5rem">Project Details</div>
-        <table style="width:100%;border-collapse:collapse;font-size:0.93rem">
-          ${climb.projectStatus ? `<tr><td style="padding:0.3rem 0;color:#64748b;width:40%">Status</td><td>${escapeHtml(climb.projectStatus.charAt(0).toUpperCase() + climb.projectStatus.slice(1))}</td></tr>` : ""}
-          ${climb.date ? `<tr><td style="padding:0.3rem 0;color:#64748b">First Attempt</td><td>${formatDate(climb.date)}</td></tr>` : ""}
-          ${climb.highPoint ? `<tr><td style="padding:0.3rem 0;color:#64748b">High Point</td><td>${escapeHtml(String(climb.highPoint))}</td></tr>` : ""}
-          ${climb.lastAttemptDate ? `<tr><td style="padding:0.3rem 0;color:#64748b">Last Attempt</td><td>${formatDate(climb.lastAttemptDate)}</td></tr>` : ""}
-          ${climb.attemptCount ? `<tr><td style="padding:0.3rem 0;color:#64748b">Attempts</td><td>${climb.attemptCount}</td></tr>` : ""}
-        </table>
-        ${climb.projectNotes ? `<div style="margin-top:0.5rem;font-size:0.9rem;color:#475569;white-space:pre-wrap">${escapeHtml(climb.projectNotes)}</div>` : ""}
-      </div>
-    `;
-	}
-
-	// Ascents placeholder — filled asynchronously (fresh fetch per open)
-	html += `<div id="detail-ascents-container"></div>`;
-
-	// Photos section: async-loaded from Firestore sub-collection
-	html += `<div id="detail-gps-row"></div>`;
-	html += `<div id="modal-photos-container" style="margin-bottom:1rem"></div>`;
-
-	html += `<div style="display:flex;justify-content:flex-end;margin-top:.5rem">
-    <button id="detail-edit-btn" class="btn btn-primary btn-sm">Edit Climb</button>
-  </div>`;
-
-	content.innerHTML = html;
-	overlay.style.display = "flex";
-	document.body.style.overflow = "hidden";
-
-	// Async: fetch central route — updates ownership chip and community rating
-	if (climb.centralRouteID) {
-		getRoute(climb.centralRouteID)
-			.then((route) => {
-				if (!route) return;
-				const chip = document.getElementById("detail-central-route-chip");
-				if (chip && route.createdBy === auth.currentUser?.uid) {
-					chip.innerHTML =
-						'☁ In community database <span title="You created this route">👤</span>';
-				}
-				const ratingSpan = document.getElementById("detail-community-rating");
-				if (ratingSpan && route.communityRating != null) {
-					ratingSpan.textContent = `(${route.communityRating.toFixed(1)})`;
-				}
-				// Location row — country when set (plus GPS details when available),
-				// injected after the table
-				{
-					const gpsContainer = document.getElementById("detail-gps-row");
-					if (gpsContainer) {
-						const hasGPS =
-							route.latitude != null && route.longitude != null;
-						const countryLine = route.country
-							? `${countryFlagEmoji(route.country)} ${isoCountryName(route.country) ?? escapeHtml(route.country)}`
-							: '<span style="color:#94a3b8">No country set</span>';
-						const mapsURL = hasGPS
-							? `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climb.route || "Route start")}`
-							: null;
-						gpsContainer.innerHTML = `
-							<div style="margin-bottom:1.25rem;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
-								<div style="font-size:0.8rem;color:#64748b;margin-bottom:0.25rem;">📍 Route Start</div>
-								<div style="font-size:0.9rem;margin-bottom:${hasGPS ? "0.4rem" : "0"}">${countryLine}</div>
-								${hasGPS ? `
-								<div style="font-size:0.85rem;font-family:monospace;margin-bottom:0.4rem;">${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</div>
-								<a href="${escapeHtml(mapsURL)}" target="_blank" rel="noopener" style="font-size:0.82rem;color:var(--accent-color,#6366f1);">Open in Maps ↗</a>
-								` : ""}
-							</div>`;
-					}
-				}
-			})
-			.catch(() => {});
-	}
-
-	// Async: lazy-load ascents for the detail modal view — always fresh, so
-	// repeats added elsewhere (e.g. in the iOS app) show up without a reload.
-	if (climb.recordName) {
-		fetchAscents(climb.recordName)
-			.then((ascents) => {
-				if (ascents.length === 0) return;
-				const container = document.getElementById("detail-ascents-container");
-				if (!container) return;
-				container.innerHTML = `
-					<div style="margin-bottom:1.25rem">
-						<div style="font-weight:600;margin-bottom:0.5rem">Repeat Ascents</div>
-						<div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
-							${ascents
-								.map((a, i) => {
-									const d = a.date
-										? new Date(a.date).toLocaleDateString("en-US", {
-												month: "short",
-												day: "numeric",
-												year: "numeric",
-											})
-										: "\u2014";
-									const border =
-										i < ascents.length - 1
-											? "border-bottom:1px solid #f1f5f9;"
-											: "";
-									return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;${border}">
-										<span style="color:#64748b;min-width:90px;font-size:0.82rem">${d}</span>
-										<span style="flex:1">${escapeHtml(a.sendType ?? "Redpoint")}</span>
-										${a.notes ? `<span style="color:#64748b;font-size:0.85rem;font-style:italic">${escapeHtml(a.notes)}</span>` : ""}
-									</div>`;
-								})
-								.join("")}
-						</div>
-					</div>`;
-			})
-			.catch(() => {});
-	}
-
-	// Async photo load
-	if (climb.recordName && typeof fetchPhotos === "function") {
-		fetchPhotos(climb.recordName).then((photos) => {
-			const container = document.getElementById("modal-photos-container");
-			if (!container || photos.length === 0) return;
-			container.innerHTML = `
-        <div style="font-weight:600;margin-bottom:0.5rem">Photos</div>
-        <div style="display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.25rem">
-          ${photos
-						.map(
-							(p) => `
-            <a href="${escapeHtml(p.storageURL)}" target="_blank" rel="noopener" style="flex-shrink:0">
-              <img src="${escapeHtml(p.storageURL)}" alt="Route photo"
-                style="height:120px;width:auto;max-width:160px;object-fit:cover;border-radius:8px;display:block">
-            </a>
-          `,
-						)
-						.join("")}
-        </div>
-      `;
-		});
-	}
-
-	document.getElementById("detail-edit-btn").addEventListener("click", () => {
-		hideDetailModal();
-		if (climb.sendType === "Project") {
-			showEditProjectOverlay(climb);
-		} else {
-			showEditSendOverlay(climb);
-		}
-	});
-}
 
 function hideDetailModal() {
 	document.getElementById("modal-overlay").style.display = "none";
@@ -577,6 +395,7 @@ function populateFilters(climbs) {
 			typeSelect.appendChild(opt);
 		}
 	}
+	syncRouteTypeChipBar(types);
 }
 
 // ---------- User chip ----------
@@ -719,6 +538,7 @@ function bindFilterHandlers(initialClimbs) {
 
 // Modules run after DOM is parsed; execute init immediately (no DOMContentLoaded needed)
 {
+	initThemeSwitch();
 	document
 		.getElementById("modal-close")
 		?.addEventListener("click", hideDetailModal);
@@ -1470,7 +1290,7 @@ function buildRouteSearchOverlay(displaySystem, onSelect) {
         <div class="route-search-result" data-id="${r.id}" style="
           padding:10px 8px;border-bottom:1px solid var(--border-color);cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${escapeHtml(r.name)}${r.createdBy === currentUID ? ' <span title="You created this route" style="font-size:11px;">👤</span>' : ""}</strong>
+            <strong>${escapeHtml(r.name)}${r.createdBy === currentUID ? renderCommunityOwnerIndicatorHtml(true) : renderCommunityOwnerIndicatorHtml(false)}</strong>
             <span style="color:var(--accent-color);font-weight:600;">${escapeHtml(r.displayGrade)}</span>
           </div>
           <div style="font-size:12px;color:var(--text-muted);">
@@ -1589,6 +1409,11 @@ function showAddSendOverlay(prefill = {}) {
 	document.getElementById("so-route-error").classList.add("hidden");
 	document.getElementById("so-route").classList.remove("error");
 	overlay.dataset.projectRecordName = prefill.projectRecordName ?? "";
+	_centralRouteID = null;
+	_pendingNewCentralRoute = null;
+	_centralRouteCreatedBy = null;
+	_centralRouteCountry = undefined;
+	setFindRouteUnlinked("find-route-btn-send");
 
 	// Restore soft link if coming from a linked project (mark-as-sent flow)
 	if (prefill.centralRouteID) {
@@ -1680,6 +1505,11 @@ function showAddProjectOverlay() {
 	document.getElementById("project-overlay-delete").classList.add("hidden");
 	document.getElementById("po-route-error").classList.add("hidden");
 	document.getElementById("po-route").classList.remove("error");
+	_centralRouteID = null;
+	_pendingNewCentralRoute = null;
+	_centralRouteCreatedBy = null;
+	_centralRouteCountry = undefined;
+	setFindRouteUnlinked("find-route-btn-project");
 	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
 	overlay.classList.remove("hidden");
 }
@@ -2246,7 +2076,7 @@ function showTrainingDetailModal(session) {
 	const intensityDots = [1, 2, 3, 4, 5]
 		.map(
 			(i) =>
-				`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${i <= (session.intensity ?? 3) ? "#0f172a" : "#e2e8f0"};margin-right:3px"></span>`,
+				`<span class="intensity-dot${i <= (session.intensity ?? 3) ? " filled" : ""}" style="display:inline-block;width:10px;height:10px;margin-right:4px"></span>`,
 		)
 		.join("");
 

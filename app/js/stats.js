@@ -323,46 +323,79 @@ function bindStatsPeriodTabs() {
 
 // ==================== Render: Grade and route type charts ====================
 
+function isChalkSkyStatsTheme() {
+	return globalThis.document?.documentElement?.dataset?.theme === "chalk-sky";
+}
+
+function chartPalette() {
+	if (isChalkSkyStatsTheme()) {
+		return {
+			bar: "rgba(118, 214, 255, 0.85)",
+			grid: "rgba(255, 255, 255, 0.07)",
+			tick: "#8b949e",
+		};
+	}
+	return {
+		bar: "rgba(15, 23, 42, 0.75)",
+		grid: "rgba(0, 0, 0, 0.06)",
+		tick: "#64748b",
+	};
+}
+
 /** Returns a standard Chart.js bar-chart options object. xFontSize defaults to 11. */
 function defaultBarChartOptions(xFontSize = 11) {
+	const pal = chartPalette();
 	return {
 		responsive: true,
 		plugins: { legend: { display: false } },
 		scales: {
 			y: {
 				beginAtZero: true,
-				ticks: { stepSize: 1 },
-				grid: { color: "rgba(0,0,0,0.06)" },
+				ticks: { stepSize: 1, color: pal.tick },
+				grid: { color: pal.grid },
 			},
-			x: { ticks: { font: { size: xFontSize } }, grid: { display: false } },
+			x: {
+				ticks: { font: { size: xFontSize }, color: pal.tick },
+				grid: { display: false },
+			},
 		},
 	};
+}
+
+function rebuildBarChart({ canvasId, prevInstance, labels, counts, xFontSize = 11 }) {
+	const canvas = document.getElementById(canvasId);
+	if (!canvas) return null;
+	if (prevInstance) prevInstance.destroy();
+	const pal = chartPalette();
+	return new Chart(canvas.getContext("2d"), {
+		type: "bar",
+		data: {
+			labels,
+			datasets: [
+				{
+					data: counts,
+					backgroundColor: pal.bar,
+					borderColor: pal.bar,
+					borderWidth: 1,
+					borderRadius: 4,
+				},
+			],
+		},
+		options: defaultBarChartOptions(xFontSize),
+	});
 }
 
 let gradeChartInstance = null;
 let typeChartInstance = null;
 
 function renderGradeChart(filteredClimbs, period) {
-	const canvas = document.getElementById("sp-grade-chart");
-	if (!canvas) return;
 	const data = spCalcGradeDistribution(filteredClimbs, period);
-	const ctx = canvas.getContext("2d");
-	if (gradeChartInstance) gradeChartInstance.destroy();
-	gradeChartInstance = new Chart(ctx, {
-		type: "bar",
-		data: {
-			labels: data.map((d) => d.grade),
-			datasets: [
-				{
-					data: data.map((d) => d.count),
-					backgroundColor: "rgba(15,23,42,0.75)",
-					borderColor: "rgba(15,23,42,0.75)",
-					borderWidth: 1,
-					borderRadius: 4,
-				},
-			],
-		},
-		options: defaultBarChartOptions(),
+	gradeChartInstance = rebuildBarChart({
+		canvasId: "sp-grade-chart",
+		prevInstance: gradeChartInstance,
+		labels: data.map((d) => d.grade),
+		counts: data.map((d) => d.count),
+		xFontSize: 11,
 	});
 }
 
@@ -374,30 +407,14 @@ function toIsoWeekKey(d) {
 	return `${dt.getFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-const BAR_COLOR = "rgba(15,23,42,0.75)";
-
-
 function renderTypeChart(filteredClimbs, period) {
-	const canvas = document.getElementById("sp-type-chart");
-	if (!canvas) return;
 	const data = spCalcRouteTypes(filteredClimbs, period);
-	const ctx = canvas.getContext("2d");
-	if (typeChartInstance) typeChartInstance.destroy();
-	typeChartInstance = new Chart(ctx, {
-		type: "bar",
-		data: {
-			labels: data.map((d) => d.type),
-			datasets: [
-				{
-					data: data.map((d) => d.count),
-					backgroundColor: BAR_COLOR,
-					borderColor: BAR_COLOR,
-					borderWidth: 1,
-					borderRadius: 4,
-				},
-			],
-		},
-		options: defaultBarChartOptions(12),
+	typeChartInstance = rebuildBarChart({
+		canvasId: "sp-type-chart",
+		prevInstance: typeChartInstance,
+		labels: data.map((d) => d.type),
+		counts: data.map((d) => d.count),
+		xFontSize: 12,
 	});
 }
 
@@ -461,11 +478,11 @@ function renderStreakCards(allClimbs, allSessions) {
 	const longest = spCalcLongestStreak(allClimbs);
 	document.getElementById("sp-streak-cards").innerHTML = `
     <div class="stat-card">
-      <div class="stat-value">🔥 ${weekly}</div>
+      <div class="stat-value"><span class="classic-only">🔥 </span>${weekly}</div>
       <div class="stat-label">Weekly Streak</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value">🏆 ${longest}</div>
+      <div class="stat-value"><span class="classic-only">🏆 </span>${longest}</div>
       <div class="stat-label">Longest Streak (days)</div>
     </div>
   `;
@@ -481,23 +498,16 @@ function renderTrainingSection(filteredSessions) {
     <div class="stat-card"><div class="stat-value">${t.days}</div><div class="stat-label">Training Days</div></div>
   `;
 	const types = Object.entries(t.byType).sort((a, b) => b[1] - a[1]);
-	const ctx = document.getElementById("sp-training-chart")?.getContext("2d");
-	if (trainingChartInstance) trainingChartInstance.destroy();
-	if (!ctx || types.length === 0) return;
-	trainingChartInstance = new Chart(ctx, {
-		type: "bar",
-		data: {
-			labels: types.map(([type]) => type),
-			datasets: [
-				{
-					data: types.map(([, count]) => count),
-					backgroundColor: "rgba(15,23,42,0.75)",
-					borderColor: "rgba(15,23,42,0.75)",
-					borderWidth: 1,
-					borderRadius: 4,
-				},
-			],
-		},
-		options: defaultBarChartOptions(),
+	if (trainingChartInstance) {
+		trainingChartInstance.destroy();
+		trainingChartInstance = null;
+	}
+	if (types.length === 0) return;
+	trainingChartInstance = rebuildBarChart({
+		canvasId: "sp-training-chart",
+		prevInstance: null,
+		labels: types.map(([type]) => type),
+		counts: types.map(([, count]) => count),
+		xFontSize: 11,
 	});
 }

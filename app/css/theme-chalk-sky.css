@@ -1,0 +1,1706 @@
+/* ============================================================================
+   CHALK & SKY THEME (Stage 1) — Scoped to html[data-theme="chalk-sky"]
+   ============================================================================
+   Palette: GitHub-dark canvas (#0d1117 / #161b22 / #30363d) + iOS
+   CardBackground sky-blue accent (#76D6FF) + iOS route-type colors.
+   Flipping to data-theme="classic" leaves app.css completely in charge.
+   ============================================================================ */
+
+/* ── Classic-mode rules: hide Chalk & Sky additions so classic is untouched ── */
+html:not([data-theme="chalk-sky"]) .cs-only,
+html:not([data-theme="chalk-sky"]) #routetype-chips-bar,
+html:not([data-theme="chalk-sky"]) #climb-inspector {
+	display: none !important;
+}
+
+html:not([data-theme="chalk-sky"]) .logbook-workspace,
+html:not([data-theme="chalk-sky"]) .logbook-table-card {
+	display: contents;
+}
+
+.req-star {
+	color: #f87171;
+}
+
+.form-group.hidden,
+.ascent-add-row.hidden {
+	display: none !important;
+}
+
+.btn-find-route {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1rem;
+	color: var(--text-muted, #64748b);
+	padding: 0;
+	line-height: 1;
+	font-family: inherit;
+}
+
+/* Header theme toggle button (visible in both Classic and Chalk & Sky) */
+.btn-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: rgba(255, 255, 255, 0.08);
+	color: #f1f5f9;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	padding: 0.35rem 0.75rem;
+	border-radius: 7px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+	font-family: inherit;
+	transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-theme-toggle:hover {
+	background: rgba(255, 255, 255, 0.16);
+	border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Chalk & Sky root tokens & visibility ────────────────────────────────── */
+html[data-theme="chalk-sky"] {
+	color-scheme: dark;
+	--cs-bg: #0d1117;
+	--cs-header-bg: #010409;
+	--cs-sidebar-bg: #090d12;
+	--cs-card: #161b22;
+	--cs-card-hover: #1c2128;
+	--cs-border: #30363d;
+	--cs-border-subtle: #21262d;
+	--cs-fg: #e6edf3;
+	--cs-fg-bright: #f0f6fc;
+	--cs-muted: #8b949e;
+	--cs-accent: #76d6ff;
+	--cs-accent-on: #042436;
+	--cs-accent-soft: rgba(118, 214, 255, 0.13);
+
+	/* Override legacy app.css tokens so shared components inherit Chalk & Sky */
+	--primary-color: #76d6ff;
+	--accent-color: #76d6ff;
+	--dark-bg: #f0f6fc;
+	--light-bg: #0d1117;
+	--white: #161b22;
+	--card-bg: #161b22;
+	--text-dark: #e6edf3;
+	--text-primary: #e6edf3;
+	--text-secondary: #8b949e;
+	--text-light: #f0f6fc;
+	--border-color: #30363d;
+	--border-dark: #484f58;
+}
+
+html[data-theme="chalk-sky"] .classic-only,
+html[data-theme="chalk-sky"] #filter-routetype {
+	display: none !important;
+}
+
+html[data-theme="chalk-sky"] body,
+html[data-theme="chalk-sky"] #app,
+html[data-theme="chalk-sky"] .app-main {
+	background: var(--cs-bg);
+	color: var(--cs-fg);
+	font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* ── Top Header ──────────────────────────────────────────────────────────── */
+html[data-theme="chalk-sky"] .app-header {
+	height: 50px;
+	background: var(--cs-header-bg);
+	border-bottom: 1px solid var(--cs-border-subtle);
+	padding: 0 18px;
+}
+
+html[data-theme="chalk-sky"] .app-header-logo {
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: -0.2px;
+	color: var(--cs-fg-bright);
+	font-family: inherit;
+}
+
+html[data-theme="chalk-sky"] .app-header-logo img {
+	width: 26px;
+	height: 26px;
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .app-header-user {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+html[data-theme="chalk-sky"] .app-user-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 4px 11px;
+	border-radius: 999px;
+	background: var(--cs-card);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+html[data-theme="chalk-sky"] .app-user-chip::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #22c55e;
+	box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.22);
+}
+
+html[data-theme="chalk-sky"] .btn-account,
+html[data-theme="chalk-sky"] .btn-signout,
+html[data-theme="chalk-sky"] .btn-theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 11px;
+	border-radius: 7px;
+	font-size: 12px;
+	font-weight: 500;
+	background: var(--cs-card);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .btn-account:hover,
+html[data-theme="chalk-sky"] .btn-signout:hover,
+html[data-theme="chalk-sky"] .btn-theme-toggle:hover {
+	background: var(--cs-border-subtle);
+	border-color: #484f58;
+}
+
+/* ── Left Sidebar ────────────────────────────────────────────────────────── */
+html[data-theme="chalk-sky"] .app-sidebar {
+	width: 224px;
+	background: var(--cs-sidebar-bg);
+	border-right: 1px solid var(--cs-border-subtle);
+	padding: 12px 10px 24px;
+	gap: 2px;
+}
+
+html[data-theme="chalk-sky"] .sidebar-header {
+	padding: 0 0 8px;
+	border-bottom: none;
+}
+
+html[data-theme="chalk-sky"] .sidebar-search {
+	position: relative;
+}
+
+html[data-theme="chalk-sky"] .sidebar-search .cs-search-icon {
+	position: absolute;
+	left: 9px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--cs-muted);
+	pointer-events: none;
+}
+
+html[data-theme="chalk-sky"] .sidebar-search input {
+	width: 100%;
+	padding: 6px 9px 6px 28px;
+	font-size: 12.5px;
+	border-radius: 7px;
+	border: 1px solid var(--cs-border);
+	background: var(--cs-bg);
+	color: var(--cs-fg);
+	outline: none;
+}
+
+html[data-theme="chalk-sky"] .sidebar-search input:focus {
+	border-color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav {
+	padding: 0;
+	gap: 2px;
+}
+
+html[data-theme="chalk-sky"] .sidebar-section-label {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.7px;
+	color: var(--cs-muted);
+	padding: 10px 8px 4px;
+	font-weight: 600;
+	margin-top: 0;
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item {
+	padding: 6px 9px;
+	border-radius: 7px;
+	border-left: none;
+	font-size: 12.5px;
+	color: #c9d1d9;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item svg {
+	width: 15px;
+	height: 15px;
+	color: var(--cs-muted);
+	flex-shrink: 0;
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item:hover {
+	background: var(--cs-card);
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item.active {
+	background: var(--cs-accent-soft);
+	color: var(--cs-accent);
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item.active svg {
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .count-badge {
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: var(--cs-border-subtle);
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item.active .count-badge {
+	background: var(--cs-accent);
+	color: var(--cs-accent-on);
+}
+
+html[data-theme="chalk-sky"] .sidebar-filters {
+	padding: 2px 2px 0;
+	border-bottom: none;
+	gap: 5px;
+}
+
+html[data-theme="chalk-sky"] .sidebar-filters select {
+	width: 100%;
+	padding: 5px 8px;
+	font-size: 12px;
+	border-radius: 7px;
+	border: 1px solid var(--cs-border);
+	background: var(--cs-bg);
+	color: var(--cs-fg);
+}
+
+/* ── Main Content & 4 Stat Cards ─────────────────────────────────────────── */
+html[data-theme="chalk-sky"] .app-content {
+	padding: 16px 20px 48px;
+	max-width: 1380px;
+	width: 100%;
+	gap: 12px;
+}
+
+html[data-theme="chalk-sky"] .stats-container {
+	gap: 10px;
+}
+
+html[data-theme="chalk-sky"] .stat-card {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+	padding: 11px 14px;
+	min-height: 66px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
+
+html[data-theme="chalk-sky"] .stat-card.accent-primary,
+html[data-theme="chalk-sky"] .stat-card.accent-success,
+html[data-theme="chalk-sky"] .stat-card.accent-warning,
+html[data-theme="chalk-sky"] .stat-card.accent-danger {
+	border-left: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .stat-value {
+	font-size: 21px;
+	font-weight: 700;
+	letter-spacing: -0.4px;
+	font-variant-numeric: tabular-nums;
+	color: var(--cs-fg-bright);
+	line-height: 1.1;
+}
+
+html[data-theme="chalk-sky"] .stat-label {
+	font-size: 11px;
+	color: var(--cs-muted);
+	margin-top: 3px;
+	margin-bottom: 0;
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+html[data-theme="chalk-sky"] .cs-stat-ico {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: grid;
+	place-items: center;
+	background: var(--cs-accent-soft);
+	color: var(--cs-accent);
+	flex-shrink: 0;
+}
+
+/* ── Toolbar (iOS Route-type filter chips + Primary action) ──────────────── */
+html[data-theme="chalk-sky"] .table-container {
+	background: transparent;
+	border-radius: 0;
+	padding: 0;
+	box-shadow: none;
+	overflow: visible;
+}
+
+html[data-theme="chalk-sky"] .table-header {
+	margin-bottom: 10px;
+}
+
+html[data-theme="chalk-sky"] .table-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+	flex-wrap: wrap;
+}
+
+html[data-theme="chalk-sky"] .table-header-row .table-title {
+	display: none;
+}
+
+html[data-theme="chalk-sky"] .rt-chips {
+	display: flex;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+
+/* iOS filter chip geometry: 5px × 10px pill */
+html[data-theme="chalk-sky"] .rt-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	border: 1px solid var(--cs-border);
+	font-family: inherit;
+	background: var(--cs-card);
+	color: var(--cs-muted);
+	transition: background 0.12s ease, color 0.12s ease;
+}
+
+html[data-theme="chalk-sky"] .rt-chip:hover {
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .rt-chip.active {
+	background: var(--cs-accent);
+	color: var(--cs-accent-on);
+	border-color: transparent;
+	font-weight: 600;
+}
+
+/* iOS route-type dots (StatsView.getRouteTypeColor) */
+.rt-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	display: inline-block;
+	flex-shrink: 0;
+}
+.rt-sport { background: #007aff; }
+.rt-boulder { background: #ff9f0a; }
+.rt-multipitch { background: #bf5af2; }
+.rt-trad { background: #34c759; }
+.rt-gym { background: #00c7be; }
+.rt-gymboulder { background: #30d158; }
+.rt-default { background: #8b949e; }
+
+html[data-theme="chalk-sky"] .btn-action {
+	background: var(--cs-accent);
+	color: var(--cs-accent-on);
+	border: none;
+	border-radius: 8px;
+	padding: 6px 13px;
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .btn-action:hover {
+	filter: brightness(1.06);
+}
+
+/* ── Split Workspace: Climbs Table (left) + Route Inspector (right) ──────── */
+html[data-theme="chalk-sky"] .logbook-workspace {
+	display: grid;
+	grid-template-columns: 1fr 350px;
+	gap: 12px;
+	align-items: start;
+}
+
+html[data-theme="chalk-sky"] .logbook-table-card {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+html[data-theme="chalk-sky"] .cs-table-card-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 9px 14px;
+	border-bottom: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .cs-table-card-head h3 {
+	font-size: 13.5px;
+	font-weight: 700;
+	color: var(--cs-fg-bright);
+	margin: 0;
+}
+
+html[data-theme="chalk-sky"] .cs-table-card-head small {
+	font-size: 11.5px;
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] #climbs-table thead {
+	background: var(--cs-card);
+	border-bottom: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] #climbs-table th {
+	background: var(--cs-card);
+	color: var(--cs-muted);
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.55px;
+	padding: 7px 12px;
+	border-bottom: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] #climbs-table tbody tr {
+	border-bottom: 1px solid var(--cs-border-subtle);
+}
+
+html[data-theme="chalk-sky"] #climbs-table tbody tr:hover {
+	background: var(--cs-card-hover);
+}
+
+html[data-theme="chalk-sky"] #climbs-table tbody tr.cs-row-selected {
+	background: rgba(118, 214, 255, 0.09);
+	box-shadow: inset 3px 0 0 var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] #climbs-table td {
+	padding: 8px 12px;
+	font-size: 12.75px;
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .cs-route-cell {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+/* Compact list layout: Rating column is Inspector-only in Chalk & Sky */
+html[data-theme="chalk-sky"] #climbs-table th:last-child {
+	display: none;
+}
+
+/* Fixed column layout — widths stay stable across filters/pages instead of
+   re-flowing with content (Route takes the flexible remainder). */
+html[data-theme="chalk-sky"] #climbs-table {
+	table-layout: fixed;
+}
+
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(1) { width: auto; }
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(2) { width: 21%; }
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(3) { width: 108px; }
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(4) { width: 68px; }
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(5) { width: 92px; }
+html[data-theme="chalk-sky"] #climbs-table th:nth-child(6) { width: 58px; }
+
+/* Text columns ellipsize instead of reflowing the table; full value on hover */
+html[data-theme="chalk-sky"] #climbs-table td:nth-child(1) .cs-route-cell {
+	flex-wrap: nowrap;
+	overflow: hidden;
+}
+
+html[data-theme="chalk-sky"] #climbs-table td:nth-child(1) strong,
+html[data-theme="chalk-sky"] #climbs-table td:nth-child(2) {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+html[data-theme="chalk-sky"] #climbs-table td:nth-child(1) .cs-route-cloud,
+html[data-theme="chalk-sky"] #climbs-table td:nth-child(1) .cs-route-iso {
+	flex-shrink: 0;
+}
+
+html[data-theme="chalk-sky"] .cs-date-cell {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	color: #c9d1d9;
+}
+
+html[data-theme="chalk-sky"] .cs-style-badge {
+	text-transform: none;
+	letter-spacing: 0.3px;
+	font-size: 10.5px;
+	padding: 2px 6px;
+}
+
+html[data-theme="chalk-sky"] .cs-route-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+/* Cloud symbol sits inline right of the grade pill in the inspector header */
+html[data-theme="chalk-sky"] .insp-grade-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+html[data-theme="chalk-sky"] .cs-route-cloud,
+html[data-theme="chalk-sky"] .insp-cloud-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--cs-accent);
+	opacity: 0.9;
+}
+
+html[data-theme="chalk-sky"] .cs-route-iso {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.35px;
+	padding: 1px 5px;
+	border-radius: 4px;
+	background: var(--cs-border-subtle);
+	color: var(--cs-muted);
+	border: 1px solid var(--cs-border);
+	line-height: 1.3;
+}
+
+html[data-theme="chalk-sky"] .type-badge {
+	background: var(--cs-border-subtle);
+	color: #c9d1d9;
+	font-size: 11.5px;
+	padding: 2px 7px;
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .grade-normal {
+	background: rgba(118, 214, 255, 0.12);
+	color: var(--cs-accent);
+	padding: 2px 7px;
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .grade-hard {
+	background: rgba(239, 68, 68, 0.15);
+	color: #f87171;
+	padding: 2px 7px;
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .send-rp { background: rgba(239, 68, 68, 0.14); color: #f87171; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-os { background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-fl { background: rgba(249, 115, 22, 0.15); color: #fb923c; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-proj { background: rgba(148, 163, 184, 0.16); color: #94a3b8; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-pp { background: rgba(236, 72, 153, 0.15); color: #f472b6; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-tr { background: rgba(100, 116, 139, 0.18); color: #94a3b8; padding: 2px 7px; border-radius: 6px; }
+html[data-theme="chalk-sky"] .send-af { background: rgba(139, 92, 246, 0.16); color: #a78bfa; padding: 2px 7px; border-radius: 6px; }
+
+html[data-theme="chalk-sky"] .pagination-bar {
+	padding: 10px 14px;
+	border-top: 1px solid var(--cs-border-subtle);
+	background: var(--cs-card);
+}
+
+html[data-theme="chalk-sky"] .page-btn {
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .page-info {
+	color: var(--cs-muted);
+}
+
+/* ── Right-hand Route Detail Inspector ───────────────────────────────────── */
+html[data-theme="chalk-sky"] .climb-inspector {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+	padding: 14px 15px;
+	position: sticky;
+	top: 62px;
+}
+
+html[data-theme="chalk-sky"] .insp-empty {
+	font-size: 12.5px;
+	color: var(--cs-muted);
+	padding: 18px 4px;
+	text-align: center;
+}
+
+html[data-theme="chalk-sky"] .insp-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+html[data-theme="chalk-sky"] .insp-title {
+	font-size: 15.5px;
+	font-weight: 700;
+	letter-spacing: -0.2px;
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .insp-grade-pill {
+	font-size: 12.5px;
+	font-weight: 700;
+	background: var(--cs-accent-soft);
+	color: var(--cs-accent);
+	padding: 2px 8px;
+	border-radius: 6px;
+	text-transform: none;
+}
+
+html[data-theme="chalk-sky"] .insp-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	font-size: 11.5px;
+	color: var(--cs-muted);
+	margin-bottom: 12px;
+}
+
+html[data-theme="chalk-sky"] .insp-iso-pill {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.4px;
+	padding: 1px 5px;
+	border-radius: 4px;
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .insp-type {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .insp-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+	padding: 8px 10px;
+	background: var(--cs-bg);
+	border-radius: 8px;
+	border: none;
+	margin-bottom: 12px;
+}
+
+html[data-theme="chalk-sky"] .insp-cell-l {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #c9d1d9;
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .insp-cell-v {
+	font-size: 12.5px;
+	font-weight: 700;
+	margin-top: 3px;
+	font-variant-numeric: tabular-nums;
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .insp-sec {
+	font-size: 10.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
+	color: #c9d1d9;
+	font-weight: 700;
+	margin: 10px 0 6px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+html[data-theme="chalk-sky"] .insp-note-body {
+	padding: 7px 9px;
+	border-radius: 7px;
+	background: var(--cs-bg);
+	border: 1px solid var(--cs-border-subtle);
+	font-size: 12px;
+	color: var(--cs-fg);
+	white-space: pre-wrap;
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-item {
+	padding: 7px 9px;
+	border-radius: 7px;
+	background: var(--cs-bg);
+	border: 1px solid var(--cs-border-subtle);
+	font-size: 12px;
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-row1 {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2px;
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-date {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-style {
+	font-size: 11px;
+	color: var(--cs-accent);
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .insp-ascent-note {
+	font-size: 11.5px;
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .insp-maps-link {
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--cs-accent);
+	text-decoration: none;
+	text-transform: none;
+}
+
+html[data-theme="chalk-sky"] .insp-maps-link:hover {
+	text-decoration: underline;
+}
+
+html[data-theme="chalk-sky"] .insp-photos-strip {
+	display: flex;
+	gap: 6px;
+	overflow-x: auto;
+	padding-bottom: 2px;
+}
+
+html[data-theme="chalk-sky"] .insp-photos-strip img {
+	height: 76px;
+	width: auto;
+	max-width: 110px;
+	object-fit: cover;
+	border-radius: 6px;
+	border: 1px solid var(--cs-border);
+	display: block;
+}
+
+html[data-theme="chalk-sky"] .insp-actions {
+	display: flex;
+	gap: 6px;
+	margin-top: 12px;
+	padding-top: 4px;
+	border-top: none;
+}
+
+html[data-theme="chalk-sky"] .btn-inspector-primary,
+html[data-theme="chalk-sky"] .btn-inspector-ghost {
+	flex: 1;
+	padding: 6px 10px;
+	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	font-family: inherit;
+	text-align: center;
+}
+
+html[data-theme="chalk-sky"] .btn-inspector-primary {
+	background: var(--cs-accent);
+	color: var(--cs-accent-on);
+	border: 1px solid transparent;
+}
+
+html[data-theme="chalk-sky"] .btn-inspector-ghost {
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+}
+
+@media (max-width: 980px) {
+	html[data-theme="chalk-sky"] .logbook-workspace {
+		grid-template-columns: 1fr;
+	}
+	html[data-theme="chalk-sky"] .climb-inspector {
+		position: static;
+	}
+}
+
+/* ============================================================================
+   STAGE 2 — Training, Statistics, Admin, Account, Modals & Login
+   ============================================================================ */
+
+/* ── Segmented Period Tabs (Training & Statistics) ───────────────────────── */
+html[data-theme="chalk-sky"] .period-tabs {
+	background: #090d12;
+	border: 1px solid var(--cs-border-subtle);
+	border-radius: 8px;
+	padding: 3px;
+}
+
+html[data-theme="chalk-sky"] .period-tabs button {
+	color: var(--cs-muted);
+	font-weight: 500;
+}
+
+html[data-theme="chalk-sky"] .period-tabs button:hover {
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .period-tabs button.active {
+	background: var(--cs-card);
+	color: var(--cs-accent);
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Training Page (#training-view) ──────────────────────────────────────── */
+html[data-theme="chalk-sky"] .training-page-header h3 {
+	color: var(--cs-fg-bright);
+	font-size: 16px;
+}
+
+html[data-theme="chalk-sky"] .training-chart {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+}
+
+html[data-theme="chalk-sky"] .training-bar {
+	background: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .session-row {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+	padding: 10px 13px;
+}
+
+html[data-theme="chalk-sky"] .session-row:hover {
+	background: var(--cs-card-hover);
+}
+
+html[data-theme="chalk-sky"] .type-icon {
+	background: var(--cs-border-subtle);
+	border: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .session-type {
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .session-meta,
+html[data-theme="chalk-sky"] .session-duration {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .intensity-dot {
+	background: var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .intensity-dot.filled {
+	background: var(--cs-accent);
+}
+
+/* ── Statistics Page (#stats-view) ───────────────────────────────────────── */
+html[data-theme="chalk-sky"] .stats-page-header h3 {
+	color: var(--cs-fg-bright);
+	font-size: 16px;
+}
+
+html[data-theme="chalk-sky"] .stats-section-title {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .stats-chart-card {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+}
+
+html[data-theme="chalk-sky"] .sp-top-grade-inline,
+html[data-theme="chalk-sky"] .sp-top-grade-route {
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .sp-top-grade-label,
+html[data-theme="chalk-sky"] .sp-top-grade-sep,
+html[data-theme="chalk-sky"] .sp-top-grade-empty {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .sp-top-grade-value {
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .heatmap-month-label,
+html[data-theme="chalk-sky"] .heatmap-weekday,
+html[data-theme="chalk-sky"] .heatmap-legend {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .heatmap-cell.level-0 {
+	background: var(--cs-border-subtle);
+}
+html[data-theme="chalk-sky"] .heatmap-cell.level-1 {
+	background: rgba(118, 214, 255, 0.28);
+}
+html[data-theme="chalk-sky"] .heatmap-cell.level-2 {
+	background: rgba(118, 214, 255, 0.58);
+}
+html[data-theme="chalk-sky"] .heatmap-cell.level-3 {
+	background: var(--cs-accent);
+}
+html[data-theme="chalk-sky"] .heatmap-cell.training {
+	background: #ff9f0a;
+}
+
+/* ── Admin Panel (#admin-view) ───────────────────────────────────────────── */
+html[data-theme="chalk-sky"] #admin-view h2,
+html[data-theme="chalk-sky"] #admin-view h3 {
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] #admin-view .form-input,
+html[data-theme="chalk-sky"] #admin-view input[type="text"],
+html[data-theme="chalk-sky"] #admin-view select,
+html[data-theme="chalk-sky"] #admin-view textarea {
+	background: var(--cs-bg);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	border-radius: 7px;
+	padding: 6px 10px;
+	font-size: 12.5px;
+	font-family: inherit;
+}
+
+html[data-theme="chalk-sky"] #admin-view .form-input:focus,
+html[data-theme="chalk-sky"] #admin-view input[type="text"]:focus,
+html[data-theme="chalk-sky"] #admin-view select:focus {
+	outline: none;
+	border-color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] #admin-view .form-label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .admin-route-row {
+	background: var(--cs-card) !important;
+	border-color: var(--cs-border) !important;
+	color: var(--cs-fg);
+	transition: background 0.12s ease;
+}
+
+html[data-theme="chalk-sky"] .admin-route-row:hover {
+	background: var(--cs-card-hover) !important;
+}
+
+html[data-theme="chalk-sky"] #admin-view table {
+	color: var(--cs-fg) !important;
+}
+
+/* ── Account Page (#account-view) ────────────────────────────────────────── */
+html[data-theme="chalk-sky"] .account-page-title,
+html[data-theme="chalk-sky"] .account-name,
+html[data-theme="chalk-sky"] .account-card-text strong {
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .account-user-info,
+html[data-theme="chalk-sky"] .account-card {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+}
+
+html[data-theme="chalk-sky"] .account-email,
+html[data-theme="chalk-sky"] .account-card-text p,
+html[data-theme="chalk-sky"] .account-section-label {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .pref-select {
+	background: var(--cs-bg);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	border-radius: 7px;
+}
+
+html[data-theme="chalk-sky"] .account-legal-link {
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .account-card-danger {
+	background: rgba(239, 68, 68, 0.08);
+	border-color: rgba(239, 68, 68, 0.35);
+}
+
+html[data-theme="chalk-sky"] .account-card-danger .account-card-text strong {
+	color: #f87171;
+}
+
+/* ── Modals, Overlays, Confirm Dialog & Buttons ──────────────────────────── */
+html[data-theme="chalk-sky"] .modal-overlay,
+html[data-theme="chalk-sky"] .edit-overlay {
+	background: rgba(1, 4, 9, 0.72);
+	backdrop-filter: blur(4px);
+}
+
+html[data-theme="chalk-sky"] .modal-content,
+html[data-theme="chalk-sky"] .edit-overlay-content,
+html[data-theme="chalk-sky"] .confirm-content {
+	background: var(--cs-card);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	border-radius: 10px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="chalk-sky"] .edit-overlay-header,
+html[data-theme="chalk-sky"] .modal-header,
+html[data-theme="chalk-sky"] .edit-overlay-footer,
+html[data-theme="chalk-sky"] .form-section {
+	border: none !important;
+}
+
+html[data-theme="chalk-sky"] .edit-overlay-header {
+	padding: 15px 18px 6px;
+}
+
+html[data-theme="chalk-sky"] .edit-overlay-body {
+	padding: 10px 18px 14px;
+	gap: 12px;
+}
+
+html[data-theme="chalk-sky"] .edit-overlay-footer {
+	padding: 6px 18px 16px;
+}
+
+html[data-theme="chalk-sky"] .form-section {
+	padding-top: 4px;
+}
+
+html[data-theme="chalk-sky"] .edit-overlay-header h2,
+html[data-theme="chalk-sky"] .modal-title,
+html[data-theme="chalk-sky"] .confirm-content h3 {
+	color: var(--cs-fg-bright);
+	font-size: 15.5px;
+	font-weight: 700;
+	letter-spacing: -0.2px;
+}
+
+html[data-theme="chalk-sky"] .confirm-content p {
+	color: #c9d1d9;
+}
+
+html[data-theme="chalk-sky"] .btn-close,
+html[data-theme="chalk-sky"] .modal-close {
+	color: #c9d1d9;
+	background: transparent;
+}
+
+html[data-theme="chalk-sky"] .btn-close:hover,
+html[data-theme="chalk-sky"] .modal-close:hover,
+html[data-theme="chalk-sky"] .btn-ghost:hover {
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg-bright);
+}
+
+/* Community DB link pill inside Send/Project overlays & Detail Modal */
+html[data-theme="chalk-sky"] .cs-route-link-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: none;
+	letter-spacing: 0;
+	padding: 3px 9px;
+	border-radius: 6px;
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	transition: background 0.12s ease;
+}
+
+html[data-theme="chalk-sky"] .cs-route-link-pill:hover {
+	background: var(--cs-card-hover);
+}
+
+html[data-theme="chalk-sky"] .cs-route-link-pill.linked,
+html[data-theme="chalk-sky"] #detail-central-route-chip {
+	background: var(--cs-accent-soft) !important;
+	color: var(--cs-accent) !important;
+	border: 1px solid rgba(118, 214, 255, 0.32) !important;
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .form-group label,
+html[data-theme="chalk-sky"] .form-section-title {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
+	color: #d0d7de;
+}
+
+/* Brighten secondary grey text inside overlays and detail modals */
+html[data-theme="chalk-sky"] .modal-content [style*="color:#64748b"],
+html[data-theme="chalk-sky"] .modal-content [style*="color: #64748b"],
+html[data-theme="chalk-sky"] .modal-content [style*="color:#94a3b8"],
+html[data-theme="chalk-sky"] .modal-content [style*="color: #94a3b8"],
+html[data-theme="chalk-sky"] .edit-overlay-content [style*="color:#64748b"],
+html[data-theme="chalk-sky"] .edit-overlay-content [style*="color: #64748b"],
+html[data-theme="chalk-sky"] .edit-overlay-content [style*="color:#94a3b8"],
+html[data-theme="chalk-sky"] .edit-overlay-content [style*="color: #94a3b8"],
+html[data-theme="chalk-sky"] .ascent-date,
+html[data-theme="chalk-sky"] .ascent-notes {
+	color: #c9d1d9 !important;
+}
+
+/* Kill ALL row separator lines inside detail views (tables, ascent lists,
+   route-search results) — spacing only, no hairlines */
+html[data-theme="chalk-sky"] .modal-content tbody tr,
+html[data-theme="chalk-sky"] .edit-overlay-content tbody tr,
+html[data-theme="chalk-sky"] .route-search-result {
+	border-bottom: none !important;
+}
+
+html[data-theme="chalk-sky"] .route-search-result {
+	border-radius: 6px;
+	margin-bottom: 2px;
+}
+
+html[data-theme="chalk-sky"] .modal-content [style*="border-bottom"],
+html[data-theme="chalk-sky"] .modal-content [style*="border-top"],
+html[data-theme="chalk-sky"] .modal-content [style*="border:1px solid #e2e8f0"],
+html[data-theme="chalk-sky"] .modal-content [style*="border: 1px solid #e2e8f0"] {
+	border: none !important;
+}
+
+html[data-theme="chalk-sky"] .modal-content table,
+html[data-theme="chalk-sky"] .edit-overlay-content table {
+	border: none !important;
+}
+
+/* Consistent Community-DB owner indication: cloud symbol + "Owner" label */
+html[data-theme="chalk-sky"] .detail-chip-owner,
+html[data-theme="chalk-sky"] .cs-route-link-pill.linked > span,
+html[data-theme="chalk-sky"] .cs-owner-indicator > span {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.3px;
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .insp-cloud-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: var(--cs-accent-soft);
+	border: 1px solid rgba(118, 214, 255, 0.32);
+}
+
+html[data-theme="chalk-sky"] .cs-owner-indicator {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 4px;
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .form-input {
+	width: 100%;
+}
+
+html[data-theme="chalk-sky"] .form-input,
+html[data-theme="chalk-sky"] .form-group input:not([type="checkbox"]),
+html[data-theme="chalk-sky"] .form-group select,
+html[data-theme="chalk-sky"] .form-group textarea,
+html[data-theme="chalk-sky"] .ascent-add-row input,
+html[data-theme="chalk-sky"] .ascent-add-row select {
+	background: var(--cs-bg);
+	color: var(--cs-fg-bright);
+	border: 1px solid var(--cs-border);
+	border-radius: 7px;
+	padding: 7px 10px;
+	font-size: 13px;
+	font-family: inherit;
+}
+
+/* Keep Gym Session warm-up route-line & 2-col grid proportions intact */
+html[data-theme="chalk-sky"] .form-row-2 > .form-group {
+	min-width: 0;
+}
+
+html[data-theme="chalk-sky"] #to-add-route {
+	align-self: flex-start;
+}
+
+html[data-theme="chalk-sky"] .route-line {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-bottom: 6px;
+}
+
+html[data-theme="chalk-sky"] .route-line input.route-line-grade {
+	flex: 1 1 0;
+	min-width: 0;
+	width: auto;
+}
+
+html[data-theme="chalk-sky"] .route-line select {
+	width: auto;
+	flex: 0 0 auto;
+}
+
+html[data-theme="chalk-sky"] .route-line-remove {
+	color: #c9d1d9;
+}
+
+html[data-theme="chalk-sky"] .form-group input:disabled,
+html[data-theme="chalk-sky"] .form-group select:disabled {
+	opacity: 0.72;
+	color: #b1bac4;
+	cursor: not-allowed;
+}
+
+html[data-theme="chalk-sky"] .form-input:focus,
+html[data-theme="chalk-sky"] .form-group input:focus,
+html[data-theme="chalk-sky"] .form-group select:focus,
+html[data-theme="chalk-sky"] .form-group textarea:focus {
+	outline: none;
+	border-color: var(--cs-accent);
+	box-shadow: 0 0 0 2px rgba(118, 214, 255, 0.15);
+}
+
+html[data-theme="chalk-sky"] .route-search-result {
+	border-radius: 6px;
+	transition: background 0.1s ease;
+}
+
+html[data-theme="chalk-sky"] .route-search-result:hover {
+	background: var(--cs-card-hover);
+}
+
+html[data-theme="chalk-sky"] .btn-primary,
+html[data-theme="chalk-sky"] .btn-primary.btn-project {
+	background: var(--cs-accent);
+	color: var(--cs-accent-on);
+	border: 1px solid transparent;
+	border-radius: 8px;
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .btn-primary:hover,
+html[data-theme="chalk-sky"] .btn-primary.btn-project:hover {
+	background: #8ee0ff;
+}
+
+html[data-theme="chalk-sky"] .btn-secondary {
+	background: var(--cs-border-subtle);
+	color: var(--cs-fg);
+	border: 1px solid var(--cs-border);
+	border-radius: 8px;
+	font-size: 12.5px;
+}
+
+html[data-theme="chalk-sky"] .btn-secondary:hover {
+	background: var(--cs-card-hover);
+}
+
+html[data-theme="chalk-sky"] .btn-success {
+	background: rgba(34, 197, 94, 0.16);
+	color: #4ade80;
+	border: 1px solid rgba(74, 222, 128, 0.4);
+	border-radius: 8px;
+	font-size: 12.5px;
+}
+
+html[data-theme="chalk-sky"] .btn-success:hover {
+	background: rgba(34, 197, 94, 0.24);
+}
+
+/* Style tabs inside Send overlay — aligned with main table send-type badges */
+html[data-theme="chalk-sky"] .style-tab {
+	background: var(--cs-bg);
+	border: 1px solid var(--cs-border);
+	color: #c9d1d9;
+	border-radius: 6px;
+	padding: 5px 11px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+html[data-theme="chalk-sky"] .style-tab:hover {
+	background: var(--cs-card-hover);
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .style-tab.active-rp { border-color: rgba(248, 113, 113, 0.55); background: rgba(239, 68, 68, 0.16); color: #f87171; }
+html[data-theme="chalk-sky"] .style-tab.active-os { border-color: rgba(74, 222, 128, 0.55); background: rgba(34, 197, 94, 0.16); color: #4ade80; }
+html[data-theme="chalk-sky"] .style-tab.active-tr { border-color: #64748b; background: rgba(100, 116, 139, 0.22); color: #cbd5e1; }
+html[data-theme="chalk-sky"] .style-tab.active-af { border-color: rgba(167, 139, 250, 0.55); background: rgba(139, 92, 246, 0.18); color: #a78bfa; }
+html[data-theme="chalk-sky"] .style-tab.active-fl { border-color: rgba(251, 146, 60, 0.55); background: rgba(249, 115, 22, 0.17); color: #fb923c; }
+html[data-theme="chalk-sky"] .style-tab.active-pk { border-color: rgba(244, 114, 182, 0.55); background: rgba(236, 72, 153, 0.17); color: #f472b6; }
+html[data-theme="chalk-sky"] .style-tab.active-tp { border-color: rgba(45, 212, 191, 0.55); background: rgba(20, 184, 166, 0.17); color: #2dd4bf; }
+
+/* Training Intensity picker — high contrast & no sky-blue hover flash */
+html[data-theme="chalk-sky"] .intensity-btn {
+	background: #1c2128;
+	border: 1.5px solid var(--cs-border);
+	color: #c9d1d9;
+}
+
+html[data-theme="chalk-sky"] .intensity-btn:hover:not(.active) {
+	background: #262c36;
+	border-color: #484f58;
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .intensity-btn.active {
+	background: var(--cs-accent);
+	border-color: var(--cs-accent);
+	color: var(--cs-accent-on);
+	box-shadow: 0 0 0 2px rgba(118, 214, 255, 0.22);
+}
+
+/* Star picker — fit-content so hovering empty row space doesn't light stars */
+html[data-theme="chalk-sky"] .star-picker {
+	width: fit-content;
+}
+
+html[data-theme="chalk-sky"] .star-picker span,
+html[data-theme="chalk-sky"] .star-picker:hover span,
+html[data-theme="chalk-sky"] .star-picker span:hover ~ span {
+	color: var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .star-picker span.filled {
+	color: #f59e0b;
+}
+
+html[data-theme="chalk-sky"] .ascent-row,
+html[data-theme="chalk-sky"] .ascent-add-row {
+	background: var(--cs-bg);
+	border: none;
+	color: var(--cs-fg);
+	padding: 6px 8px;
+	border-radius: 6px;
+	margin-bottom: 4px;
+}
+
+html[data-theme="chalk-sky"] .modal-content [style*="border-bottom:1px solid #f1f5f9"],
+html[data-theme="chalk-sky"] .modal-content [style*="border-top:1px solid"] {
+	border: none !important;
+}
+
+html[data-theme="chalk-sky"] .ascent-delete:hover {
+	background: rgba(239, 68, 68, 0.15);
+	color: #f87171;
+}
+
+html[data-theme="chalk-sky"] .badge-edit-only {
+	background: var(--cs-accent-soft);
+	color: var(--cs-accent);
+}
+
+/* Override hardcoded light inline box backgrounds inside modals/admin */
+html[data-theme="chalk-sky"] [style*="background:#f8fafc"],
+html[data-theme="chalk-sky"] [style*="background: #f8fafc"],
+html[data-theme="chalk-sky"] [style*="background:#f1f5f9"],
+html[data-theme="chalk-sky"] [style*="background: #f1f5f9"] {
+	background: var(--cs-bg) !important;
+	border-color: var(--cs-border) !important;
+	color: var(--cs-fg) !important;
+}
+
+/* ── Classic-mode fallbacks for the shared Route Detail card ─────────────────
+   The climb detail modal renders the same insp-* card as the Chalk & Sky
+   inspector in BOTH themes — give Classic its light look here. */
+html:not([data-theme="chalk-sky"]) .insp-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-title {
+	font-size: 16px;
+	font-weight: 700;
+	color: #1e293b;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-grade-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-grade-pill {
+	background: #eff6ff;
+	color: #1d4ed8;
+	padding: 2px 8px;
+	border-radius: 6px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-cloud-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: #f1f5f9;
+	color: #475569;
+}
+
+html:not([data-theme="chalk-sky"]) .detail-chip-owner {
+	color: #1d4ed8;
+	font-weight: 700;
+	font-size: 11px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	font-size: 11.5px;
+	color: #64748b;
+	margin-bottom: 12px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-iso-pill {
+	font-size: 10px;
+	font-weight: 700;
+	padding: 1px 5px;
+	border-radius: 4px;
+	background: #f1f5f9;
+	color: #334155;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-type {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: #334155;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+	padding: 9px 10px;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-bottom: 12px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-cell-l {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #64748b;
+	font-weight: 600;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-cell-v {
+	font-size: 12.5px;
+	font-weight: 700;
+	margin-top: 3px;
+	color: #1e293b;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-sec {
+	font-size: 10.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
+	color: #64748b;
+	font-weight: 700;
+	margin: 10px 0 6px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-note-body {
+	padding: 7px 9px;
+	border-radius: 7px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	font-size: 12.5px;
+	color: #1e293b;
+	white-space: pre-wrap;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-item {
+	padding: 7px 9px;
+	border-radius: 7px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	font-size: 12.5px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-row1 {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2px;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-date {
+	font-weight: 600;
+	color: #1e293b;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-style {
+	font-size: 11px;
+	color: #2563eb;
+	font-weight: 600;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-ascent-note {
+	font-size: 11.5px;
+	color: #64748b;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-maps-link {
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+	color: #2563eb;
+	text-decoration: none;
+	text-transform: none;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-photos-strip {
+	display: flex;
+	gap: 6px;
+	overflow-x: auto;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-photos-strip img {
+	height: 90px;
+	width: auto;
+	max-width: 130px;
+	object-fit: cover;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	display: block;
+}
+
+html:not([data-theme="chalk-sky"]) .insp-empty {
+	font-size: 12.5px;
+	color: #64748b;
+	padding: 18px 4px;
+	text-align: center;
+}
+
+/* ── Skeletons, Toast & Login Card ───────────────────────────────────────── */
+html[data-theme="chalk-sky"] .skeleton {
+	background: linear-gradient(90deg, #161b22 25%, #21262d 50%, #161b22 75%);
+	background-size: 200% 100%;
+}
+
+html[data-theme="chalk-sky"] .toast {
+	background: var(--cs-card);
+	color: var(--cs-fg-bright);
+	border: 1px solid var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .login-card {
+	background: var(--cs-card);
+	border: 1px solid var(--cs-border);
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .login-card h2,
+html[data-theme="chalk-sky"] .login-logo {
+	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .login-card p,
+html[data-theme="chalk-sky"] .login-tagline {
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .login-requirement {
+	background: rgba(34, 197, 94, 0.1);
+	border-color: rgba(34, 197, 94, 0.3);
+	color: #4ade80;
+}
+

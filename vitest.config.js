@@ -16,6 +16,7 @@ export default defineConfig({
         "app/js/firebase-routes.js",
         "app/js/firebase-training.js",
         "app/js/grades.js",
+        "app/js/ui-theme.js",
       ],
     },
   },
