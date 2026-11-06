@@ -111,13 +111,13 @@ let createCentralRoute = $createCentralRoute;
 let updateCentralRoute = $updateCentralRoute;
 const shouldClearSoftLink = $shouldClearSoftLink;
 let checkAdminStatus = $checkAdminStatus;
-const getRoute = $getRoute;
+let getRoute = $getRoute;
 const incrementSendCount = $incrementSendCount;
 const incrementProjectCount = $incrementProjectCount;
 const decrementProjectCount = $decrementProjectCount;
 const completedProject = $completedProject;
 const reportRating = $reportRating;
-const fetchRouteData = $fetchRouteData;
+let fetchRouteData = $fetchRouteData;
 
 // Service name → setter for the mutable bindings above (keeps
 // setMockServices constant-size when new services are added).
@@ -143,6 +143,8 @@ const SERVICE_MOCK_SETTERS = {
 	apiKeysCreate: (fn) => (apiKeysCreate = fn),
 	apiKeysRevoke: (fn) => (apiKeysRevoke = fn),
 	searchRoutes: (fn) => (searchRoutes = fn),
+	getRoute: (fn) => (getRoute = fn),
+	fetchRouteData: (fn) => (fetchRouteData = fn),
 	createCentralRoute: (fn) => (createCentralRoute = fn),
 	updateCentralRoute: (fn) => (updateCentralRoute = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),

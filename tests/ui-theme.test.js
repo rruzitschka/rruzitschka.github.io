@@ -24,6 +24,7 @@ import {
 	renderCommunityOwnerIndicatorHtml,
 	renderInspectorEmptyHtml,
 	renderInspectorAscentsHtml,
+	combineAscentsWithOriginalSend,
 	renderInspectorGpsHtml,
 	renderInspectorPhotosHtml,
 	renderInspectorHtml,
@@ -229,8 +230,14 @@ describe("Route Detail Inspector HTML rendering", () => {
 		expect(html).toContain("Zillertal · Ewige Jagdgründe");
 		expect(html).toContain(">AT<");
 		expect(html).toContain("★ 4.6");
-		expect(html).toContain("Crux at bolt 5");
 		expect(html).toContain("Log Ascent / Edit");
+		// noteText now lives in the original-send ascent entry (combined in
+		// climb-inspector-ui), not in a standalone Notes section
+		expect(html).toContain(">Style</div>");
+		expect(html).toContain(">Ascents</div>");
+		expect(html).toContain('id="inspector-ascents-count">—</div>');
+		expect(html).toContain("Coordinates");
+		expect(html).not.toContain(">Date</div>");
 	});
 
 	it("renders project details and Edit Project button for projects", () => {
@@ -260,14 +267,21 @@ describe("Route Detail Inspector HTML rendering", () => {
 	});
 
 	it("renderInspectorAscentsHtml handles empty and populated ascents", () => {
-		expect(renderInspectorAscentsHtml([])).toBe("");
-		expect(renderInspectorAscentsHtml(null)).toBe("");
+		const empty = renderInspectorAscentsHtml([]);
+		expect(empty).toContain("0 entries");
+		expect(empty).toContain("No ascents logged yet");
+		expect(renderInspectorAscentsHtml(null)).toContain(
+			"No ascents logged yet",
+		);
 
-		const single = renderInspectorAscentsHtml([
-			{ date: "2025-10-12T00:00:00Z", sendType: "Redpoint", notes: "Sent!" },
-		]);
+		const single = renderInspectorAscentsHtml(
+			[{ date: "2025-10-12T00:00:00Z", sendType: "Redpoint", notes: "Sent!" }],
+			{ Redpoint: "send-rp" },
+		);
 		expect(single).toContain("1 entry");
-		expect(single).toContain("Redpoint");
+		expect(single).toContain('title="Redpoint"');
+		expect(single).toContain(">RP</span>");
+		expect(single).toContain("send-rp");
 		expect(single).toContain("Sent!");
 
 		const multi = renderInspectorAscentsHtml([
@@ -275,6 +289,42 @@ describe("Route Detail Inspector HTML rendering", () => {
 			{ date: "2025-10-05T00:00:00Z", sendType: "Project" },
 		]);
 		expect(multi).toContain("2 entries");
+	});
+
+	it("combineAscentsWithOriginalSend prepends the original send and keeps repeats", () => {
+		const climb = {
+			date: new Date("2025-10-12T00:00:00Z"),
+			sendType: "Redpoint",
+			noteText: "Crux at bolt 5",
+		};
+		const all = combineAscentsWithOriginalSend(climb, [
+			{ date: "2025-11-01T00:00:00Z", sendType: "Redpoint", notes: "Repeat" },
+		]);
+		expect(all).toHaveLength(2);
+		expect(all[0]).toEqual({
+			date: climb.date,
+			sendType: "Redpoint",
+			notes: "Crux at bolt 5",
+			original: true,
+		});
+		expect(all[1].notes).toBe("Repeat");
+	});
+
+	it("combineAscentsWithOriginalSend handles projects and missing dates", () => {
+		const project = combineAscentsWithOriginalSend(
+			{ date: null, sendType: "Project", noteText: null },
+			[],
+		);
+		expect(project).toHaveLength(1);
+		expect(project[0].sendType).toBe("Project");
+		expect(project[0].original).toBe(true);
+
+		const bare = combineAscentsWithOriginalSend(
+			{ date: null, sendType: null },
+			[{ date: "2025-01-01", sendType: "Redpoint" }],
+		);
+		expect(bare).toHaveLength(1); // nothing to prepend
+		expect(bare[0].original).toBeUndefined();
 	});
 
 	it("renderInspectorGpsHtml handles missing and valid coordinates", () => {

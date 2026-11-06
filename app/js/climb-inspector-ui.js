@@ -19,6 +19,8 @@ import {
 	renderInspectorGpsHtml,
 	renderInspectorPhotosHtml,
 	renderInspectorHtml,
+	formatCommunityRating,
+	combineAscentsWithOriginalSend,
 	buildCompactClimbRowCellsHtml,
 	renderAreaCragCell,
 } from "./ui-theme.js";
@@ -184,7 +186,10 @@ function applyInspectorCountryPill(route) {
 function applyInspectorCommunityRating(route) {
 	const commEl = document.getElementById("inspector-comm-rating");
 	if (!commEl || typeof route.communityRating !== "number") return;
-	commEl.textContent = `★ ${route.communityRating.toFixed(1)}`;
+	commEl.textContent = formatCommunityRating(
+		route.communityRating,
+		route.ratingCount ?? null,
+	);
 }
 
 function applyCentralRouteToInspector(route, climb) {
@@ -203,15 +208,26 @@ function loadInspectorRoute(climb, deps) {
 		.catch(() => {});
 }
 
-function loadInspectorAscents(climb, fetchAscents) {
-	if (!climb.recordName || typeof fetchAscents !== "function") return;
-	fetchAscents(climb.recordName)
-		.then((ascents) => {
-			if (_selectedRecordName !== climb.recordName) return;
-			const ascEl = document.getElementById("inspector-ascents-container");
-			if (ascEl) ascEl.innerHTML = renderInspectorAscentsHtml(ascents);
-		})
-		.catch(() => {});
+function loadInspectorAscents(climb, deps) {
+	if (!climb.recordName || typeof deps.fetchAscents !== "function") {
+		return;
+	}
+	const render = (ascents) => {
+		if (_selectedRecordName !== climb.recordName) return;
+		const all = combineAscentsWithOriginalSend(climb, ascents);
+		const ascEl = document.getElementById("inspector-ascents-container");
+		if (ascEl) {
+			ascEl.innerHTML = renderInspectorAscentsHtml(
+				all,
+				deps.sendClasses ?? {},
+			);
+		}
+		const countEl = document.getElementById("inspector-ascents-count");
+		if (countEl) countEl.textContent = String(all.length);
+	};
+	deps.fetchAscents(climb.recordName)
+		.then(render)
+		.catch(() => render([])); // even on failure the original send is shown
 }
 
 function loadInspectorPhotos(climb, fetchPhotos) {
@@ -276,7 +292,7 @@ export function selectClimbInInspector(climb, deps) {
 	bindInspectorButtons(climb, deps);
 
 	loadInspectorRoute(climb, deps);
-	loadInspectorAscents(climb, deps.fetchAscents);
+	loadInspectorAscents(climb, deps);
 	loadInspectorPhotos(climb, deps.fetchPhotos);
 }
 

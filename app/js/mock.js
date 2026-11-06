@@ -78,6 +78,42 @@ export async function deleteAscent(recordName) {
   console.log('[Mock] deleted Ascent', recordName);
 }
 
+export async function fetchAscents(noteRecordName) {
+  const climb = MOCK_CLIMBS.find((c) => c.recordName === noteRecordName);
+  return climb ? [...(climb.ascents ?? [])] : [];
+}
+
+export async function getRoute(routeID) {
+  const r = MOCK_ROUTES.find((rt) => rt.id === routeID);
+  if (!r) return null;
+  return {
+    id: r.id,
+    name: r.name,
+    climbingArea: r.climbingArea,
+    crag: r.crag,
+    grade: r.grade,
+    createdGrade: r.grade,
+    createdGradeSystem: 'French',
+    routeType: r.routeType,
+    sendCount: r.sendCount,
+    projectCount: r.projectCount,
+    isOrphaned: r.isOrphaned,
+    ratingSum: r.ratingSum ?? 0,
+    ratingCount: r.ratingCount ?? 0,
+    communityRating:
+      (r.ratingCount ?? 0) > 0
+        ? (r.ratingSum ?? 0) / (r.ratingCount ?? 0)
+        : null,
+    createdBy: r.createdBy,
+    updatedBy: null,
+    updatedAt: null,
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
+    country: r.country ?? null,
+    recentEdits: [],
+  };
+}
+
 export async function fetchPhotos(noteId) {
   if (noteId === 'mock-1') {
     return [
@@ -226,6 +262,25 @@ export function updateCentralRoute(routeID, fields) {
 }
 
 export async function checkAdminStatus() { return false; }
+
+export async function fetchRouteData(routeIDs) {
+  const ratings = new Map();
+  const gps = new Map();
+  const countries = new Map();
+  for (const id of routeIDs ?? []) {
+    const r = MOCK_ROUTES.find((rt) => rt.id === id);
+    if (!r) continue;
+    if ((r.ratingCount ?? 0) > 0) {
+      ratings.set(id, (r.ratingSum ?? 0) / (r.ratingCount ?? 0));
+    }
+    if (r.latitude != null && r.longitude != null) {
+      gps.set(id, { latitude: r.latitude, longitude: r.longitude, country: r.country ?? null });
+    }
+    if (r.country) countries.set(id, r.country);
+  }
+  return { ratings, gps, countries };
+}
+
 export function incrementSendCount() {}
 export function incrementProjectCount() {}
 export function decrementProjectCount() {}
@@ -248,7 +303,7 @@ const MOCK_CLIMBS = [
     route: 'Biographie', climbingArea: 'Ceüse', crag: 'La Face',
     difficulty: '9a', date: new Date('2026-08-15'), sendType: 'Redpoint',
     rating: 5, noteText: 'Dream route, finally!', routeType: 'Sport',
-    attemptCount: 47, isProject: false,
+    attemptCount: 47, isProject: false, centralRouteID: 'r-01',
     ascents: [
       { recordName: 'mock-1/asc-1', id: 'asc-1', date: new Date('2026-09-10'), sendType: 'Redpoint', notes: 'Even better second time' },
       { recordName: 'mock-1/asc-2', id: 'asc-2', date: new Date('2026-10-03'), sendType: 'Redpoint', notes: null },
@@ -314,7 +369,7 @@ const MOCK_API_KEYS = [
 //   "dream" → Dreamtime, Dream    crag "cre"    → Cresciano
 //   "la"    → La Dura Dura, etc.
 const MOCK_ROUTES = [
-  { id: 'r-01', name: 'Biographie',          climbingArea: 'Ceüse',         crag: 'La Face',              grade: '9a',  routeType: 'Sport',   sendCount: 42,  projectCount: 18, attemptCount: 380, isOrphaned: false, createdBy: 'user-other' },
+  { id: 'r-01', name: 'Biographie',          climbingArea: 'Ceüse',         crag: 'La Face',              grade: '9a',  routeType: 'Sport',   sendCount: 42,  projectCount: 18, attemptCount: 380, isOrphaned: false, createdBy: 'mock-user-001', latitude: 44.39712, longitude: 5.87895, country: 'FR', ratingSum: 47, ratingCount: 10 },
   { id: 'r-02', name: 'Nouveau Monde',        climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8c+', routeType: 'Sport',   sendCount: 28,  projectCount: 11, attemptCount: 210, isOrphaned: false, createdBy: 'user-other' },
   { id: 'r-03', name: 'Bronx',               climbingArea: 'Ceüse',         crag: 'La Face',              grade: '8a',  routeType: 'Sport',   sendCount: 87,  projectCount: 5,  attemptCount: 430, isOrphaned: false, createdBy: 'user-other' },
   { id: 'r-04', name: 'Bat Route',           climbingArea: 'Buoux',         crag: 'Les Gours Noirs',      grade: '8c',  routeType: 'Sport',   sendCount: 19,  projectCount: 9,  attemptCount: 175, isOrphaned: false, createdBy: 'user-other' },

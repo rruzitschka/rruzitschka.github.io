@@ -181,14 +181,14 @@ html[data-theme="chalk-sky"] .btn-theme-toggle:hover {
 /* ── Left Sidebar ────────────────────────────────────────────────────────── */
 html[data-theme="chalk-sky"] .app-sidebar {
 	width: 224px;
-	background: var(--cs-sidebar-bg);
-	border-right: 1px solid var(--cs-border-subtle);
-	padding: 12px 10px 24px;
-	gap: 2px;
+	background: #0d1218;
+	border-right: 1px solid #1b232d;
+	padding: 14px 10px 24px;
+	gap: 4px;
 }
 
 html[data-theme="chalk-sky"] .sidebar-header {
-	padding: 0 0 8px;
+	padding: 0 0 6px;
 	border-bottom: none;
 }
 
@@ -207,10 +207,10 @@ html[data-theme="chalk-sky"] .sidebar-search .cs-search-icon {
 
 html[data-theme="chalk-sky"] .sidebar-search input {
 	width: 100%;
-	padding: 6px 9px 6px 28px;
-	font-size: 12.5px;
-	border-radius: 7px;
-	border: 1px solid var(--cs-border);
+	padding: 7px 9px 7px 28px;
+	font-size: 13px;
+	border-radius: 8px;
+	border: 1px solid transparent;
 	background: var(--cs-bg);
 	color: var(--cs-fg);
 	outline: none;
@@ -222,40 +222,46 @@ html[data-theme="chalk-sky"] .sidebar-search input:focus {
 
 html[data-theme="chalk-sky"] .sidebar-nav {
 	padding: 0;
-	gap: 2px;
+	gap: 4px;
 }
 
 html[data-theme="chalk-sky"] .sidebar-section-label {
 	font-size: 10px;
 	text-transform: uppercase;
-	letter-spacing: 0.7px;
-	color: var(--cs-muted);
-	padding: 10px 8px 4px;
+	letter-spacing: 0.8px;
+	color: #9aa5b1b3;
+	padding: 10px 10px 4px;
 	font-weight: 600;
 	margin-top: 0;
 }
 
 html[data-theme="chalk-sky"] .sidebar-nav-item {
-	padding: 6px 9px;
-	border-radius: 7px;
+	padding: 7px 10px;
+	border-radius: 8px;
 	border-left: none;
-	font-size: 12.5px;
-	color: #c9d1d9;
+	font-size: 13px;
+	color: #9aa5b1;
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 9px;
 }
 
 html[data-theme="chalk-sky"] .sidebar-nav-item svg {
-	width: 15px;
-	height: 15px;
+	width: 16px;
+	height: 16px;
 	color: var(--cs-muted);
 	flex-shrink: 0;
 }
 
 html[data-theme="chalk-sky"] .sidebar-nav-item:hover {
-	background: var(--cs-card);
+	background: #161d26;
 	color: var(--cs-fg-bright);
+}
+
+html[data-theme="chalk-sky"] .sidebar-nav-item.active {
+	background: rgba(118, 214, 255, 0.12);
+	color: var(--cs-accent);
+	font-weight: 600;
 }
 
 html[data-theme="chalk-sky"] .sidebar-nav-item.active {
@@ -284,19 +290,40 @@ html[data-theme="chalk-sky"] .sidebar-nav-item.active .count-badge {
 }
 
 html[data-theme="chalk-sky"] .sidebar-filters {
-	padding: 2px 2px 0;
+	padding: 2px 0 0;
 	border-bottom: none;
-	gap: 5px;
+	gap: 4px;
 }
 
+/* Filters & Sort as flat nav-style rows (prototype v4 look) — the
+   <select> elements keep working, they just lose the boxed chrome. */
 html[data-theme="chalk-sky"] .sidebar-filters select {
 	width: 100%;
-	padding: 5px 8px;
-	font-size: 12px;
-	border-radius: 7px;
-	border: 1px solid var(--cs-border);
-	background: var(--cs-bg);
-	color: var(--cs-fg);
+	padding: 7px 10px;
+	font-size: 13px;
+	border-radius: 8px;
+	border: none;
+	background: transparent;
+	color: #9aa5b1;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+html[data-theme="chalk-sky"] .sidebar-filters select:hover {
+	background: #161d26;
+	color: var(--cs-fg-bright);
+}
+
+/* Flat rows get a small ▾ hint on the right, like the prototype */
+html[data-theme="chalk-sky"] .sidebar-filters {
+	position: relative;
+}
+
+html[data-theme="chalk-sky"] .sidebar-filters select:focus {
+	outline: none;
+	background: #161d26;
+	color: var(--cs-fg-bright);
 }
 
 /* ── Main Content & 4 Stat Cards ─────────────────────────────────────────── */
@@ -729,7 +756,7 @@ html[data-theme="chalk-sky"] .insp-type {
 
 html[data-theme="chalk-sky"] .insp-grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(3, 1fr);
 	gap: 8px;
 	padding: 8px 10px;
 	background: var(--cs-bg);
@@ -783,11 +810,12 @@ html[data-theme="chalk-sky"] .insp-ascent-list {
 }
 
 html[data-theme="chalk-sky"] .insp-ascent-item {
-	padding: 7px 9px;
-	border-radius: 7px;
+	padding: 8px 10px;
+	border-radius: 8px;
 	background: var(--cs-bg);
-	border: 1px solid var(--cs-border-subtle);
+	border: none;
 	font-size: 12px;
+	margin-bottom: 6px;
 }
 
 html[data-theme="chalk-sky"] .insp-ascent-row1 {
@@ -818,12 +846,13 @@ html[data-theme="chalk-sky"] .insp-maps-link {
 	font-family: ui-monospace, "SF Mono", Menlo, monospace;
 	font-size: 11px;
 	font-weight: 500;
-	color: var(--cs-accent);
+	color: var(--cs-fg);
 	text-decoration: none;
 	text-transform: none;
 }
 
 html[data-theme="chalk-sky"] .insp-maps-link:hover {
+	color: var(--cs-accent);
 	text-decoration: underline;
 }
 
@@ -1557,7 +1586,7 @@ html:not([data-theme="chalk-sky"]) .insp-type {
 
 html:not([data-theme="chalk-sky"]) .insp-grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(3, 1fr);
 	gap: 8px;
 	padding: 9px 10px;
 	background: #f8fafc;

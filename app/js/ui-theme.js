@@ -177,14 +177,6 @@ function renderInspectorProjectSection(climb) {
 	`;
 }
 
-function renderInspectorNotesSection(climb) {
-	if (!climb.noteText) return "";
-	return `
-		<div class="insp-sec"><span>Notes</span></div>
-		<div class="insp-note-body">${escapeInspectorHtml(climb.noteText)}</div>
-	`;
-}
-
 const CLOUD_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
 
 function renderClassicRouteIndicators({ centralRouteID, hasGps, countryCode, countryName, flagEmoji }) {
@@ -359,14 +351,42 @@ function renderInspectorIsoBadge(country) {
 	return `<span class="insp-iso-pill" id="inspector-country-pill">${escapeInspectorHtml(country)}</span>`;
 }
 
-function formatCommunityRating(communityRating) {
-	return typeof communityRating === "number"
-		? `★ ${communityRating.toFixed(1)}`
-		: "—";
+export function formatCommunityRating(communityRating, communityCount = null) {
+	if (typeof communityRating !== "number") return "—";
+	const base = `★ ${communityRating.toFixed(1)}`;
+	return typeof communityCount === "number"
+		? `${base} (${communityCount})`
+		: base;
 }
 
 function inspectorPrimaryButtonLabel(sendType) {
 	return sendType === "Project" ? "Edit Project" : "Log Ascent / Edit";
+}
+
+/**
+ * Combine the original send (from the climb note — date, style, note) with
+ * the repeat ascents from the ascent sub-collection. The original send IS an
+ * ascent — it always leads the log. Projects contribute their first-attempt
+ * entry (sendType "Project").
+ *
+ * @param {{
+ *   date?: Date|null,
+ *   sendType?: string|null,
+ *   noteText?: string|null,
+ * }} climb
+ * @param {Array<{ date?: string|Date, sendType?: string, notes?: string }>} ascents
+ * @returns {Array<{ date: Date|string|null, sendType: string, notes: string|null, original: boolean }>}
+ */
+export function combineAscentsWithOriginalSend(climb, ascents) {
+	const repeats = Array.isArray(ascents) ? ascents : [];
+	if (!climb.date && !climb.sendType) return repeats;
+	const original = {
+		date: climb.date ?? null,
+		sendType: climb.sendType ?? "Redpoint",
+		notes: climb.noteText ?? null,
+		original: true,
+	};
+	return [original, ...repeats];
 }
 
 /**
@@ -375,31 +395,37 @@ function inspectorPrimaryButtonLabel(sendType) {
  * @param {Array<{ date?: string|Date, sendType?: string, notes?: string }>} ascents
  * @returns {string}
  */
-export function renderInspectorAscentsHtml(ascents) {
-	if (!ascents || ascents.length === 0) return "";
-	const label = ascents.length === 1 ? "1 entry" : `${ascents.length} entries`;
-	const items = ascents
-		.map((a) => {
-			const dateStr = a.date
-				? new Date(a.date).toLocaleDateString("en-US", {
-						month: "short",
-						day: "numeric",
-						year: "numeric",
-					})
-				: "—";
-			const st = escapeInspectorHtml(a.sendType ?? "Redpoint");
-			const note = a.notes
-				? `<div class="insp-ascent-note">${escapeInspectorHtml(a.notes)}</div>`
-				: "";
-			return `<div class="insp-ascent-item">
-				<div class="insp-ascent-row1">
-					<span class="insp-ascent-date">${escapeInspectorHtml(dateStr)}</span>
-					<span class="insp-ascent-style">${st}</span>
-				</div>
-				${note}
-			</div>`;
-		})
-		.join("");
+export function renderInspectorAscentsHtml(ascents, sendClasses = {}) {
+	const list = ascents ?? [];
+	const label =
+		list.length === 1 ? "1 entry" : `${list.length} entries`;
+	const items = list.length
+		? list
+			.map((a) => {
+				const dateStr = a.date
+					? new Date(a.date).toLocaleDateString("en-US", {
+							month: "short",
+							day: "numeric",
+							year: "numeric",
+						})
+					: "—";
+				const fullSt = escapeInspectorHtml(a.sendType ?? "Redpoint");
+				const badgeCls = escapeInspectorHtml(
+					sendClasses[a.sendType] ?? "send-proj",
+				);
+				const note = a.notes
+					? `<div class="insp-ascent-note">${escapeInspectorHtml(a.notes)}</div>`
+					: "";
+				return `<div class="insp-ascent-item">
+					<div class="insp-ascent-row1">
+						<span class="insp-ascent-date">${escapeInspectorHtml(dateStr)}</span>
+						<span class="badge ${badgeCls} cs-style-badge" title="${fullSt}">${escapeInspectorHtml(styleAbbreviation(a.sendType))}</span>
+					</div>
+					${note}
+				</div>`;
+			})
+			.join("")
+		: `<div class="insp-mini-row insp-empty-row"><span>No ascents logged yet</span></div>`;
 	return `
 		<div class="insp-sec"><span>Ascent Log</span><span>${label}</span></div>
 		<div class="insp-ascent-list">${items}</div>
@@ -423,9 +449,9 @@ export function renderInspectorGpsHtml(route, climbName = "Route start") {
 	const coords = `${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°`;
 	const mapsURL = `https://maps.apple.com/?ll=${route.latitude},${route.longitude}&q=${encodeURIComponent(climbName || "Route start")}`;
 	return `
-		<div class="insp-sec">
+		<div class="insp-sec insp-coords-row">
 			<span>Coordinates</span>
-			<a href="${escapeInspectorHtml(mapsURL)}" target="_blank" rel="noopener" class="insp-maps-link">${coords} ↗</a>
+			<a href="${escapeInspectorHtml(mapsURL)}" target="_blank" rel="noopener" class="insp-maps-link" title="Open in Maps">${coords}</a>
 		</div>
 	`;
 }
@@ -456,10 +482,8 @@ export function renderInspectorPhotosHtml(photos) {
  * @param {object|null|undefined} climb
  * @param {{
  *   country?: string|null,
- *   dateFormatted?: string,
  *   sendBadgeClass?: string,
  *   communityRating?: number|null,
- *   starsHtml?: string,
  * }} [meta]
  * @returns {string}
  */
@@ -468,10 +492,8 @@ export function renderInspectorHtml(climb, meta = {}) {
 
 	const {
 		country = null,
-		dateFormatted = "—",
 		sendBadgeClass = "send-proj",
 		communityRating = null,
-		starsHtml = "",
 	} = meta;
 
 	const routeName = escapeInspectorHtml(climb.route || "—");
@@ -500,12 +522,8 @@ export function renderInspectorHtml(climb, meta = {}) {
 				<div class="insp-cell-v"><span class="badge ${escapeInspectorHtml(sendBadgeClass)} cs-style-badge" title="${sendType}">${escapeInspectorHtml(styleAbbreviation(climb.sendType))}</span></div>
 			</div>
 			<div>
-				<div class="insp-cell-l">Date</div>
-				<div class="insp-cell-v">${escapeInspectorHtml(dateFormatted)}</div>
-			</div>
-			<div>
-				<div class="insp-cell-l">Rating</div>
-				<div class="insp-cell-v">${starsHtml || "—"}</div>
+				<div class="insp-cell-l">Ascents</div>
+				<div class="insp-cell-v" id="inspector-ascents-count">—</div>
 			</div>
 			<div>
 				<div class="insp-cell-l">Community</div>
@@ -513,9 +531,8 @@ export function renderInspectorHtml(climb, meta = {}) {
 			</div>
 		</div>
 		${renderInspectorProjectSection(climb)}
-		${renderInspectorNotesSection(climb)}
 		<div id="inspector-ascents-container"></div>
-		<div id="inspector-gps-container"></div>
+		<div id="inspector-gps-container"><div class="insp-sec insp-coords-row"><span>Coordinates</span><span class="insp-coords-pending">—</span></div></div>
 		<div id="inspector-photos-container"></div>
 		<div class="insp-actions">
 			<button type="button" class="btn-inspector-primary" id="inspector-edit-btn">${inspectorPrimaryButtonLabel(climb.sendType)}</button>
