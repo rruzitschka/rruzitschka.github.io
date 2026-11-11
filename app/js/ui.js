@@ -5,7 +5,6 @@ import { doc, getDoc } from "firebase/firestore";
 import {
 	fetchClimbs as $fetchClimbs,
 	fetchAscents as $fetchAscents,
-	fetchSessionSends as $fetchSessionSends,
 	canonicalizeSendType,
 	normalizeSendType,
 	saveClimbNote as $saveClimbNote,
@@ -17,13 +16,6 @@ import {
 	computeStats as $computeStats,
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
-import {
-	fetchTrainingSessions as $fetchTrainingSessions,
-	saveTrainingSession as $saveTrainingSession,
-	deleteTrainingSession as $deleteTrainingSession,
-	computeTrainingStats as $computeTrainingStats,
-	TYPE_EMOJI,
-} from "./firebase-training.js";
 import {
 	getCurrentUser as $getCurrentUser,
 	deleteAccount as $deleteAccount,
@@ -49,6 +41,14 @@ import {
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
 import {
+	showTrainingView,
+	bindTrainingOverlayHandlers,
+	bindPeriodTabs,
+	loadTrainingData,
+	ensureTrainingSessionsLoaded,
+	setTrainingMockServices,
+} from "./training-ui.js";
+import {
 	syncCountrySelects as _syncCountrySelects,
 	overlayCountryChange,
 } from "./overlay-country.js";
@@ -57,17 +57,6 @@ import {
 	setFindRouteUnlinked,
 } from "./route-link-ui.js";
 import {
-	syncGymFieldVisibility,
-	addRouteLine,
-	setGymFields,
-	gymSessionFieldsForSave,
-} from "./route-line-ui.js";
-import {
-	GYM_ROUTE_TYPES,
-	coerceSendTypeForRouteType,
-	isStyleTabHidden,
-} from "./send-style.js";
-import {
 	syncRouteTypeChipBar,
 	syncTableCardHeader,
 	buildClimbRowCellsHtml,
@@ -75,10 +64,13 @@ import {
 	syncInspectorForPage,
 } from "./climb-inspector-ui.js";
 import {
+	GYM_ROUTE_TYPES,
+	coerceSendTypeForRouteType,
+	isStyleTabHidden,
+} from "./send-style.js";
+import {
 	renderCommunityOwnerIndicatorHtml,
 	renderStarsHtml,
-	renderTrainingDetailHtml,
-	buildSessionSendsTableHtml,
 } from "./ui-theme.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
@@ -90,7 +82,6 @@ const initGradePicker = (...a) => window.initGradePicker(...a);
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
 let fetchAscents = $fetchAscents;
-let fetchSessionSends = $fetchSessionSends;
 let fetchAllClimbAscents = $fetchAllClimbAscents;
 let saveClimbNote = $saveClimbNote;
 let deleteClimbNote = $deleteClimbNote;
@@ -99,10 +90,6 @@ let deleteAscent = $deleteAscent;
 let fetchPhotos = $fetchPhotos;
 let computeStats = $computeStats;
 let filterClimbs = $filterClimbs;
-let fetchTrainingSessions = $fetchTrainingSessions;
-let saveTrainingSession = $saveTrainingSession;
-let deleteTrainingSession = $deleteTrainingSession;
-let computeTrainingStats = $computeTrainingStats;
 let getCurrentUser = $getCurrentUser;
 let deleteAccount = $deleteAccount;
 let apiKeysList = $apiKeysList;
@@ -126,7 +113,6 @@ let fetchRouteData = $fetchRouteData;
 const SERVICE_MOCK_SETTERS = {
 	fetchClimbs: (fn) => (fetchClimbs = fn),
 	fetchAscents: (fn) => (fetchAscents = fn),
-	fetchSessionSends: (fn) => (fetchSessionSends = fn),
 	fetchAllClimbAscents: (fn) => (fetchAllClimbAscents = fn),
 	saveClimbNote: (fn) => (saveClimbNote = fn),
 	deleteClimbNote: (fn) => (deleteClimbNote = fn),
@@ -135,10 +121,6 @@ const SERVICE_MOCK_SETTERS = {
 	fetchPhotos: (fn) => (fetchPhotos = fn),
 	computeStats: (fn) => (computeStats = fn),
 	filterClimbs: (fn) => (filterClimbs = fn),
-	fetchTrainingSessions: (fn) => (fetchTrainingSessions = fn),
-	saveTrainingSession: (fn) => (saveTrainingSession = fn),
-	deleteTrainingSession: (fn) => (deleteTrainingSession = fn),
-	computeTrainingStats: (fn) => (computeTrainingStats = fn),
 	getCurrentUser: (fn) => (getCurrentUser = fn),
 	deleteAccount: (fn) => (deleteAccount = fn),
 	apiKeysList: (fn) => (apiKeysList = fn),
@@ -160,6 +142,7 @@ export function setMockServices(mocks) {
 	for (const [key, set] of Object.entries(SERVICE_MOCK_SETTERS)) {
 		if (mocks[key]) set(mocks[key]);
 	}
+	setTrainingMockServices(mocks);
 }
 
 // ---------- Module-level state ----------
@@ -583,6 +566,7 @@ function bindFilterHandlers(initialClimbs) {
 	// Expose helpers for non-module consumers (stats.js, admin.js)
 	window.escapeHtml = escapeHtml;
 	window.showConfirmDialog = showConfirmDialog;
+	window.hideDetailModal = hideDetailModal;
 }
 
 // ---------- Utility ----------
@@ -965,27 +949,6 @@ export async function loadData() {
 	}
 }
 
-// ---------- Training view toggle ----------
-
-function showTrainingView() {
-	document.getElementById("stats-bar").classList.add("hidden");
-	document.querySelector(".table-container").classList.add("hidden");
-	document.getElementById("training-view").classList.remove("hidden");
-	document.getElementById("account-view")?.classList.add("hidden");
-	document.getElementById("stats-view")?.classList.add("hidden");
-	document.getElementById("admin-view")?.classList.add("hidden");
-	// Sidebar active state
-	["view-all", "view-projects", "view-sent", "view-account"].forEach((id) => {
-		document.getElementById(id)?.classList.remove("active");
-	});
-	document.getElementById("view-stats")?.classList.remove("active");
-	document.getElementById("view-admin")?.classList.remove("active");
-	document.querySelector('[data-view="training"]')?.classList.add("active");
-	document.getElementById("btn-log-send")?.classList.add("hidden");
-	document.getElementById("btn-add-project")?.classList.add("hidden");
-	loadTrainingData();
-}
-
 function showLogbookView() {
 	document.getElementById("stats-bar").classList.remove("hidden");
 	document.querySelector(".table-container").classList.remove("hidden");
@@ -1051,18 +1014,13 @@ async function showStatsView() {
 	document.getElementById("btn-log-send")?.classList.add("hidden");
 	document.getElementById("btn-add-project")?.classList.add("hidden");
 	// Fetch sessions directly if not yet loaded (avoids calling renderTrainingPage as a side-effect)
-	if (!trainingLoaded) {
-		try {
-			allSessions = await fetchTrainingSessions();
-			window.allSessions = allSessions;
-			trainingLoaded = true;
-			document.getElementById("badge-sessions").textContent =
-				allSessions.length;
-		} catch (e) {
-			console.warn("Stats: could not load training sessions", e);
-		}
+	let sessions = [];
+	try {
+		sessions = await ensureTrainingSessionsLoaded();
+	} catch (e) {
+		console.warn("Stats: could not load training sessions", e);
 	}
-	renderStatsPage(window.allClimbs ?? [], allSessions);
+	renderStatsPage(window.allClimbs ?? [], sessions);
 	bindStatsPeriodTabs();
 }
 
@@ -2020,296 +1978,6 @@ function bindProjectOverlayHandlers() {
 	document
 		.getElementById("btn-add-project")
 		.addEventListener("click", showAddProjectOverlay);
-}
-
-// ---------- Training overlay ----------
-
-function setIntensity(value) {
-	document.querySelectorAll(".intensity-btn").forEach((btn) => {
-		btn.classList.toggle("active", Number(btn.dataset.value) <= value);
-	});
-}
-
-// ---------- Gym session route lines (see route-line-ui.js) ----------
-
-const GYM_SESSION_TYPE = "Gym Session";
-
-/** Fills the attached-sends section in the open session detail modal with
- * the linked climbs. sessionID links are authoritative — any same-day check
- * is iOS-only at attach time. */
-async function updateSessionSends(sessionId) {
-	const section = document.getElementById("session-sends-section");
-	if (!section?.isConnected) return;
-	try {
-		const sends = await fetchSessionSends(sessionId);
-		if (!section.isConnected) return; // modal closed while fetching
-		section.classList.remove("train-sends-pending");
-		section.innerHTML = sends.length
-			? buildSessionSendsTableHtml(sends)
-			: `<div class="insp-empty-row">No attached sends yet — link gym sends to this session in the iOS app.</div>`;
-	} catch {
-		if (section.isConnected)
-			section.innerHTML = `<div class="insp-empty-row">Attached sends: —</div>`;
-	}
-}
-
-function showTrainingDetailModal(session) {
-	const overlay = document.getElementById("modal-overlay");
-	const content = document.getElementById("modal-content");
-
-	content.innerHTML = renderTrainingDetailHtml(session);
-	overlay.style.display = "flex";
-	document.body.style.overflow = "hidden";
-
-	if (session.type === GYM_SESSION_TYPE) {
-		updateSessionSends(session.id);
-	}
-
-	document
-		.getElementById("training-detail-edit-btn")
-		.addEventListener("click", () => {
-			hideDetailModal();
-			showEditTrainingOverlay(session);
-		});
-}
-
-function showAddTrainingOverlay() {
-	const overlay = document.getElementById("training-overlay");
-	document.getElementById("training-overlay-title").textContent = "Log Session";
-	document.getElementById("to-record-name").value = "";
-	document.getElementById("to-type").value = "Hangboard";
-	document.getElementById("to-date").value = new Date()
-		.toISOString()
-		.slice(0, 10);
-	document.getElementById("to-duration").value = "60";
-	document.getElementById("to-notes").value = "";
-	setGymFields(null, null);
-	syncGymFieldVisibility();
-	setIntensity(3);
-	document.getElementById("training-overlay-delete").classList.add("hidden");
-	overlay.classList.remove("hidden");
-}
-
-function showEditTrainingOverlay(session) {
-	showAddTrainingOverlay();
-	document.getElementById("training-overlay-title").textContent =
-		"Edit Session";
-	document.getElementById("to-record-name").value = session.recordName ?? "";
-	document.getElementById("to-type").value = session.type ?? "Gym Session";
-	document.getElementById("to-date").value = session.date
-		? session.date.toISOString().slice(0, 10)
-		: "";
-	document.getElementById("to-duration").value = session.duration ?? 60;
-	document.getElementById("to-notes").value = session.notes ?? "";
-	setGymFields(session.gym, session.routes);
-	syncGymFieldVisibility();
-	setIntensity(session.intensity ?? 3);
-	document.getElementById("training-overlay-delete").classList.remove("hidden");
-}
-
-function bindTrainingOverlayHandlers() {
-	function closeOverlay() {
-		document.getElementById("training-overlay").classList.add("hidden");
-	}
-	document
-		.getElementById("training-overlay-close")
-		.addEventListener("click", closeOverlay);
-	document
-		.getElementById("training-overlay-cancel")
-		.addEventListener("click", closeOverlay);
-	document.getElementById("training-overlay").addEventListener("click", (e) => {
-		if (e.target === e.currentTarget) closeOverlay();
-	});
-
-	document.querySelectorAll(".intensity-btn").forEach((btn) => {
-		btn.addEventListener("click", () =>
-			setIntensity(Number(btn.dataset.value)),
-		);
-	});
-
-	document
-		.getElementById("to-type")
-		.addEventListener("change", syncGymFieldVisibility);
-	document
-		.getElementById("to-add-route")
-		.addEventListener("click", () => addRouteLine());
-
-	document
-		.getElementById("training-overlay-save")
-		.addEventListener("click", async function () {
-			const btn = this;
-			btn.disabled = true;
-			btn.textContent = "Saving…";
-			try {
-				const recordName =
-					document.getElementById("to-record-name").value || undefined;
-				const dateVal = document.getElementById("to-date").value;
-				const activeIntensityBtns = document.querySelectorAll(
-					".intensity-btn.active",
-				);
-				const activeIntensityBtn = activeIntensityBtns.length
-					? activeIntensityBtns[activeIntensityBtns.length - 1]
-					: null;
-				await saveTrainingSession({
-					recordName,
-					id: recordName ? undefined : crypto.randomUUID(),
-					type: document.getElementById("to-type").value,
-					date: dateVal ? new Date(dateVal) : new Date(),
-					duration: Number(document.getElementById("to-duration").value),
-					intensity: activeIntensityBtn
-						? Number(activeIntensityBtn.dataset.value)
-						: 3,
-					notes: document.getElementById("to-notes").value.trim() || null,
-					...gymSessionFieldsForSave(
-						document.getElementById("to-type").value,
-					),
-				});
-				closeOverlay();
-				trainingLoaded = false;
-				await loadTrainingData();
-			} catch (err) {
-				alert("Save failed: " + (err.message ?? err));
-			} finally {
-				btn.disabled = false;
-				btn.textContent = "Save Session";
-			}
-		});
-
-	document
-		.getElementById("training-overlay-delete")
-		.addEventListener("click", async function () {
-			const recordName = document.getElementById("to-record-name").value;
-			const type = document.getElementById("to-type").value;
-			const confirmed = await showConfirmDialog(
-				"Delete Session?",
-				`This ${type} session will be permanently deleted.`,
-			);
-			if (!confirmed) return;
-			try {
-				await deleteTrainingSession(recordName);
-				document.getElementById("training-overlay").classList.add("hidden");
-				trainingLoaded = false;
-				await loadTrainingData();
-			} catch (err) {
-				alert("Delete failed: " + (err.message ?? err));
-			}
-		});
-
-	document
-		.getElementById("btn-log-session")
-		.addEventListener("click", showAddTrainingOverlay);
-
-	document.getElementById("training-list").addEventListener("click", (e) => {
-		const row = e.target.closest(".session-row");
-		if (!row) return;
-		const session = allSessions.find(
-			(s) => s.recordName === row.dataset.record,
-		);
-		if (session) showTrainingDetailModal(session);
-	});
-}
-
-// ---------- Training data + rendering ----------
-
-let allSessions = [];
-let trainingPeriod = "allTime";
-let trainingLoaded = false;
-
-async function loadTrainingData() {
-	if (trainingLoaded) {
-		renderTrainingPage(allSessions, trainingPeriod);
-		return;
-	}
-	allSessions = await fetchTrainingSessions();
-	window.allSessions = allSessions;
-	// Mark loaded only after a successful fetch so a failure can retry on
-	// the next Training view open.
-	trainingLoaded = true;
-	document.getElementById("badge-sessions").textContent = allSessions.length;
-	renderTrainingPage(allSessions, trainingPeriod);
-}
-
-function renderTrainingPage(sessions, period) {
-	const stats = computeTrainingStats(sessions, period);
-
-	document.getElementById("ts-total").textContent = stats.totalSessions;
-	document.getElementById("ts-time").textContent = stats.formattedTotalTime(
-		stats.totalMinutes,
-	);
-	document.getElementById("ts-days").textContent = stats.trainingDays;
-	document.getElementById("ts-avg").textContent = stats.avgPerWeek.toFixed(1);
-
-	const listEl = document.getElementById("training-list");
-	const filtered = sessions.filter((s) => {
-		if (period === "allTime") return true;
-		const now = new Date();
-		if (!s.date) return false;
-		if (period === "week") {
-			const w = new Date(now);
-			w.setDate(now.getDate() - 7);
-			return s.date >= w;
-		}
-		if (period === "month")
-			return (
-				s.date.getFullYear() === now.getFullYear() &&
-				s.date.getMonth() === now.getMonth()
-			);
-		if (period === "year") return s.date.getFullYear() === now.getFullYear();
-		return true;
-	});
-	listEl.innerHTML =
-		filtered
-			.map((s) => {
-				const emoji = TYPE_EMOJI[s.type] || "🏋️";
-				const dateStr = s.date
-					? s.date.toLocaleDateString("en-US", {
-							month: "short",
-							day: "numeric",
-							year: "numeric",
-						})
-					: "—";
-				const dots = [1, 2, 3, 4, 5]
-					.map(
-						(i) =>
-							`<div class="intensity-dot${i <= (s.intensity ?? 0) ? " filled" : ""}"></div>`,
-					)
-					.join("");
-				let meta = dateStr;
-				if (s.gym) meta += ` · ${escapeHtml(s.gym)}`;
-				if (s.notes) {
-					const ellipsis = s.notes.length > 40 ? "…" : "";
-					meta += ` · ${escapeHtml(s.notes.slice(0, 40))}${ellipsis}`;
-				}
-				return `<div class="session-row" data-record="${escapeHtml(s.recordName)}">
-      <div class="type-icon">${emoji}</div>
-      <div class="session-info">
-        <div class="session-type">${escapeHtml(s.type)}</div>
-        <div class="session-meta">${meta}</div>
-      </div>
-      <div class="session-right">
-        <div class="intensity-dots">${dots}</div>
-        <div class="session-duration">${s.duration} min</div>
-      </div>
-    </div>`;
-			})
-			.join("") ||
-		'<p style="color:#94a3b8;font-size:.875rem;padding:.5rem 0">No sessions in this period.</p>';
-}
-
-// ---------- Period tabs ----------
-
-function bindPeriodTabs() {
-	document
-		.getElementById("training-period-tabs")
-		.addEventListener("click", (e) => {
-			const btn = e.target.closest("[data-period]");
-			if (!btn) return;
-			trainingPeriod = btn.dataset.period;
-			document
-				.querySelectorAll("#training-period-tabs button")
-				.forEach((b) => b.classList.toggle("active", b === btn));
-			renderTrainingPage(allSessions, trainingPeriod);
-		});
 }
 
 // ---------- Ascent list ----------

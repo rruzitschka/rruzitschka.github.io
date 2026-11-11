@@ -51,6 +51,7 @@ export default [
       'app/js/reverse-geocode.js',
       'app/js/ui-theme.js',
       'app/js/climb-inspector-ui.js',
+      'app/js/training-ui.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

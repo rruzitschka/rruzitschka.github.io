@@ -2,6 +2,8 @@
 
 **Status:** open · **Baseline:** ui.js Code Health 5.3 (2026-11-11), 2352 lines, 106 functions.
 
+**Progress:** Chunk 1 ✅ done (ui.js Code Health 5.3 → 5.9, `training-ui.js` 10.0).
+
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
 one commit, app working after each chunk.
@@ -14,9 +16,16 @@ overlays open, save flows work.
 
 ---
 
-## Chunk 1 — Training UI module (`training-ui.js`)
+## Chunk 1 — Training UI module (`training-ui.js`) ✅
 
 Easiest, most self-contained win. ~250 lines out of ui.js.
+
+**Done 2026-11-11:** `training-ui.js` (10.0) with all training view logic,
+`showTrainingDetailModal`, overlays, `filterSessionsByPeriod` (pure, unit-tested
+in `tests/training-ui.test.js`), `sessionFormPayload` (DOM read helper),
+`setTrainingMockServices` for mock mode. `ui.js` keeps only imports +
+`loadData` wiring. `showStatsView` shares the session cache via
+`ensureTrainingSessionsLoaded()`.
 
 - Move: `showTrainingView`, `showTrainingDetailModal`, `showAddTrainingOverlay`,
   `showEditTrainingOverlay`, `bindTrainingOverlayHandlers` (cc=13), `loadTrainingData`,
