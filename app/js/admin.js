@@ -976,6 +976,10 @@ function renderAdminEditForm(route) {
 		: '<p class="ad-empty">No edit history recorded yet.</p>';
 
 	const lot = route.lastOwnershipTransfer;
+	const transferYouBadge =
+		lot?.transferredBy === currentUID
+			? ' <span class="ad-audit-you">(you)</span>'
+			: "";
 	const ownershipHtml = lot
 		? `
     <div class="ad-audit-block">
@@ -986,11 +990,26 @@ function renderAdminEditForm(route) {
         <div><span class="ad-kv-key">When</span> ${fmtDateTime(lot.transferredAt)}</div>
         <div><span class="ad-kv-key">From</span> <span class="ad-mono" title="${escapeHtml(lot.fromUID ?? "")}">${uidShort(lot.fromUID)}</span></div>
         <div><span class="ad-kv-key">To</span> <span class="ad-mono" title="${escapeHtml(lot.toUID ?? "")}">${uidShort(lot.toUID)}</span></div>
-        <div><span class="ad-kv-key">By admin</span> <span class="ad-mono" title="${escapeHtml(lot.transferredBy ?? "")}">${uidShort(lot.transferredBy)}</span>${lot.transferredBy === currentUID ? ' <span class="ad-audit-you">(you)</span>' : ""}</div>
+        <div><span class="ad-kv-key">By admin</span> <span class="ad-mono" title="${escapeHtml(lot.transferredBy ?? "")}">${uidShort(lot.transferredBy)}</span>${transferYouBadge}</div>
       </div>
     </div>
   `
 		: '<p class="ad-empty">No ownership transfer recorded.</p>';
+
+	const gpsCountryHtml = route.country
+		? `&nbsp;·&nbsp;<span class="ad-country-flag">${escapeHtml(route.country)}</span>`
+		: "";
+	const gpsPinHtml =
+		route.latitude != null
+			? `
+          <p class="ad-note-body">
+            Current pin: <strong>${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</strong>
+            ${gpsCountryHtml}
+          </p>
+        `
+			: `
+          <p class="ad-note-body">No GPS coordinates set for this route.</p>
+        `;
 
 	const el = document.getElementById("admin-tab-content");
 	el.innerHTML = `
@@ -1068,18 +1087,7 @@ function renderAdminEditForm(route) {
         <div class="ad-section-heading ad-heading-info">
           📍 GPS &amp; Location
         </div>
-        ${
-					route.latitude != null
-						? `
-          <p class="ad-note-body">
-            Current pin: <strong>${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</strong>
-            ${route.country ? `&nbsp;·&nbsp;<span class="ad-country-flag">${escapeHtml(route.country)}</span>` : ""}
-          </p>
-        `
-						: `
-          <p class="ad-note-body">No GPS coordinates set for this route.</p>
-        `
-				}
+        ${gpsPinHtml}
         <div id="admin-gps-map" class="ad-map"></div>
         <p class="ad-note-muted ad-mb-sm">
           ${
