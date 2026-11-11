@@ -18,3 +18,4 @@ coverage/
 .scannerwork/
 .graphify_uncached.txt
 .pi-lens/
+graphify-out/
