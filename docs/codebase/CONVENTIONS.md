@@ -40,6 +40,30 @@ Hard rules. Breaking any of these is a bug.
     `className` wholesale when a class list (e.g. `hidden`) carries sync
     state — remove specific classes instead.
 
+## New UI ("Chalk & Sky")
+
+16. The new UI is **unconditional** — `html[data-theme="chalk-sky"]` is set
+    statically in `index.html`/`login.html` and all new-UI styles are scoped
+    under that attribute in `app/css/theme-chalk-sky.css`. There is no
+    Classic fallback anymore; never add `classic-only`/`cs-only` switches.
+17. **Design tokens**: `#0d1117` canvas, `#161b22` cards, `#30363d` borders,
+    accent `#76D6FF` (the iOS `CardBackground` asset), iOS route-type colors
+    (Sport blue, Boulder orange, Multi-Pitch purple, Trad green, Gym mint).
+    Accent-on-accent text is `#042436`.
+18. **No emojis in the new UI** — use stroke SVG icons or text; send styles
+    are abbreviated (`RP/OS/TR/AF/PP/PJ/FL/TP`, `styleAbbreviation()` in
+    `ui-theme.js`) with the full name as `title` tooltip everywhere.
+19. **Community DB indication** is always the cloud symbol; ownership adds an
+    "Owner" label (`cs-owner-indicator`, `.cs-route-link-pill.linked`).
+    Route rows add the ISO country pill (`cs-route-iso`).
+20. The Route Detail card renderer (`renderInspectorHtml` in `ui-theme.js`)
+    is the single source for the right-hand pane. Row click = select into
+    the Inspector; **the climb detail modal no longer exists**. Ascent Log
+    always shows the original send first, then repeat ascents
+    (`combineAscentsWithOriginalSend()`).
+21. New pure logic goes into `ui-theme.js` (vitest-tested); DOM wiring into
+    `climb-inspector-ui.js`; keep `ui.js` from growing.
+
 ## Process
 
 11. Run `npx vitest run` + `npx eslint app/js tests` before committing; no

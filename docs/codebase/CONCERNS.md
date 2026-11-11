@@ -32,3 +32,11 @@ Known debt and risk areas. Update as items are resolved/discovered.
 8. **Sonar "new code" spans everything since the last analysis** with static
    `projectVersion=1.0`; large feature pushes can dip coverage/violations —
    run the scanner locally before pushing big changes.
+
+9. **New-UI leftovers (post-redesign, 2026-11)** — the Chalk & Sky GUI is
+   deployed as the only UI (GUI switch removed), but polish is pending:
+   see `docs/plan-new-ui-gui-followups.md`. In brief: the Training detail
+   modal still uses old inline-styled markup, `admin.js` carries many inline
+   light styles (covered by CSS overrides only), the user's own star rating
+   is not displayed in the Route Inspector, and existing browsers may still
+   carry the dead `sendlog_ui_theme` localStorage key (harmless, never read).
