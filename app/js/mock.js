@@ -261,7 +261,10 @@ export function updateCentralRoute(routeID, fields) {
   console.log('[Mock] updated central route', routeID);
 }
 
-export async function checkAdminStatus() { return false; }
+export async function checkAdminStatus() {
+	// The mock user is an admin so the Admin panel is reviewable in mock mode.
+	return true;
+}
 
 export async function fetchRouteData(routeIDs) {
   const ratings = new Map();

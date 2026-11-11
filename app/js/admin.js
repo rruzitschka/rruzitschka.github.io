@@ -83,21 +83,13 @@ export async function showAdminView() {
 function renderAdminShell(activeTab) {
 	const view = document.getElementById("admin-view");
 	view.innerHTML = `
-    <div style="max-width:680px;margin:0 auto;padding:1.5rem 0">
-      <h2 style="margin:0 0 1.25rem;font-size:1.25rem">Admin Panel</h2>
-      <div style="display:flex;gap:0;border-bottom:2px solid var(--border-color);margin-bottom:1.5rem">
-        <button class="admin-tab ${activeTab === "stats" ? "admin-tab-active" : ""}" data-tab="stats"
-          style="padding:0.5rem 1.25rem;background:none;border:none;cursor:pointer;font-size:0.9rem;
-            font-weight:600;color:${activeTab === "stats" ? "var(--accent-color,#6366f1)" : "#64748b"};
-            border-bottom:${activeTab === "stats" ? "2px solid var(--accent-color,#6366f1)" : "2px solid transparent"};
-            margin-bottom:-2px">
+    <div class="ad-shell">
+      <h2 class="ad-title">Admin Panel</h2>
+      <div class="ad-tabs">
+        <button class="admin-tab ${activeTab === "stats" ? "admin-tab-active" : ""}" data-tab="stats">
           📊 Statistics
         </button>
-        <button class="admin-tab ${activeTab === "routes" ? "admin-tab-active" : ""}" data-tab="routes"
-          style="padding:0.5rem 1.25rem;background:none;border:none;cursor:pointer;font-size:0.9rem;
-            font-weight:600;color:${activeTab === "routes" ? "var(--accent-color,#6366f1)" : "#64748b"};
-            border-bottom:${activeTab === "routes" ? "2px solid var(--accent-color,#6366f1)" : "2px solid transparent"};
-            margin-bottom:-2px">
+        <button class="admin-tab ${activeTab === "routes" ? "admin-tab-active" : ""}" data-tab="routes">
           🔍 Routes
         </button>
       </div>
@@ -123,7 +115,7 @@ function renderAdminShell(activeTab) {
 async function loadAndRenderAdminStats() {
 	const el = document.getElementById("admin-tab-content");
 	if (!el) return;
-	el.innerHTML = '<p style="color:#94a3b8;font-size:0.875rem">Loading…</p>';
+	el.innerHTML = '<p class="ad-loading">Loading…</p>';
 
 	try {
 		const [totalSnap, activeSnap, orphanedSnap, usersSnap, apiKeysSnap, userDocsSnap] =
@@ -151,17 +143,17 @@ async function loadAndRenderAdminStats() {
 		).size;
 
 		el.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem">
+      <div class="ad-stat-grid">
         ${adminStatCard("Community Routes", totalRoutes)}
         ${adminStatCard("Active Routes", activeRoutes)}
-        ${adminStatCard("Orphaned Routes", orphanedRoutes, orphanedRoutes > 0 ? "#f97316" : null)}
+        ${adminStatCard("Orphaned Routes", orphanedRoutes, orphanedRoutes > 0 ? "warn" : null)}
         ${adminStatCard("Registered Users", totalUsers)}
         ${adminStatCard("API Keys Issued", totalKeys)}
         ${adminStatCard("Users with API Keys", usersWithKeys)}
       </div>
       ${renderAdminLastSeenVersions(userDocsSnap)}
-      <p style="font-size:0.75rem;color:#94a3b8;text-align:right">
-        <button id="admin-stats-refresh" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:0.75rem;">↻ Refresh</button>
+      <p class="ad-refresh-row">
+        <button id="admin-stats-refresh" class="ad-refresh-btn">↻ Refresh</button>
       </p>
     `;
 
@@ -170,7 +162,7 @@ async function loadAndRenderAdminStats() {
 			?.addEventListener("click", loadAndRenderAdminStats);
 	} catch (err) {
 		console.error("Admin stats failed:", err);
-		el.innerHTML = `<p style="color:#ef4444;font-size:0.875rem">✗ Failed to load stats: ${escapeHtml(err.message ?? err)}</p>`;
+		el.innerHTML = `<p class="ad-error">✗ Failed to load stats: ${escapeHtml(err.message ?? err)}</p>`;
 	}
 }
 
@@ -207,19 +199,19 @@ function renderAdminLastSeenVersions(userDocsSnap) {
 		.map(
 			(v) => `
         <tr>
-          <td style="padding:2px 10px 2px 0;font-family:monospace">${v}</td>
-          <td style="padding:2px 10px 2px 0">${iosCounts.get(v) ?? 0} iOS</td>
-          <td style="padding:2px 0">${webCounts.get(v) ?? 0} web${v === WEB_APP_VERSION ? " ← current" : ""}</td>
+          <td class="ad-table-mono">${v}</td>
+          <td>${iosCounts.get(v) ?? 0} iOS</td>
+          <td>${webCounts.get(v) ?? 0} web${v === WEB_APP_VERSION ? " ← current" : ""}</td>
         </tr>`,
 		)
 		.join("");
 	if (!rows) return ""; // no version stamps deployed yet
 	return `
-    <div style="margin-bottom:1.5rem">
-      <div style="font-size:0.85rem;font-weight:600;color:#64748b;margin-bottom:0.5rem">Users per last-seen version</div>
-      <table style="font-size:0.85rem;color:#334155;border-collapse:collapse">
+    <div class="ad-versions-block">
+      <div class="ad-versions-title">Users per last-seen version</div>
+      <table class="ad-table-mini">
         ${rows}
-        <tr><td colspan="3" style="padding-top:6px;font-size:0.75rem;color:#94a3b8">
+        <tr><td colspan="3" class="ad-table-note">
           no version stamp yet: ${iosUnknown} iOS · ${webUnknown} web
         </td></tr>
       </table>
@@ -227,12 +219,11 @@ function renderAdminLastSeenVersions(userDocsSnap) {
   `;
 }
 
-function adminStatCard(label, value, valueColor) {
+function adminStatCard(label, value, kind) {
 	return `
-    <div style="background:var(--card-bg,#fff);border:1px solid var(--border-color);
-      border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:4px">
-      <div style="font-size:1.6rem;font-weight:700;color:${valueColor ?? "inherit"}">${value}</div>
-      <div style="font-size:0.78rem;color:#64748b">${label}</div>
+    <div class="ad-stat-card">
+      <div class="ad-stat-value ${kind === "warn" ? "ad-stat-value-warn" : ""}">${value}</div>
+      <div class="ad-stat-label">${label}</div>
     </div>
   `;
 }
@@ -245,8 +236,7 @@ async function runAdminBackfillAreaSearch(
 	const status = document.getElementById(statusId);
 	if (!btn || !status || btn.disabled) return;
 	btn.disabled = true;
-	status.style.color = "#64748b";
-	status.textContent = "Scanning routes…";
+	setAdminStatus(status, "Scanning routes…");
 	try {
 		const stats = await adminBackfillAreaSearch( // NOSONAR — adminBackfillAreaSearch is async (cross-module); Sonar S4123 false positive
 			({ scanned: s, updated: u }) => {
@@ -254,17 +244,23 @@ async function runAdminBackfillAreaSearch(
 			},
 		);
 		const { scanned, updated, batches } = stats;
-		status.style.color = "#16a34a";
-		status.textContent = `✓ Done — scanned ${scanned}, updated ${updated} (${batches} batch${batches === 1 ? "" : "es"}).`;
+		setAdminStatus(status, `✓ Done — scanned ${scanned}, updated ${updated} (${batches} batch${batches === 1 ? "" : "es"}).`, "ok");
 		scheduleStatusClear(status);
 	} catch (err) {
 		console.error("Backfill areaSearch failed:", err);
-		status.style.color = "#ef4444";
-		status.textContent = `✗ Failed: ${escapeHtml(err.message ?? err)}`;
+		setAdminStatus(status, `✗ Failed: ${escapeHtml(err.message ?? err)}`, "err");
 		scheduleStatusClear(status);
 	} finally {
 		btn.disabled = false;
 	}
+}
+
+/** Set a status span's text and tone ("neutral" | "ok" | "err") via classes. */
+function setAdminStatus(statusEl, text, kind = "neutral") {
+	if (!statusEl) return;
+	const base = [...statusEl.classList].filter((c) => !c.startsWith("ad-status"));
+	statusEl.className = [...base, `ad-status-${kind}`].join(" ");
+	statusEl.textContent = text;
 }
 
 /** Auto-clear a one-shot status message after 10s (only if not superseded). */
@@ -299,14 +295,6 @@ const adminBrowserState = {
 	loadSeq: 0,
 };
 
-// Type chip palette (module-level so the edit form could reuse it later)
-const TYPE_CHIP_COLORS = {
-	Sport: { bg: "#ecfdf5", color: "#059669" },
-	Boulder: { bg: "#fff7ed", color: "#ea580c" },
-	"Multi-Pitch": { bg: "#f5f3ff", color: "#7c3aed" },
-	Trad: { bg: "#eff6ff", color: "#2563eb" },
-};
-
 /** Sort dropdown options for the admin routes browser filter bar. */
 const ADMIN_SORT_OPTIONS = [
 	{ value: "name", label: "Sort: Name (A–Z)" },
@@ -318,7 +306,7 @@ function renderAdminSortSelect(selected) {
 	const options = ADMIN_SORT_OPTIONS.map(
 		(o) => `<option value="${o.value}"${o.value === selected ? " selected" : ""}>${o.label}</option>`,
 	).join("");
-	return `<select id="admin-b-sort" class="form-input" style="width:auto"
+	return `<select id="admin-b-sort" class="form-input ad-select-auto"
                 title="Sort order — “Newest first” applies when not searching">${options}</select>`;
 }
 
@@ -373,8 +361,7 @@ async function loadAdminBrowserPage(page) {
 	if (!resultsEl) return;
 	const seq = ++adminBrowserState.loadSeq;
 
-	resultsEl.innerHTML =
-		'<p style="color:#94a3b8;font-size:0.875rem">Loading…</p>';
+	resultsEl.innerHTML = '<p class="ad-loading">Loading…</p>';
 
 	try {
 		const cursors = adminBrowserState.pages[page] ?? null;
@@ -402,9 +389,8 @@ async function loadAdminBrowserPage(page) {
 			).length;
 
 		if (!routes.length) {
-			resultsEl.innerHTML = `
-          <p style="color:#94a3b8;font-size:0.875rem">No routes match your filters.</p>
-        `;
+			resultsEl.innerHTML =
+				'<p class="ad-loading">No routes match your filters.</p>';
 			return;
 		}
 
@@ -449,8 +435,8 @@ async function loadAdminBrowserPage(page) {
 		if (seq !== adminBrowserState.loadSeq) return;
 		console.error("Admin routes browser error:", err);
 		resultsEl.innerHTML = `
-      <p style="color:#ef4444;font-size:0.875rem">Failed to load routes: ${escapeHtml(err.message ?? err)}</p>
-      <button id="admin-b-retry" class="btn btn-secondary btn-sm" style="margin-top:0.5rem">Retry</button>
+      <p class="ad-error">Failed to load routes: ${escapeHtml(err.message ?? err)}</p>
+      <button id="admin-b-retry" class="btn btn-secondary btn-sm ad-mt-sm">Retry</button>
     `;
 		resultsEl
 			.querySelector("#admin-b-retry")
@@ -461,14 +447,14 @@ async function loadAdminBrowserPage(page) {
 function renderAdminBrowserCount(total) {
 	if (total == null) return "";
 	return `
-    <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">
-      <p style="font-size:0.8rem;color:#64748b;margin:0">${total} routes</p>
-      <span style="flex:1"></span>
+    <div class="ad-count-row">
+      <p class="ad-count-text">${total} routes</p>
+      <span class="ad-spacer"></span>
       <button id="admin-b-backfill" class="btn btn-secondary btn-sm"
               title="Rebuild nameSearch/cragSearch/areaSearch where missing or stale (idempotent, safe to re-run)">
         Rebuild search fields
       </button>
-      <span id="admin-b-backfill-status" style="font-size:0.75rem;color:#94a3b8"></span>
+      <span id="admin-b-backfill-status" class="ad-backfill-status"></span>
     </div>
   `;
 }
@@ -483,15 +469,19 @@ function adminBrowserFiltersActive() {
 }
 
 function renderAdminRouteRow(r) {
-	const chip = TYPE_CHIP_COLORS[r.routeType] ?? { bg: "#f1f5f9", color: "#475569" };
+	const chipClass =
+		{
+			Sport: "ad-chip-sport",
+			Boulder: "ad-chip-boulder",
+			"Multi-Pitch": "ad-chip-multipitch",
+			Trad: "ad-chip-trad",
+		}[r.routeType] ?? "ad-chip-default";
 	const displayGrade = convertFromFrench(r.grade, getPreferredGradeSystem());
 	const badges = [
-		r.isOrphaned
-			? '<span style="font-size:0.7rem;color:#f97316;margin-left:6px;background:#ffedd5;padding:1px 6px;border-radius:4px">orphaned</span>'
-			: "",
+		r.isOrphaned ? '<span class="ad-orphan-badge">orphaned</span>' : "",
 		r.latitude == null
 			? ""
-			: '<span title="GPS pin set" style="margin-left:4px;font-size:0.75rem">📍</span>',
+			: '<span title="GPS pin set" class="ad-pin-badge">📍</span>',
 	]
 		.filter(Boolean)
 		.join("");
@@ -500,24 +490,20 @@ function renderAdminRouteRow(r) {
 		: "—";
 
 	return `
-    <div class="admin-route-row" data-id="${escapeHtml(r.id)}" style="
-      display:flex;justify-content:space-between;align-items:center;gap:8px;
-      padding:10px 12px;border:1px solid var(--border-color);
-      border-radius:8px;margin-bottom:6px;cursor:pointer;
-      background:${r.isOrphaned ? "#fff7ed" : "var(--card-bg, #fff)"}">
-      <div style="min-width:0">
-        <div style="font-weight:600;font-size:0.95rem">
+    <div class="admin-route-row ${r.isOrphaned ? "ad-route-orphaned" : ""}" data-id="${escapeHtml(r.id)}">
+      <div class="ad-route-main">
+        <div class="ad-route-name">
           ${escapeHtml(r.name)}${badges}
         </div>
-        <div style="font-size:0.8rem;color:#64748b">
+        <div class="ad-route-sub">
           ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""}
           &nbsp;·&nbsp;${countryLabel}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;text-align:right">
-        <span style="font-size:0.8rem;font-weight:600">${escapeHtml(displayGrade)}</span>
-        <span style="font-size:0.7rem;padding:1px 8px;border-radius:4px;background:${chip.bg};color:${chip.color}">${escapeHtml(r.routeType)}</span>
-        <span style="font-size:0.8rem;color:#94a3b8">✓ ${r.sendCount}</span>
+      <div class="ad-route-side">
+        <span class="ad-route-grade">${escapeHtml(displayGrade)}</span>
+        <span class="ad-chip ${chipClass}">${escapeHtml(r.routeType)}</span>
+        <span class="ad-route-sends">✓ ${r.sendCount}</span>
       </div>
     </div>
   `;
@@ -526,11 +512,11 @@ function renderAdminRouteRow(r) {
 function renderAdminBrowserFooter(page, hasNext) {
 	const totalPages = Math.max(1, Math.ceil((adminBrowserState.total ?? 0) / PAGE_SIZE));
 	return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+    <div class="ad-list-footer">
       <button id="admin-b-prev" class="btn btn-secondary btn-sm" ${page === 0 ? "disabled" : ""}>
         ← Previous
       </button>
-      <span style="font-size:0.8rem;color:#64748b">Page ${page + 1} of ${totalPages}</span>
+      <span class="ad-footer-count">Page ${page + 1} of ${totalPages}</span>
       <button id="admin-b-next" class="btn btn-secondary btn-sm" ${hasNext ? "" : "disabled"}>
         Next →
       </button>
@@ -550,7 +536,7 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 		overlay.style.cssText =
 			"position:fixed;inset:0;background:rgba(15,23,42,0.5);display:flex;align-items:center;justify-content:center;z-index:1000";
 		const countryInput = codes
-			? `<select id="admin-ac-country" class="form-input" style="width:100%">
+			? `<select id="admin-ac-country" class="form-input ad-select-full">
               <option value="">Select country…</option>
               ${codes
 					.map(
@@ -560,27 +546,28 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 					.join("")}
               <option value="__other__">Other (enter code)…</option>
             </select>`
-			: `<input type="text" id="admin-ac-country" class="form-input" style="width:100%"
+			: `<input type="text" id="admin-ac-country" class="form-input ad-select-full"
                placeholder="ISO country code" maxlength="2" autocomplete="off" />`;
 
+		overlay.className = "ad-dialog-overlay";
 		overlay.innerHTML = `
-      <div style="background:var(--card-bg,#fff);border-radius:12px;padding:1.25rem;max-width:440px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2)">
-        <h3 style="margin:0 0 0.5rem;font-size:1rem">Apply country to results</h3>
-        <p style="margin:0 0 0.75rem;font-size:0.85rem">
+      <div class="ad-dialog-card">
+        <h3 class="ad-dialog-title">Apply country to results</h3>
+        <p class="ad-dialog-text">
           Apply country to <b>${matched}</b> routes?
           (${gpsBacked} GPS-backed routes will be skipped.)
         </p>
-        <div style="margin-bottom:0.75rem">${countryInput}</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;margin-bottom:0.5rem">
+        <div class="ad-mb-sm">${countryInput}</div>
+        <label class="ad-checkbox-label ad-mb-xs">
           <input type="checkbox" id="admin-ac-fill" checked />
           Only fill routes without a country
         </label>
-        <p id="admin-ac-warn" style="display:none;margin:0 0 0.5rem;font-size:0.78rem;color:#b45309"></p>
-        <p style="margin:0 0 0.75rem;font-size:0.75rem;color:#94a3b8">
+        <p id="admin-ac-warn" class="ad-dialog-warn"></p>
+        <p class="ad-dialog-hint">
           A later admin GPS assignment (which reverse-geocodes) will overwrite a
           manually set country — GPS-derived values win.
         </p>
-        <div style="display:flex;justify-content:flex-end;gap:8px">
+        <div class="ad-dialog-actions">
           <button id="admin-ac-cancel" class="btn btn-secondary btn-sm">Cancel</button>
           <button id="admin-ac-ok" class="btn btn-primary btn-sm">Apply</button>
         </div>
@@ -611,8 +598,7 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 			const input = document.createElement("input");
 			input.type = "text";
 			input.id = "admin-ac-country";
-			input.className = "form-input";
-			input.style.width = "100%";
+			input.className = "form-input ad-select-full";
 			input.placeholder = "ISO country code";
 			input.maxLength = 2;
 			input.autocomplete = "off";
@@ -633,8 +619,7 @@ function showAdminApplyCountryDialog({ matched, gpsBacked, overwriteCount, codes
 				.value.trim()
 				.toUpperCase();
 			if (country.length !== 2) {
-				warn.style.display = "";
-				warn.style.color = "#ef4444";
+				warn.className = "ad-dialog-err";
 				warn.textContent = "Please pick a 2-letter ISO country code.";
 				return;
 			}
@@ -661,11 +646,8 @@ async function runAdminApplyCountry() {
 		country: adminBrowserState.country || null,
 		isOrphaned: adminBrowserState.isOrphaned,
 	};
-	const setStatus = (text, color = "#64748b") => {
-		if (statusEl) {
-			statusEl.style.color = color;
-			statusEl.textContent = text;
-		}
+	const setStatus = (text, kind = "neutral") => {
+		setAdminStatus(statusEl, text, kind);
 	};
 
 	btn.disabled = true;
@@ -676,7 +658,7 @@ async function runAdminApplyCountry() {
 		);
 		const matched = scan.targets.length + scan.skippedAlreadySet + scan.skippedGPS;
 		if (matched === 0) {
-			setStatus("No matching routes found.", "#94a3b8");
+			setStatus("No matching routes found.", "muted");
 			return;
 		}
 
@@ -699,7 +681,7 @@ async function runAdminApplyCountry() {
 		if (targets.length === 0) {
 			setStatus(
 				`Nothing to do — all ${scan.skippedGPS} matched routes are GPS-backed.`,
-				"#94a3b8",
+				"muted",
 			);
 			return;
 		}
@@ -712,7 +694,7 @@ async function runAdminApplyCountry() {
 		);
 		setStatus(
 			`✓ Updated ${updated} routes · skipped ${scan.skippedAlreadySet} already set · skipped ${scan.skippedGPS} GPS-backed`,
-			"#16a34a",
+			"ok",
 		);
 		scheduleStatusClear(statusEl);
 		// Country values changed — the session-cached dropdown list is now stale;
@@ -723,7 +705,7 @@ async function runAdminApplyCountry() {
 		}
 	} catch (err) {
 		console.error("Apply country batch failed:", err);
-		setStatus(`✗ Failed: ${escapeHtml(err.message ?? err)}`, "#ef4444");
+		setStatus(`✗ Failed: ${escapeHtml(err.message ?? err)}`, "err");
 	} finally {
 		btn.disabled = false;
 	}
@@ -733,11 +715,11 @@ function renderAdminSearch() {
 	const el = document.getElementById("admin-tab-content");
 	if (!el) return;
 	el.innerHTML = `
-      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <div class="ad-filter-bar">
         <input type="text" id="admin-b-search" placeholder="Search route, crag, or area…"
-               class="form-input" style="flex:1;min-width:200px" autocomplete="off"
+               class="form-input ad-search-input" autocomplete="off"
                value="${escapeHtml(adminBrowserState.searchText)}" />
-        <select id="admin-b-field" class="form-input" style="width:auto" title="Search in">
+        <select id="admin-b-field" class="form-input ad-select-auto" title="Search in">
           ${["any", "name", "crag", "area"]
 				.map(
 					(f) =>
@@ -747,23 +729,23 @@ function renderAdminSearch() {
         </select>
           ${renderAdminSortSelect(adminBrowserState.sortBy)}
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
-        <select id="admin-b-type" class="form-input" style="width:auto">
+      <div class="ad-filter-bar-center">
+        <select id="admin-b-type" class="form-input ad-select-auto">
           <option value="">Type: All</option>
           ${ADMIN_ROUTE_TYPES.map(
 				(t) =>
 					`<option value="${escapeHtml(t)}"${adminBrowserState.routeType === t ? " selected" : ""}>${escapeHtml(t)}</option>`,
 			).join("")}
         </select>
-        <select id="admin-b-country" class="form-input" style="width:auto">
+        <select id="admin-b-country" class="form-input ad-select-auto">
           <option value="">Country: All</option>
           <option value="${COUNTRY_NONE}">Country: (none)</option>
         </select>
-        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:#64748b;cursor:pointer">
+        <label class="ad-checkbox-label">
           <input type="checkbox" id="admin-b-orphaned" ${adminBrowserState.isOrphaned ? "checked" : ""} />
           Orphaned only
         </label>
-        <span style="flex:1"></span>
+        <span class="ad-spacer"></span>
         <button id="admin-b-apply-country" class="btn btn-secondary btn-sm"
                 title="Set the same country on all matching routes (GPS-backed routes are never modified)">
           Apply country to results…
@@ -771,7 +753,7 @@ function renderAdminSearch() {
       </div>
 
       <div id="admin-b-results">
-        <p style="color:#94a3b8;font-size:0.875rem">Loading…</p>
+        <p class="ad-loading">Loading…</p>
       </div>
   `;
 
@@ -795,8 +777,7 @@ function renderAdminSearch() {
 			const input = document.createElement("input");
 			input.type = "text";
 			input.id = "admin-b-country";
-			input.className = "form-input";
-			input.style.width = "120px";
+			input.className = "form-input ad-country-input";
 			input.placeholder = "Country (ISO)";
 			input.maxLength = 2;
 			input.autocomplete = "off";
@@ -849,7 +830,7 @@ function renderAdminSearch() {
 async function openAdminEditForm(routeID) {
 	const el = document.getElementById("admin-tab-content");
 	if (!el) return;
-	el.innerHTML = '<p style="color:#94a3b8;font-size:0.875rem">Loading…</p>';
+	el.innerHTML = '<p class="ad-loading">Loading…</p>';
 	try {
 		const route = await getRoute(routeID);
 		if (!route) throw new Error("Route not found");
@@ -857,8 +838,8 @@ async function openAdminEditForm(routeID) {
 	} catch (err) {
 		console.error("openAdminEditForm failed:", err);
 		el.innerHTML = `
-      <button id="admin-back-btn" class="btn btn-secondary btn-sm" style="margin-bottom:1rem">← Back</button>
-      <p style="color:#ef4444">Failed to load route: ${escapeHtml(err.message ?? err)}</p>
+      <button id="admin-back-btn" class="btn btn-secondary btn-sm ad-back-btn">← Back</button>
+      <p class="ad-error-inline">Failed to load route: ${escapeHtml(err.message ?? err)}</p>
     `;
 		document
 			.getElementById("admin-back-btn")
@@ -953,8 +934,8 @@ function renderAdminEditForm(route) {
 
 	const recentEditsHtml = route.recentEdits.length
 		? `
-    <div style="margin-bottom:1rem">
-      <div style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem">
+    <div class="ad-audit-block">
+      <div class="ad-section-title">
         Recent Edits (last ${route.recentEdits.length})
       </div>
       ${route.recentEdits
@@ -970,21 +951,21 @@ function renderAdminEditForm(route) {
 								return s === "" ? "(empty)" : escapeHtml(s);
 							};
 							return `
-              <div style="font-family:monospace;font-size:0.72rem;padding:2px 0 2px 148px;color:#475569">
-                <span style="color:#0f766e">${escapeHtml(c.field)}:</span>
-                <span style="color:#b91c1c;text-decoration:line-through">${fmt(c.from)}</span>
-                → <span style="color:#15803d">${fmt(c.to)}</span>
+              <div class="ad-audit-change">
+                <span class="ad-change-field">${escapeHtml(c.field)}:</span>
+                <span class="ad-change-old">${fmt(c.from)}</span>
+                → <span class="ad-change-new">${fmt(c.to)}</span>
               </div>`;
 						})
 						.join("");
 					return `
-        <div style="border-bottom:1px solid #f1f5f9;padding:3px 0">
-          <div style="font-size:0.8rem;color:#64748b;display:flex;gap:8px">
-            <span style="color:#94a3b8;min-width:140px">${fmtDateTime(e.editedAt)}</span>
-            <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(e.editedBy)}">${uidShort(e.editedBy)}</span>
-            ${e.editedBy === currentUID ? '<span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ""}
-            <span style="font-size:0.7rem;color:#7c3aed;background:#f5f3ff;padding:1px 6px;border-radius:4px">${escapeHtml(actionLabel)}</span>
-            ${e.note ? `<span style="font-size:0.7rem;color:#94a3b8">${escapeHtml(e.note)}</span>` : ""}
+        <div class="ad-audit-row">
+          <div class="ad-audit-meta">
+            <span class="ad-audit-time">${fmtDateTime(e.editedAt)}</span>
+            <span class="ad-mono" title="${escapeHtml(e.editedBy)}">${uidShort(e.editedBy)}</span>
+            ${e.editedBy === currentUID ? '<span class="ad-audit-you">(you)</span>' : ""}
+            <span class="ad-audit-badge">${escapeHtml(actionLabel)}</span>
+            ${e.note ? `<span class="ad-audit-note">${escapeHtml(e.note)}</span>` : ""}
           </div>
           ${changesHtml}
         </div>`;
@@ -992,38 +973,38 @@ function renderAdminEditForm(route) {
 				.join("")}
     </div>
   `
-		: '<p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">No edit history recorded yet.</p>';
+		: '<p class="ad-empty">No edit history recorded yet.</p>';
 
 	const lot = route.lastOwnershipTransfer;
 	const ownershipHtml = lot
 		? `
-    <div style="margin-bottom:1rem">
-      <div style="font-size:0.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem">
+    <div class="ad-audit-block">
+      <div class="ad-section-title">
         Last Ownership Transfer
       </div>
-      <div style="font-size:0.8rem;color:#64748b;background:#f8fafc;border:1px solid var(--border-color);border-radius:6px;padding:8px 10px;line-height:1.8">
-        <div><span style="color:#94a3b8;width:80px;display:inline-block">When</span> ${fmtDateTime(lot.transferredAt)}</div>
-        <div><span style="color:#94a3b8;width:80px;display:inline-block">From</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.fromUID ?? "")}">${uidShort(lot.fromUID)}</span></div>
-        <div><span style="color:#94a3b8;width:80px;display:inline-block">To</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.toUID ?? "")}">${uidShort(lot.toUID)}</span></div>
-        <div><span style="color:#94a3b8;width:80px;display:inline-block">By admin</span> <span style="font-family:monospace;font-size:0.75rem" title="${escapeHtml(lot.transferredBy ?? "")}">${uidShort(lot.transferredBy)}</span>${lot.transferredBy === currentUID ? ' <span style="color:#6366f1;font-size:0.7rem">(you)</span>' : ""}</div>
+      <div class="ad-info-box">
+        <div><span class="ad-kv-key">When</span> ${fmtDateTime(lot.transferredAt)}</div>
+        <div><span class="ad-kv-key">From</span> <span class="ad-mono" title="${escapeHtml(lot.fromUID ?? "")}">${uidShort(lot.fromUID)}</span></div>
+        <div><span class="ad-kv-key">To</span> <span class="ad-mono" title="${escapeHtml(lot.toUID ?? "")}">${uidShort(lot.toUID)}</span></div>
+        <div><span class="ad-kv-key">By admin</span> <span class="ad-mono" title="${escapeHtml(lot.transferredBy ?? "")}">${uidShort(lot.transferredBy)}</span>${lot.transferredBy === currentUID ? ' <span class="ad-audit-you">(you)</span>' : ""}</div>
       </div>
     </div>
   `
-		: '<p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">No ownership transfer recorded.</p>';
+		: '<p class="ad-empty">No ownership transfer recorded.</p>';
 
 	const el = document.getElementById("admin-tab-content");
 	el.innerHTML = `
-    <div style="max-width:560px">
-      <button id="admin-back-btn" class="btn btn-secondary btn-sm" style="margin-bottom:1.25rem">
+    <div class="ad-form">
+      <button id="admin-back-btn" class="btn btn-secondary btn-sm ad-back-btn">
         ← Back to search
       </button>
-      <h2 style="margin:0 0 1.25rem;font-size:1.25rem">Edit Route</h2>
+      <h2 class="ad-title">Edit Route</h2>
 
       <div class="form-group">
         <label class="form-label">Name</label>
         <input type="text" id="admin-f-name" class="form-input" value="${escapeHtml(route.name)}" />
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="ad-grid-2">
         <div class="form-group">
           <label class="form-label">Climbing Area</label>
           <input type="text" id="admin-f-area" class="form-input" value="${escapeHtml(route.climbingArea)}" />
@@ -1038,9 +1019,9 @@ function renderAdminEditForm(route) {
         <select id="admin-f-country" class="form-input">
           ${isoCountryOptionsHTML(route.country ?? "", "— No country —")}
         </select>
-        ${route.country ? `<p style="font-size:0.75rem;color:#64748b;margin:4px 0 0">Current: ${countryFlagEmoji(route.country)} ${isoCountryName(route.country) ?? escapeHtml(route.country)}</p>` : ""}
+        ${route.country ? `<p class="ad-country-current">Current: ${countryFlagEmoji(route.country)} ${isoCountryName(route.country) ?? escapeHtml(route.country)}</p>` : ""}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="ad-grid-2">
         <div class="form-group">
           <label class="form-label">Grade</label>
           <input type="text" id="admin-f-grade" class="form-input" value="${escapeHtml(displayGrade)}" />
@@ -1063,102 +1044,101 @@ function renderAdminEditForm(route) {
         </div>
       </div>
 
-      <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
-        <div style="font-size:0.75rem;font-weight:600;color:#f97316;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
+      <div class="ad-section">
+        <div class="ad-section-heading ad-heading-warn">
           ⚙ Admin Fields
         </div>
         <div class="form-group">
-          <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
-            <span>Owner UID <span style="font-weight:400;color:#94a3b8">(paste new UID to transfer)</span></span>
-            <button id="admin-transfer-to-me" class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:2px 8px">
+          <label class="form-label ad-label-row">
+            <span>Owner UID <span class="ad-label-hint">(paste new UID to transfer)</span></span>
+            <button id="admin-transfer-to-me" class="btn btn-secondary btn-sm ad-btn-xs">
               Transfer to me
             </button>
           </label>
-          <input type="text" id="admin-f-createdby" class="form-input"
-                 value="${escapeHtml(route.createdBy ?? "")}"
-                 style="font-family:monospace;font-size:0.82rem" />
+          <input type="text" id="admin-f-createdby" class="form-input ad-input-mono"
+                 value="${escapeHtml(route.createdBy ?? "")}" />
         </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;cursor:pointer;margin-top:0.5rem">
+        <label class="ad-checkbox-lg">
           <input type="checkbox" id="admin-f-orphaned" ${route.isOrphaned ? "checked" : ""} />
           Mark as orphaned
         </label>
       </div>
 
-      <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
-        <div style="font-size:0.75rem;font-weight:600;color:#3b82f6;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
+      <div class="ad-section">
+        <div class="ad-section-heading ad-heading-info">
           📍 GPS &amp; Location
         </div>
         ${
 					route.latitude != null
 						? `
-          <p style="font-size:0.825rem;color:#64748b;margin-bottom:0.5rem">
+          <p class="ad-note-body">
             Current pin: <strong>${route.latitude.toFixed(5)}°, ${route.longitude.toFixed(5)}°</strong>
-            ${route.country ? `&nbsp;·&nbsp;<span style="font-size:0.8rem">${escapeHtml(route.country)}</span>` : ""}
+            ${route.country ? `&nbsp;·&nbsp;<span class="ad-country-flag">${escapeHtml(route.country)}</span>` : ""}
           </p>
         `
 						: `
-          <p style="font-size:0.825rem;color:#94a3b8;margin-bottom:0.5rem">No GPS coordinates set for this route.</p>
+          <p class="ad-note-body">No GPS coordinates set for this route.</p>
         `
 				}
-        <div id="admin-gps-map" style="height:220px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:0.75rem;background:#f1f5f9"></div>
-        <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:0.75rem">
+        <div id="admin-gps-map" class="ad-map"></div>
+        <p class="ad-note-muted ad-mb-sm">
           ${
 						route.latitude != null
 							? "Drag the pin or click the map to reposition it, then press “Save GPS Pin”."
 							: "Click the map or drag the pin to place it, then press “Save GPS Pin”."
 					}
         </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem;align-items:end">
-          <div class="form-group" style="margin:0">
-            <label class="form-label" style="font-size:0.75rem">Latitude</label>
+        <div class="ad-grid-2-tight">
+          <div class="form-group ad-grid-flat">
+            <label class="form-label ad-label-sm">Latitude</label>
             <input type="number" id="admin-gps-lat" class="form-input" step="any"
                    value="${route.latitude ?? ""}" placeholder="e.g. 47.0512" />
           </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label" style="font-size:0.75rem">Longitude</label>
+          <div class="form-group ad-grid-flat">
+            <label class="form-label ad-label-sm">Longitude</label>
             <input type="number" id="admin-gps-lon" class="form-input" step="any"
                    value="${route.longitude ?? ""}" placeholder="e.g. 15.4414" />
           </div>
         </div>
-        <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:0.75rem">
+        <p class="ad-note-muted ad-mb-sm">
           Saving a GPS pin reverse-geocodes the country and overwrites any
           existing value (manual or GPS-derived). Removing the pin keeps the
           country.
         </p>
-        <div style="display:flex;gap:8px">
+        <div class="ad-btn-row">
           <button id="admin-gps-save-btn" class="btn btn-primary btn-sm">📍 Save GPS Pin</button>
           ${
-						route.latitude != null
-							? '<button id="admin-gps-clear-btn" class="btn btn-danger btn-sm">✕ Remove GPS</button>'
-							: ""
-					}
+					route.latitude != null
+						? '<button id="admin-gps-clear-btn" class="btn btn-danger btn-sm">✕ Remove GPS</button>'
+						: ""
+				}
         </div>
-        <div id="admin-gps-status" style="margin-top:0.5rem;font-size:0.825rem;min-height:1.2em"></div>
+        <div id="admin-gps-status" class="ad-status ad-status-gps"></div>
       </div>
 
-      <div style="border-top:1px solid var(--border-color);margin:1.25rem 0;padding-top:1.25rem">
-        <div style="font-size:0.75rem;font-weight:600;color:#64748b;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em">
+      <div class="ad-section">
+        <div class="ad-section-heading ad-heading-muted">
           Audit Trail
         </div>
         ${recentEditsHtml}
         ${ownershipHtml}
       </div>
 
-      <div style="background:#f8fafc;border:1px solid var(--border-color);border-radius:8px;padding:0.75rem;margin-bottom:1.25rem;font-size:0.8rem;color:#64748b">
-        <strong>Route ID:</strong> <span style="font-family:monospace;font-size:0.75rem">${escapeHtml(route.id)}</span><br>
+      <div class="ad-info-box ad-mb">
+        <strong>Route ID:</strong> <span class="ad-mono">${escapeHtml(route.id)}</span><br>
         <strong>Last saved:</strong> ${fmtDateTime(route.updatedAt)}
         ${route.updatedBy ? ` &nbsp;·&nbsp; <span title="${escapeHtml(route.updatedBy)}">${uidShort(route.updatedBy)}</span>` : ""}
         &nbsp;·&nbsp; <strong>Sends:</strong> ${route.sendCount} &nbsp; <strong>Projects:</strong> ${route.projectCount}
       </div>
 
-      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+      <div class="ad-footer-actions">
         <button id="admin-delete-btn" class="btn btn-danger btn-sm">Delete Route</button>
-        <div style="display:flex;gap:8px">
+        <div class="ad-btn-row">
           <button id="admin-cancel-btn" class="btn btn-secondary btn-sm">Cancel</button>
           <button id="admin-save-btn" class="btn btn-primary btn-sm">Save Changes</button>
         </div>
       </div>
-      <div id="admin-form-status" style="margin-top:0.75rem;font-size:0.875rem;min-height:1.2em"></div>
+      <div id="admin-form-status" class="ad-status ad-status-form"></div>
     </div>
   `;
 
@@ -1198,12 +1178,12 @@ function renderAdminEditForm(route) {
 						country:
 							document.getElementById("admin-f-country")?.value || "",
 				});
-				status.style.color = "var(--success-color, #16a34a)";
+				status.className = "ad-status ad-status-form ad-status-ok";
 				status.textContent = "✓ Saved successfully";
 				setTimeout(() => openAdminEditForm(route.id), 800);
 			} catch (err) {
 				console.error("adminSaveRoute failed:", err);
-				status.style.color = "#ef4444";
+				status.className = "ad-status ad-status-form ad-status-err";
 				status.textContent = "✗ Save failed: " + (err.message ?? err);
 			} finally {
 				btn.disabled = false;
@@ -1230,7 +1210,7 @@ function renderAdminEditForm(route) {
 			} catch (err) {
 				console.error("adminDeleteRoute failed:", err);
 				const status = document.getElementById("admin-form-status");
-				status.style.color = "#ef4444";
+				status.className = "ad-status ad-status-form ad-status-err";
 				status.textContent = "✗ Delete failed: " + (err.message ?? err);
 				btn.disabled = false;
 				btn.textContent = "Delete Route";
@@ -1261,7 +1241,7 @@ function renderAdminEditForm(route) {
 				lon < -180 ||
 				lon > 180
 			) {
-				status.style.color = "#ef4444";
+				status.className = "ad-status ad-status-gps ad-status-err";
 				status.textContent = "✗ Enter valid coordinates (lat ±90°, lon ±180°).";
 				return;
 			}
@@ -1270,14 +1250,14 @@ function renderAdminEditForm(route) {
 			status.textContent = "";
 			try {
 				await adminSetGPS(route.id, lat, lon, country);
-				status.style.color = "var(--success-color, #16a34a)";
+				status.className = "ad-status ad-status-gps ad-status-ok";
 				status.textContent = country
 					? `\u2713 GPS pin saved — country set to ${countryFlagEmoji(country)} ${isoCountryName(country) ?? country}.`
 					: "\u2713 GPS pin saved — country could not be determined, existing value kept.";
 				setTimeout(() => openAdminEditForm(route.id), 800);
 			} catch (err) {
 				console.error("adminSetGPS failed:", err);
-				status.style.color = "#ef4444";
+				status.className = "ad-status ad-status-gps ad-status-err";
 				status.textContent = "\u2717 Save failed: " + (err.message ?? err);
 				btn.disabled = false;
 				btn.textContent = "\ud83d\udccd Save GPS Pin";
@@ -1295,12 +1275,12 @@ function renderAdminEditForm(route) {
 			const status = document.getElementById("admin-gps-status");
 			try {
 				await adminClearGPS(route.id);
-				status.style.color = "var(--success-color, #16a34a)";
+				status.className = "ad-status ad-status-gps ad-status-ok";
 				status.textContent = "\u2713 GPS removed.";
 				setTimeout(() => openAdminEditForm(route.id), 800);
 			} catch (err) {
 				console.error("adminClearGPS failed:", err);
-				status.style.color = "#ef4444";
+				status.className = "ad-status ad-status-gps ad-status-err";
 				status.textContent = "\u2717 Remove failed: " + (err.message ?? err);
 			}
 		});

@@ -1,8 +1,9 @@
 # Plan — New-UI GUI follow-ups (Chalk & Sky)
 
-Status: **open** · Created 2026-11-06 after the redesign shipped
-(`3e9f539` redesign, `4c369d9` GUI-switch removal, `84ede60` docs).
-Working plan for picking the last GUI issues up in a fresh session.
+Status: **resolved 2026-11-11** (item 6 = ongoing verification duty).
+Created 2026-11-06 after the redesign shipped (`3e9f539` redesign,
+`4c369d9` GUI-switch removal, `84ede60` docs). Historical reference — the
+remaining live work is item 6 after each push.
 
 ## Context for the next session
 
@@ -34,36 +35,34 @@ Working plan for picking the last GUI issues up in a fresh session.
   update `docs/codebase/` after the push. Pushing needs the user's approval
   (🚀 dialog in the pi UI) and the SonarQube gate must pass.
 
-## Remaining GUI issues (in suggested order)
+## Remaining GUI issues (resolved 2026-11-11)
 
-1. **Training detail modal** — the last view still built from old
-   inline-styled markup in `ui.js` (`showTrainingDetailModal`). Rebuild it
-   on a shared card renderer like `renderInspectorHtml` (a session variant:
-   type/date/duration/intensity rows, gym info, warm-up routes, attached
-   sends, notes, Edit Session button). Watch out: intensity dots must use
-   `.intensity-dot`/`.filled` (sky-blue), not inline colors — that bug was
-   fixed once already. Keep `hideDetailModal` + the `✕` close behaviour.
-2. **`admin.js` inline styles** — many hardcoded light styles
-   (`background:#f8fafc`, `#f1f5f9`, type-chip colors). Currently covered by
-   the attribute-selector overrides at the end of `theme-chalk-sky.css`
-   (`[style*="background:#f8fafc"]` etc.). Preferred end state: replace the
-   inline styles with semantic classes and drop the override hacks.
-3. **User's own star rating is not displayed in the Route Inspector** —
-   dropped when the grid became Style/Ascents/Community (user approved the
-   screenshot). If wanted back, add a 4th cell — grid is
-   `repeat(3, 1fr)` in `theme-chalk-sky.css`; a 4th cell wraps to a second
-   row (or widen to `repeat(4, 1fr)`). Needs `starsHtml` passed through
-   `buildInspectorMeta` in `climb-inspector-ui.js`.
-4. **Ascent-log fallback date** — a climb with zero repeat ascents shows
-   "No ascents logged yet"; its own send date appears nowhere in the pane
-   (table + edit overlay still show it). Decide: keep as-is (screenshot
-   parity) or render the send date when the log is empty.
-5. **Dead localStorage key** — browsers that once toggled the old
-   Classic/GUI switch still carry `sendlog_ui_theme`. Nothing reads it;
-   optional one-line cleanup script or just ignore (expires naturally).
-6. **Live-site verification on a real account** — deployed via GitHub Pages
-   after push; verify filters/chips/inspector/edit overlays/Training/Stats/
-   Admin with real Firebase data (mock mode already exercises the pane).
+1. **Training detail modal** — ✅ rebuilt on the shared card renderer:
+   `renderTrainingDetailHtml` in `ui-theme.js` (session variant: type title,
+   Date/Duration/Intensity `.insp-grid` row, gym info, warm-up routes,
+   async attached-sends section, notes, Edit Session button via
+   `.insp-actions`). Intensity dots are pure `.intensity-dot`/`.filled` CSS
+   (no inline colors). `buildWarmupRoutesHtml`/`buildSessionSendsTableHtml`
+   moved from `route-line-ui.js` to `ui-theme.js`; status colors are class-
+   based (`setAdminStatus`), no `style.color` writes.
+2. **`admin.js` inline styles** — ✅ all 120 inline styles replaced with
+   semantic `ad-*` classes in `theme-chalk-sky.css`; the
+   `[style*="background:#f8fafc"]` attribute-selector override hacks are
+   deleted. Route-type chips are `ad-chip-*` classes (dark-theme tints),
+   dialogs are `ad-dialog-*`, status tones are `ad-status-*`.
+3. **User's own star rating in the Route Inspector** — ✅ 4th grid cell
+   "Your Rating" (grid widened to `repeat(4, 1fr)`); `userRating` passed
+   through `buildInspectorMeta`, stars rendered by `renderStarsHtml`.
+4. **Ascent-log fallback date** — ✅ already resolved by
+   `combineAscentsWithOriginalSend` (`3e9f539`): the climb's own send is
+   always the first log entry when a date/style exists. Only climbs with
+   neither a date nor a send type show "No ascents logged yet" (no send
+   date exists to show).
+5. **Dead localStorage key** — ✅ `sendlog_ui_theme` no longer appears in
+   `app/` or `tests/`; nothing to clean up.
+6. **Live-site verification on a real account** — open duty after each
+   push: verify filters/chips/inspector/edit overlays/Training/Stats/Admin
+   with real Firebase data (mock mode already exercises the pane).
 
 ## Done in this redesign (for reference)
 

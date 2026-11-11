@@ -176,6 +176,7 @@ function buildInspectorMeta(climb, deps) {
 		communityRating: lookupMapValue(deps.communityRatings, climb.centralRouteID),
 		sendBadgeClass: deps.sendClasses[climb.sendType] ?? "send-proj",
 		dateFormatted: deps.formatDate(climb.date),
+		userRating: typeof climb.rating === "number" ? climb.rating : null,
 	};
 }
 

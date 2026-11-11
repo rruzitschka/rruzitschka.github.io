@@ -429,6 +429,7 @@ export function renderInspectorHtml(climb, meta = {}) {
 		country = null,
 		sendBadgeClass = "send-proj",
 		communityRating = null,
+		userRating = null,
 	} = meta;
 
 	const routeName = escapeInspectorHtml(climb.route || "—");
@@ -464,6 +465,10 @@ export function renderInspectorHtml(climb, meta = {}) {
 				<div class="insp-cell-l">Community</div>
 				<div class="insp-cell-v" id="inspector-comm-rating">${commText}</div>
 			</div>
+			<div>
+				<div class="insp-cell-l">Your Rating</div>
+				<div class="insp-cell-v">${userRating ? renderStarsHtml(userRating) : "—"}</div>
+			</div>
 		</div>
 		${renderInspectorProjectSection(climb)}
 		<div id="inspector-ascents-container"></div>
@@ -471,6 +476,140 @@ export function renderInspectorHtml(climb, meta = {}) {
 		<div id="inspector-photos-container"></div>
 		<div class="insp-actions">
 			<button type="button" class="btn-inspector-primary" id="inspector-edit-btn">${inspectorPrimaryButtonLabel(climb.sendType)}</button>
+		</div>
+	`;
+}
+
+// ── Training session detail card ────────────────────────────────────────────
+
+const GYM_SESSION_TYPE = "Gym Session";
+
+/** Star row for a 0–5 rating; rounds like the iOS star picker. */
+export function renderStarsHtml(rating) {
+	const n = Math.round(rating ?? 0);
+	let s = "";
+	for (let i = 1; i <= 5; i++) s += i <= n ? "★" : "☆";
+	return `<span class="stars">${s}</span>`;
+}
+
+/**
+ * Locale-aware long date ("Fri, Nov 6, 2026") for detail cards.
+ *
+ * @param {Date|string|number|null|undefined} date
+ * @returns {string}
+ */
+export function formatLongDate(date) {
+	if (!date) return "—";
+	const d = date instanceof Date ? date : new Date(date);
+	if (Number.isNaN(d.getTime())) return "—";
+	return d.toLocaleDateString(undefined, {
+		weekday: "short",
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
+}
+
+/**
+ * Intensity 1–5 dot row — sky-blue dots come from `.intensity-dot`/`.filled`
+ * CSS only (no inline colors; that regression happened once already).
+ *
+ * @param {number|null|undefined} intensity
+ * @returns {string}
+ */
+export function buildIntensityDotsHtml(intensity) {
+	const level = Number.isFinite(Number(intensity)) ? Number(intensity) : 3;
+	const dots = [1, 2, 3, 4, 5]
+		.map((i) => `<span class="intensity-dot${i <= level ? " filled" : ""}"></span>`)
+		.join("");
+	return `<span class="intensity-dots">${dots}</span>`;
+}
+
+/**
+ * Warm-up route lines of a gym session (grade + style · outcome).
+ * Empty when the session has no routes.
+ *
+ * @param {Array<{ grade?: string, style?: string, outcome?: string }>|null|undefined} routes
+ * @returns {string}
+ */
+export function buildWarmupRoutesHtml(routes) {
+	if (!routes?.length) return "";
+	const rows = routes
+		.map(
+			(r) =>
+				`<tr><td>${escapeInspectorHtml(r.grade)}</td><td class="cs-detail-sub">${r.style === "top-rope" ? "Top-rope" : "Lead"} · ${r.outcome === "failed" ? "Failed" : "Sent"}</td></tr>`,
+		)
+		.join("");
+	return `
+		<div class="insp-sec"><span>Warm-up Routes</span><span>${routes.length}</span></div>
+		<table class="cs-detail-table">${rows}</table>
+	`;
+}
+
+/**
+ * Sends attached to a gym session (route, difficulty, style).
+ * Empty when none — the caller decides how to render that case.
+ *
+ * @param {Array<{ route?: string, difficulty?: string, sendType?: string }>|null|undefined} sends
+ * @returns {string}
+ */
+export function buildSessionSendsTableHtml(sends) {
+	if (!sends?.length) return "";
+	const rows = sends
+		.map(
+			(s) =>
+				`<tr><td>${escapeInspectorHtml(s.route)}</td><td class="cs-detail-sub">${escapeInspectorHtml(s.difficulty)} · ${escapeInspectorHtml(s.sendType ?? "")}</td></tr>`,
+		)
+		.join("");
+	return `<table class="cs-detail-table">${rows}</table>`;
+}
+
+/**
+ * Render the training-session detail card for the detail modal — the session
+ * variant of the shared Route Detail card: type title, Date / Duration /
+ * Intensity grid, gym info, warm-up routes, attached-sends placeholder
+ * (filled asynchronously by ui.js for gym sessions), notes, Edit button.
+ *
+ * @param {object|null|undefined} session
+ * @returns {string}
+ */
+export function renderTrainingDetailHtml(session) {
+	if (!session) return renderInspectorEmptyHtml();
+
+	const title = escapeInspectorHtml(session.type ?? "Training");
+	const gym = session.gym
+		? `<div class="insp-sec"><span>Gym</span><span>${escapeInspectorHtml(session.gym)}</span></div>`
+		: "";
+	const notes = session.notes
+		? `<div class="insp-sec"><span>Notes</span></div><div class="insp-note-body">${escapeInspectorHtml(session.notes)}</div>`
+		: "";
+	const sendsSection =
+		session.type === GYM_SESSION_TYPE
+			? `<div class="insp-sec"><span>Attached Sends</span></div><div id="session-sends-section" class="train-sends-pending">…</div>`
+			: "";
+
+	return `
+		<div class="insp-top"><div class="insp-title">${title}</div></div>
+		<div class="insp-grid">
+			<div>
+				<div class="insp-cell-l">Date</div>
+				<div class="insp-cell-v">${escapeInspectorHtml(formatLongDate(session.date))}</div>
+			</div>
+			<div>
+				<div class="insp-cell-l">Duration</div>
+				<div class="insp-cell-v">${session.duration ? `${Number(session.duration)} min` : "—"}</div>
+			</div>
+			<div>
+				<div class="insp-cell-l">Intensity</div>
+				<div class="insp-cell-v">${buildIntensityDotsHtml(session.intensity)}</div>
+			</div>
+		</div>
+		${gym}
+		${buildWarmupRoutesHtml(session.routes)}
+		${sendsSection}
+		${notes}
+		<div class="insp-actions">
+			<button type="button" class="btn-inspector-primary" id="training-detail-edit-btn">Edit Session</button>
 		</div>
 	`;
 }

@@ -720,7 +720,7 @@ html[data-theme="chalk-sky"] .insp-type {
 
 html[data-theme="chalk-sky"] .insp-grid {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(4, 1fr);
 	gap: 8px;
 	padding: 8px 10px;
 	background: var(--cs-bg);
@@ -1466,14 +1466,561 @@ html[data-theme="chalk-sky"] .badge-edit-only {
 	color: var(--cs-accent);
 }
 
-/* Override hardcoded light inline box backgrounds inside modals/admin */
-html[data-theme="chalk-sky"] [style*="background:#f8fafc"],
-html[data-theme="chalk-sky"] [style*="background: #f8fafc"],
-html[data-theme="chalk-sky"] [style*="background:#f1f5f9"],
-html[data-theme="chalk-sky"] [style*="background: #f1f5f9"] {
-	background: var(--cs-bg) !important;
-	border-color: var(--cs-border) !important;
-	color: var(--cs-fg) !important;
+/* ── Admin Panel semantic classes ──────────────────────────────────────────
+   admin.js builds all admin markup — these classes replace the former
+   hardcoded light-theme inline styles and the [style*=…] override hacks. */
+html[data-theme="chalk-sky"] .ad-shell {
+	max-width: 680px;
+	margin: 0 auto;
+	padding: 1.5rem 0;
+}
+html[data-theme="chalk-sky"] .ad-title {
+	margin: 0 0 1.25rem;
+	font-size: 1.25rem;
+}
+html[data-theme="chalk-sky"] .ad-tabs {
+	display: flex;
+	gap: 0;
+	border-bottom: 2px solid var(--border-color);
+	margin-bottom: 1.5rem;
+}
+html[data-theme="chalk-sky"] .admin-tab {
+	padding: 0.5rem 1.25rem;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--cs-muted);
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+}
+html[data-theme="chalk-sky"] .admin-tab.admin-tab-active {
+	color: var(--cs-accent);
+	border-bottom-color: var(--cs-accent);
+}
+html[data-theme="chalk-sky"] .ad-loading {
+	color: var(--cs-muted);
+	font-size: 0.875rem;
+}
+html[data-theme="chalk-sky"] .ad-error {
+	color: var(--danger-color);
+	font-size: 0.875rem;
+}
+html[data-theme="chalk-sky"] .ad-error-inline {
+	color: var(--danger-color);
+}
+html[data-theme="chalk-sky"] .ad-note-muted {
+	color: var(--cs-muted);
+	font-size: 0.75rem;
+}
+html[data-theme="chalk-sky"] .ad-note-sub {
+	color: var(--cs-muted);
+	font-size: 0.8rem;
+}
+html[data-theme="chalk-sky"] .ad-note-body {
+	color: var(--cs-muted);
+	font-size: 0.825rem;
+}
+html[data-theme="chalk-sky"] .ad-note-2xl {
+	font-size: 0.875rem;
+	color: var(--cs-muted);
+}
+
+/* Statistics */
+html[data-theme="chalk-sky"] .ad-stat-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 12px;
+	margin-bottom: 1.5rem;
+}
+html[data-theme="chalk-sky"] .ad-stat-card {
+	background: var(--cs-card);
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+html[data-theme="chalk-sky"] .ad-stat-value {
+	font-size: 1.6rem;
+	font-weight: 700;
+	color: var(--cs-fg-bright);
+}
+html[data-theme="chalk-sky"] .ad-stat-value-warn {
+	color: #f97316;
+}
+html[data-theme="chalk-sky"] .ad-stat-label {
+	font-size: 0.78rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-refresh-row {
+	font-size: 0.75rem;
+	color: var(--cs-muted);
+	text-align: right;
+}
+html[data-theme="chalk-sky"] .ad-refresh-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--cs-muted);
+	font-size: 0.75rem;
+	padding: 0;
+	font-family: inherit;
+}
+html[data-theme="chalk-sky"] .ad-versions-block {
+	margin-bottom: 1.5rem;
+}
+html[data-theme="chalk-sky"] .ad-versions-title {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--cs-muted);
+	margin-bottom: 0.5rem;
+}
+html[data-theme="chalk-sky"] .ad-table-mini {
+	font-size: 0.85rem;
+	color: var(--cs-fg);
+	border-collapse: collapse;
+}
+html[data-theme="chalk-sky"] .ad-table-mini td {
+	padding: 2px 10px 2px 0;
+}
+html[data-theme="chalk-sky"] .ad-table-mini td:last-child {
+	padding: 2px 0;
+}
+html[data-theme="chalk-sky"] .ad-table-mono {
+	font-family: monospace;
+}
+html[data-theme="chalk-sky"] .ad-table-note {
+	padding-top: 6px;
+	font-size: 0.75rem;
+	color: var(--cs-muted);
+}
+
+/* Routes browser */
+html[data-theme="chalk-sky"] .ad-filter-bar {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+html[data-theme="chalk-sky"] .ad-filter-bar-center {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+html[data-theme="chalk-sky"] .ad-search-input {
+	flex: 1;
+	min-width: 200px;
+}
+html[data-theme="chalk-sky"] .ad-select-auto {
+	width: auto;
+}
+html[data-theme="chalk-sky"] .ad-select-full {
+	width: 100%;
+}
+html[data-theme="chalk-sky"] .ad-country-input {
+	width: 120px;
+}
+html[data-theme="chalk-sky"] .ad-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.85rem;
+	color: var(--cs-muted);
+	cursor: pointer;
+}
+html[data-theme="chalk-sky"] .ad-spacer {
+	flex: 1;
+}
+html[data-theme="chalk-sky"] .ad-count-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 8px;
+}
+html[data-theme="chalk-sky"] .ad-count-text {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+	margin: 0;
+}
+html[data-theme="chalk-sky"] .ad-backfill-status {
+	font-size: 0.75rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-list-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 12px;
+}
+html[data-theme="chalk-sky"] .ad-footer-count {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .admin-route-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	margin-bottom: 6px;
+	cursor: pointer;
+	background: var(--cs-card);
+	transition: background 0.12s ease;
+}
+html[data-theme="chalk-sky"] .admin-route-row:hover {
+	background: var(--cs-card-hover);
+}
+html[data-theme="chalk-sky"] .admin-route-row.ad-route-orphaned {
+	background: rgba(249, 115, 22, 0.12);
+}
+html[data-theme="chalk-sky"] .ad-route-main {
+	min-width: 0;
+}
+html[data-theme="chalk-sky"] .ad-route-name {
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: var(--cs-fg);
+}
+html[data-theme="chalk-sky"] .ad-route-sub {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-route-side {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+	text-align: right;
+}
+html[data-theme="chalk-sky"] .ad-route-grade {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--cs-fg);
+}
+html[data-theme="chalk-sky"] .ad-route-sends {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-orphan-badge {
+	font-size: 0.7rem;
+	color: #f97316;
+	margin-left: 6px;
+	background: rgba(249, 115, 22, 0.15);
+	padding: 1px 6px;
+	border-radius: 4px;
+}
+html[data-theme="chalk-sky"] .ad-pin-badge {
+	margin-left: 4px;
+	font-size: 0.75rem;
+}
+html[data-theme="chalk-sky"] .ad-chip {
+	font-size: 0.7rem;
+	padding: 1px 8px;
+	border-radius: 4px;
+}
+html[data-theme="chalk-sky"] .ad-chip-sport {
+	background: rgba(5, 150, 105, 0.18);
+	color: #34d399;
+}
+html[data-theme="chalk-sky"] .ad-chip-boulder {
+	background: rgba(234, 88, 12, 0.18);
+	color: #fb923c;
+}
+html[data-theme="chalk-sky"] .ad-chip-multipitch {
+	background: rgba(124, 58, 237, 0.2);
+	color: #a78bfa;
+}
+html[data-theme="chalk-sky"] .ad-chip-trad {
+	background: rgba(59, 130, 246, 0.18);
+	color: #60a5fa;
+}
+html[data-theme="chalk-sky"] .ad-chip-default {
+	background: rgba(71, 85, 105, 0.25);
+	color: var(--cs-muted);
+}
+
+/* Status spans (colors set via class, not style.color) */
+html[data-theme="chalk-sky"] .ad-status-neutral,
+html[data-theme="chalk-sky"] .ad-status-muted {
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-status-ok {
+	color: var(--success-color);
+}
+html[data-theme="chalk-sky"] .ad-status-err {
+	color: var(--danger-color);
+}
+
+/* Apply-country dialog */
+html[data-theme="chalk-sky"] .ad-dialog-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(1, 4, 9, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+html[data-theme="chalk-sky"] .ad-dialog-card {
+	background: var(--cs-card);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	padding: 1.25rem;
+	max-width: 440px;
+	width: 90%;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="chalk-sky"] .ad-dialog-title {
+	margin: 0 0 0.5rem;
+	font-size: 1rem;
+	color: var(--cs-fg-bright);
+}
+html[data-theme="chalk-sky"] .ad-dialog-text {
+	margin: 0 0 0.75rem;
+	font-size: 0.85rem;
+	color: var(--cs-fg);
+}
+html[data-theme="chalk-sky"] .ad-dialog-warn {
+	display: none;
+	margin: 0 0 0.5rem;
+	font-size: 0.78rem;
+	color: #fbbf24;
+}
+html[data-theme="chalk-sky"] .ad-dialog-err {
+	margin: 0 0 0.5rem;
+	font-size: 0.78rem;
+	color: var(--danger-color);
+}
+html[data-theme="chalk-sky"] .ad-dialog-hint {
+	margin: 0 0 0.75rem;
+	font-size: 0.75rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+/* Edit form */
+html[data-theme="chalk-sky"] .ad-form {
+	max-width: 560px;
+}
+html[data-theme="chalk-sky"] .ad-back-btn {
+	margin-bottom: 1rem;
+}
+html[data-theme="chalk-sky"] .ad-form .ad-back-btn {
+	margin-bottom: 1.25rem;
+}
+html[data-theme="chalk-sky"] .ad-mt-sm {
+	margin-top: 0.5rem;
+}
+html[data-theme="chalk-sky"] .ad-mb-sm {
+	margin-bottom: 0.75rem;
+}
+html[data-theme="chalk-sky"] .ad-mb-xs {
+	margin-bottom: 0.5rem;
+}
+html[data-theme="chalk-sky"] .ad-mb {
+	margin-bottom: 1rem;
+}
+html[data-theme="chalk-sky"] .ad-section {
+	border-top: 1px solid var(--border-color);
+	margin: 1.25rem 0;
+	padding-top: 1.25rem;
+}
+html[data-theme="chalk-sky"] .ad-section-title {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--cs-muted);
+	margin-bottom: 0.4rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+html[data-theme="chalk-sky"] .ad-section-heading {
+	font-size: 0.75rem;
+	font-weight: 600;
+	margin-bottom: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+html[data-theme="chalk-sky"] .ad-heading-muted {
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-heading-warn {
+	color: #f97316;
+}
+html[data-theme="chalk-sky"] .ad-heading-info {
+	color: #60a5fa;
+}
+html[data-theme="chalk-sky"] .ad-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+}
+html[data-theme="chalk-sky"] .ad-grid-2-tight {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	margin-bottom: 0.75rem;
+	align-items: end;
+}
+html[data-theme="chalk-sky"] .ad-grid-flat {
+	margin: 0;
+}
+html[data-theme="chalk-sky"] .ad-label-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+html[data-theme="chalk-sky"] .ad-label-sm {
+	font-size: 0.75rem;
+}
+html[data-theme="chalk-sky"] .ad-label-hint {
+	font-weight: 400;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-btn-xs {
+	font-size: 0.75rem;
+	padding: 2px 8px;
+}
+html[data-theme="chalk-sky"] .ad-input-mono {
+	font-family: monospace;
+	font-size: 0.82rem;
+}
+html[data-theme="chalk-sky"] .ad-mono {
+	font-family: monospace;
+	font-size: 0.75rem;
+}
+html[data-theme="chalk-sky"] .ad-checkbox-lg {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.9rem;
+	cursor: pointer;
+	margin-top: 0.5rem;
+}
+html[data-theme="chalk-sky"] .ad-country-current {
+	font-size: 0.75rem;
+	color: var(--cs-muted);
+	margin: 4px 0 0;
+}
+html[data-theme="chalk-sky"] .ad-country-flag {
+	font-size: 0.8rem;
+}
+
+/* GPS */
+html[data-theme="chalk-sky"] .ad-map {
+	height: 220px;
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	margin-bottom: 0.75rem;
+	background: var(--cs-card);
+}
+html[data-theme="chalk-sky"] .ad-btn-row {
+	display: flex;
+	gap: 8px;
+}
+html[data-theme="chalk-sky"] .ad-status {
+	min-height: 1.2em;
+}
+html[data-theme="chalk-sky"] .ad-status-form {
+	margin-top: 0.75rem;
+	font-size: 0.875rem;
+}
+html[data-theme="chalk-sky"] .ad-status-gps {
+	margin-top: 0.5rem;
+	font-size: 0.825rem;
+}
+
+/* Audit trail */
+html[data-theme="chalk-sky"] .ad-audit-block {
+	margin-bottom: 1rem;
+}
+html[data-theme="chalk-sky"] .ad-audit-row {
+	border-bottom: 1px solid var(--cs-border-subtle);
+	padding: 3px 0;
+}
+html[data-theme="chalk-sky"] .ad-audit-meta {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+	display: flex;
+	gap: 8px;
+}
+html[data-theme="chalk-sky"] .ad-audit-time {
+	color: var(--cs-muted);
+	min-width: 140px;
+}
+html[data-theme="chalk-sky"] .ad-audit-you {
+	color: var(--cs-accent);
+	font-size: 0.7rem;
+}
+html[data-theme="chalk-sky"] .ad-audit-badge {
+	font-size: 0.7rem;
+	color: #a78bfa;
+	background: rgba(124, 58, 237, 0.15);
+	padding: 1px 6px;
+	border-radius: 4px;
+}
+html[data-theme="chalk-sky"] .ad-audit-note {
+	font-size: 0.7rem;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-audit-change {
+	font-family: monospace;
+	font-size: 0.72rem;
+	padding: 2px 0 2px 148px;
+	color: var(--cs-muted);
+}
+html[data-theme="chalk-sky"] .ad-change-field {
+	color: var(--cs-accent);
+}
+html[data-theme="chalk-sky"] .ad-change-old {
+	color: #f87171;
+	text-decoration: line-through;
+}
+html[data-theme="chalk-sky"] .ad-change-new {
+	color: #4ade80;
+}
+html[data-theme="chalk-sky"] .ad-empty {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+	margin-bottom: 1rem;
+}
+
+/* Ownership transfer / route-ID info boxes */
+html[data-theme="chalk-sky"] .ad-info-box {
+	font-size: 0.8rem;
+	color: var(--cs-muted);
+	background: var(--cs-card);
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	padding: 8px 10px;
+	line-height: 1.8;
+}
+html[data-theme="chalk-sky"] .ad-kv-key {
+	color: var(--cs-muted);
+	width: 80px;
+	display: inline-block;
+}
+html[data-theme="chalk-sky"] .ad-meta-row {
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	align-items: center;
+}
+html[data-theme="chalk-sky"] .ad-footer-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	align-items: center;
 }
 
 /* ── Classic-mode fallbacks for the shared Route Detail card ─────────────────
@@ -1535,5 +2082,58 @@ html[data-theme="chalk-sky"] .login-requirement {
 	background: rgba(34, 197, 94, 0.1);
 	border-color: rgba(34, 197, 94, 0.3);
 	color: #4ade80;
+}
+
+/* ── Training session detail card ────────────────────────────────── */
+
+html[data-theme="chalk-sky"] .intensity-dots {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+html[data-theme="chalk-sky"] .intensity-dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--cs-border);
+}
+
+html[data-theme="chalk-sky"] .intensity-dot.filled {
+	background: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .cs-detail-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.93rem;
+	margin-bottom: 10px;
+}
+
+html[data-theme="chalk-sky"] .cs-detail-table td {
+	padding: 4px 0;
+	border-bottom: 1px solid var(--cs-border);
+	color: var(--cs-fg);
+}
+
+html[data-theme="chalk-sky"] .cs-detail-table tr:last-child td {
+	border-bottom: none;
+}
+
+html[data-theme="chalk-sky"] .cs-detail-sub {
+	color: var(--cs-muted);
+	text-align: right;
+}
+
+html[data-theme="chalk-sky"] .train-sends-pending,
+html[data-theme="chalk-sky"] .insp-empty-row {
+	font-size: 0.85rem;
+	color: var(--cs-muted);
+}
+
+html[data-theme="chalk-sky"] .insp-cell-v .stars {
+	color: #f5b942;
+	letter-spacing: 1px;
 }
 

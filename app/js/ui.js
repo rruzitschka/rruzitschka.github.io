@@ -61,8 +61,6 @@ import {
 	addRouteLine,
 	setGymFields,
 	gymSessionFieldsForSave,
-	buildRoutesSectionHtml,
-	buildSessionSendsHtml,
 } from "./route-line-ui.js";
 import {
 	GYM_ROUTE_TYPES,
@@ -76,7 +74,12 @@ import {
 	bindClimbRowClick,
 	syncInspectorForPage,
 } from "./climb-inspector-ui.js";
-import { renderCommunityOwnerIndicatorHtml } from "./ui-theme.js";
+import {
+	renderCommunityOwnerIndicatorHtml,
+	renderStarsHtml,
+	renderTrainingDetailHtml,
+	buildSessionSendsTableHtml,
+} from "./ui-theme.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -220,13 +223,6 @@ function formatDate(date) {
 	});
 }
 
-function renderStars(rating) {
-	const n = Math.round(rating ?? 0);
-	let s = "";
-	for (let i = 1; i <= 5; i++) s += i <= n ? "★" : "☆";
-	return `<span class="stars">${s}</span>`;
-}
-
 // ---------- Stats Bar ----------
 
 function renderStatsBar(stats) {
@@ -282,7 +278,7 @@ function renderClimbsTable(climbs) {
 			gradeClass: gradeBadgeClass(climb.difficulty),
 			sendClass: SEND_CLASSES[climb.sendType] ?? "send-proj",
 			dateText: formatDate(climb.date),
-			starsHtml: renderStars(climb.rating),
+			starsHtml: renderStarsHtml(climb.rating),
 		};
 		const tr = document.createElement("tr");
 		tr.style.cursor = "pointer";
@@ -2038,10 +2034,6 @@ function setIntensity(value) {
 
 const GYM_SESSION_TYPE = "Gym Session";
 
-// Gym session whose detail modal is showing the attached-sends section
-// (fetched lazily once the modal markup is in the DOM).
-let pendingSendCountSession = null;
-
 /** Fills the attached-sends section in the open session detail modal with
  * the linked climbs. sessionID links are authoritative — any same-day check
  * is iOS-only at attach time. */
@@ -2051,12 +2043,13 @@ async function updateSessionSends(sessionId) {
 	try {
 		const sends = await fetchSessionSends(sessionId);
 		if (!section.isConnected) return; // modal closed while fetching
+		section.classList.remove("train-sends-pending");
 		section.innerHTML = sends.length
-			? buildSessionSendsHtml(sends, escapeHtml)
-			: `<div style="font-size:0.85rem;color:#64748b">No attached sends yet — link gym sends to this session in the iOS app.</div>`;
+			? buildSessionSendsTableHtml(sends)
+			: `<div class="insp-empty-row">No attached sends yet — link gym sends to this session in the iOS app.</div>`;
 	} catch {
 		if (section.isConnected)
-			section.innerHTML = `<div style="font-size:0.85rem;color:#64748b">Attached sends: —</div>`;
+			section.innerHTML = `<div class="insp-empty-row">Attached sends: —</div>`;
 	}
 }
 
@@ -2064,70 +2057,12 @@ function showTrainingDetailModal(session) {
 	const overlay = document.getElementById("modal-overlay");
 	const content = document.getElementById("modal-content");
 
-	const dateStr = session.date
-		? session.date.toLocaleDateString("en-US", {
-				weekday: "short",
-				month: "short",
-				day: "numeric",
-				year: "numeric",
-			})
-		: "—";
-	const durationStr = session.duration ? `${session.duration} min` : "—";
-	const intensityDots = [1, 2, 3, 4, 5]
-		.map(
-			(i) =>
-				`<span class="intensity-dot${i <= (session.intensity ?? 3) ? " filled" : ""}" style="display:inline-block;width:10px;height:10px;margin-right:4px"></span>`,
-		)
-		.join("");
-
-	let html = `
-    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.25rem;flex-wrap:wrap">
-      <h2 style="margin:0;line-height:1.3">${escapeHtml(session.type ?? "Training")}</h2>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:0.95rem;margin-bottom:1rem">
-      <tr>
-        <td style="padding:0.35rem 0;color:#64748b;width:40%">Date</td>
-        <td style="padding:0.35rem 0">${dateStr}</td>
-      </tr>
-      <tr>
-        <td style="padding:0.35rem 0;color:#64748b">Duration</td>
-        <td style="padding:0.35rem 0">${durationStr}</td>
-      </tr>
-		<tr>
-			<td style="padding:0.35rem 0;color:#64748b">Intensity</td>
-			<td style="padding:0.35rem 0">${intensityDots}</td>
-		</tr>
-		${session.gym ? `<tr><td style="padding:0.35rem 0;color:#64748b">Gym</td><td style="padding:0.35rem 0">${escapeHtml(session.gym)}</td></tr>` : ""}
-	</table>
-	`;
-
-	html += buildRoutesSectionHtml(session.routes, escapeHtml);
-
-	if (session.type === GYM_SESSION_TYPE) {
-		html += `<div id="session-sends-section" style="margin-bottom:1.25rem;font-size:0.85rem;color:#64748b">Attached sends: …</div>`;
-		pendingSendCountSession = session;
-	}
-
-	if (session.notes) {
-		html += `
-      <div style="margin-bottom:1.25rem">
-        <div style="font-weight:600;margin-bottom:0.35rem">Notes</div>
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;white-space:pre-wrap;font-size:0.93rem">${escapeHtml(session.notes)}</div>
-      </div>
-    `;
-	}
-
-	html += `<div style="display:flex;justify-content:flex-end;margin-top:.5rem">
-    <button id="training-detail-edit-btn" class="btn btn-primary btn-sm">Edit Session</button>
-  </div>`;
-
-	content.innerHTML = html;
+	content.innerHTML = renderTrainingDetailHtml(session);
 	overlay.style.display = "flex";
 	document.body.style.overflow = "hidden";
 
-	if (pendingSendCountSession) {
-		updateSessionSends(pendingSendCountSession.id);
-		pendingSendCountSession = null;
+	if (session.type === GYM_SESSION_TYPE) {
+		updateSessionSends(session.id);
 	}
 
 	document
