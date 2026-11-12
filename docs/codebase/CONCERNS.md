@@ -2,13 +2,15 @@
 
 Known debt and risk areas. Update as items are resolved/discovered.
 
-1. **ui.js was a 2600-line monolith** — being sliced down by
-   `docs/plan-uijs-refactor.md` (Chunks 1–3 done 2026-11-11/12: training UI,
-   send overlay, project overlay → `training-ui.js`, `send-overlay-ui.js`,
-   `project-overlay-ui.js`, `overlay-common.js`, `send-form-model.js`,
-   `project-form-model.js`; ui.js ~1030 lines, Code Health 5.3 → 8.23).
-   Remaining: account/stats/API-keys (Chunk 4), table helpers (Chunk 5),
-   slim-down (Chunk 6).
+1. ~~**ui.js was a 2600-line monolith**~~ **Resolved 2026-11-13** — sliced down
+   by `docs/plan-uijs-refactor.md`, all mandatory chunks (1–6) done 2026-11-11
+   to 2026-11-13: training UI, send overlay, project overlay, account/stats/
+   API-keys, table helpers, view-switcher → `training-ui.js`,
+   `send-overlay-ui.js`, `project-overlay-ui.js`, `overlay-common.js`,
+   `account-ui.js`, `climb-table-ui.js`, `view-switcher.js`,
+   `send-form-model.js`, `project-form-model.js`; ui.js now 430 lines,
+   Code Health 5.3 → 10, no function cc > 9. Optional Chunk 7 (grade picker
+   polish) and the pending innerHTML-sanitizer sweep remain in the plan.
 2. **Deploy skew between `index.html` and `app/js/*.js`** — GitHub Pages
    caches 10 min; a browser can pair fresh JS with stale HTML (or reverse).
    Overlay sync paths are guarded with optional chaining, but any new
