@@ -63,7 +63,8 @@ on a held-back branch until the release.
 
 | Module | Responsibility |
 | --- | --- |
-| `ui.js` | Main dashboard: climbs table, filters/view-switching, account, stats views, CSV export (~1030 lines after Chunks 2–3 of `docs/plan-uijs-refactor.md` — Code Health 8.23; remaining cc>9 are Chunk 4–6 targets) |
+| `ui.js` | Main dashboard: climbs table, filters/view-switching, CSV export, detail modal (~690 lines after Chunks 2–4 of `docs/plan-uijs-refactor.md` — Code Health 9.13; remaining cc>9 are Chunk 5–6 targets) |
+| `account-ui.js` | Account view (user card, grade-system preference, API keys overlay), stats view, logbook view panels, confirm dialog, account deletion (Chunk 4 of the ui.js refactor) |
 | `training-ui.js` | Training view: session list, log/edit overlay, detail modal, period filters (Chunk 1 of the ui.js refactor) |
 | `send-overlay-ui.js` | Send overlay: add/edit send, star picker, style-tab/route-type sync, inline ascent form + ascent list, save flow (Chunk 2) |
 | `overlay-common.js` | Shared overlay plumbing for Send + Project overlays: `overlayState` (central-route soft-link state), close/find-route wiring, route search overlay, delete binding, central-route create/propagate, hidden find-route button while linked |

@@ -11,14 +11,9 @@ import {
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
 import {
-	getCurrentUser as $getCurrentUser,
-	deleteAccount as $deleteAccount,
-} from "./firebase-auth.js";
-import {
-	apiKeysList as $apiKeysList,
-	apiKeysCreate as $apiKeysCreate,
-	apiKeysRevoke as $apiKeysRevoke,
-} from "./firebase-api-keys.js";
+	showLogbookView,
+	setAccountUIMockServices,
+} from "./account-ui.js";
 import {
 	checkAdminStatus as $checkAdminStatus,
 	getRoute as $getRoute,
@@ -45,7 +40,6 @@ import {
 	bindTrainingOverlayHandlers,
 	bindPeriodTabs,
 	loadTrainingData,
-	ensureTrainingSessionsLoaded,
 	setTrainingMockServices,
 } from "./training-ui.js";
 import {
@@ -59,8 +53,6 @@ import { renderStarsHtml } from "./ui-theme.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
-const getPreferredGradeSystem = () => window.getPreferredGradeSystem();
-const setPreferredGradeSystem = (s) => window.setPreferredGradeSystem(s);
 
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
@@ -70,11 +62,6 @@ let saveClimbNote = $saveClimbNote;
 let fetchPhotos = $fetchPhotos;
 let computeStats = $computeStats;
 let filterClimbs = $filterClimbs;
-let getCurrentUser = $getCurrentUser;
-let deleteAccount = $deleteAccount;
-let apiKeysList = $apiKeysList;
-let apiKeysCreate = $apiKeysCreate;
-let apiKeysRevoke = $apiKeysRevoke;
 let checkAdminStatus = $checkAdminStatus;
 let getRoute = $getRoute;
 let reportRating = $reportRating;
@@ -90,11 +77,6 @@ const SERVICE_MOCK_SETTERS = {
 	fetchPhotos: (fn) => (fetchPhotos = fn),
 	computeStats: (fn) => (computeStats = fn),
 	filterClimbs: (fn) => (filterClimbs = fn),
-	getCurrentUser: (fn) => (getCurrentUser = fn),
-	deleteAccount: (fn) => (deleteAccount = fn),
-	apiKeysList: (fn) => (apiKeysList = fn),
-	apiKeysCreate: (fn) => (apiKeysCreate = fn),
-	apiKeysRevoke: (fn) => (apiKeysRevoke = fn),
 	getRoute: (fn) => (getRoute = fn),
 	fetchRouteData: (fn) => (fetchRouteData = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),
@@ -112,6 +94,7 @@ export function setMockServices(mocks) {
 	setOverlayCommonMockServices(mocks);
 	setSendOverlayMockServices(mocks);
 	setProjectOverlayMockServices(mocks);
+	setAccountUIMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 
@@ -495,41 +478,28 @@ function bindFilterHandlers(initialClimbs) {
 			showTrainingView();
 		});
 
-	document.getElementById("view-stats")?.addEventListener("click", (e) => {
-		e.preventDefault();
-		showStatsView();
-	});
-
 	document.getElementById("view-admin")?.addEventListener("click", (e) => {
 		e.preventDefault();
 		showAdminView();
 	});
 
-	document.getElementById("view-account")?.addEventListener("click", (e) => {
-		e.preventDefault();
-		showAccountView();
-	});
-
 	document
 		.getElementById("account-export-btn")
 		?.addEventListener("click", exportCSV);
-	document
-		.getElementById("delete-account-btn")
-		?.addEventListener("click", handleDeleteAccount);
 
 	bindSendOverlayHandlers();
 	bindProjectOverlayHandlers();
 	bindTrainingOverlayHandlers();
-	bindApiKeyHandlers();
 	bindPeriodTabs();
 
 	// Inject the full-refresh callback so the overlay modules can trigger
 	// loadData without a circular module import.
 	setDataLoader(loadData);
 
-	// Expose helpers for non-module consumers (stats.js, admin.js)
+	// Expose helpers for non-module consumers (stats.js, admin.js,
+	// account-ui.js — via globalThis shims)
 	globalThis.escapeHtml = escapeHtml;
-	globalThis.showConfirmDialog = showConfirmDialog;
+	globalThis.showToast = showToast;
 	globalThis.hideDetailModal = hideDetailModal;
 }
 
@@ -616,198 +586,6 @@ function exportCSV() {
 	a.download = `sendlog-export-${new Date().toISOString().slice(0, 10)}.csv`;
 	a.click();
 	URL.revokeObjectURL(url);
-}
-
-// ---------- Delete account ----------
-
-async function handleDeleteAccount() {
-	if (typeof deleteAccount !== "function") {
-		showToast("Account deletion is not available in this mode.", "info");
-		return;
-	}
-	const confirmed = await showConfirmDialog(
-		"Delete Account",
-		"Your cloud data (climbs, ascents, photos) will be permanently deleted from the server. Your local session will end. This cannot be undone.",
-	);
-	if (!confirmed) return;
-	try {
-		await deleteAccount();
-		window.location.href = "../login.html";
-	} catch (err) {
-		console.error("Delete account failed:", err);
-		showToast("Failed to delete account. Please try again.", "error");
-	}
-}
-
-// ---------- API Keys ----------
-
-async function renderApiKeys() {
-	const list = document.getElementById("api-keys-list");
-	if (!list) return;
-
-	list.innerHTML =
-		'<p style="color:#94a3b8;font-size:14px;margin:0">Loading…</p>';
-
-	try {
-		const keys = await apiKeysList();
-
-		if (keys.length === 0) {
-			list.innerHTML =
-				'<p style="color:#94a3b8;font-size:14px;margin:0">No API keys yet.</p>';
-			return;
-		}
-
-		list.innerHTML = keys
-			.map((k) => {
-				const created = k.createdAt
-					? new Date(k.createdAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "short",
-							day: "numeric",
-						})
-					: "—";
-				const lastUsed = k.lastUsedAt
-					? new Date(k.lastUsedAt).toLocaleDateString("en-US", {
-							year: "numeric",
-							month: "short",
-							day: "numeric",
-						})
-					: "never";
-				return `
-        <div class="account-card" style="margin-bottom:0.5rem">
-          <div class="account-card-text">
-            <strong>🔑 ${escapeHtml(k.label)}</strong>
-            <p style="margin:2px 0 0">
-              <span class="type-badge">${escapeHtml((k.scopes || []).join(", "))}</span>
-            </p>
-            <p style="font-size:12px;color:#94a3b8;margin:4px 0 0">
-              Created ${created} · Last used ${lastUsed}
-            </p>
-          </div>
-          <button class="btn btn-danger btn-sm"
-                  data-key-id="${escapeHtml(k.id)}"
-                  data-key-label="${escapeHtml(k.label)}">Revoke</button>
-        </div>
-      `;
-			})
-			.join("");
-
-		list.querySelectorAll(".btn-danger").forEach((btn) => {
-			btn.addEventListener("click", () =>
-				handleRevokeKey(btn.dataset.keyId, btn.dataset.keyLabel),
-			);
-		});
-	} catch (e) {
-		console.error("Failed to load API keys:", e);
-		list.innerHTML =
-			'<p style="color:#ef4444;font-size:14px;margin:0">Failed to load keys.</p>';
-	}
-}
-
-async function handleRevokeKey(keyId, label) {
-	const confirmed = await showConfirmDialog(
-		"Revoke Key?",
-		`"${label}" will stop working immediately. This cannot be undone.`,
-	);
-	if (!confirmed) return;
-	try {
-		await apiKeysRevoke(keyId);
-		showToast("API key revoked.", "success");
-		await renderApiKeys();
-	} catch (e) {
-		console.error("Revoke failed:", e);
-		showToast("Failed to revoke key. Please try again.", "error");
-	}
-}
-
-function openApiKeyOverlay() {
-	document.getElementById("api-key-label").value = "";
-	document.getElementById("api-key-label-error").classList.add("hidden");
-	document
-		.querySelectorAll('#api-key-overlay input[name="api-key-scope"]')
-		.forEach((cb) => {
-			cb.checked = true;
-		});
-	document.getElementById("api-key-overlay").classList.remove("hidden");
-	document.getElementById("api-key-label").focus();
-}
-
-function closeApiKeyOverlay() {
-	document.getElementById("api-key-overlay").classList.add("hidden");
-}
-
-async function handleGenerateKey() {
-	const label = document.getElementById("api-key-label").value.trim();
-	const errorEl = document.getElementById("api-key-label-error");
-
-	if (!label) {
-		errorEl.classList.remove("hidden");
-		document.getElementById("api-key-label").focus();
-		return;
-	}
-	errorEl.classList.add("hidden");
-
-	const scopes = [
-		...document.querySelectorAll(
-			'#api-key-overlay input[name="api-key-scope"]:checked',
-		),
-	].map((cb) => cb.value);
-	if (scopes.length === 0) {
-		showToast("Select at least one scope.", "error");
-		return;
-	}
-
-	const saveBtn = document.getElementById("api-key-overlay-save");
-	saveBtn.disabled = true;
-	saveBtn.textContent = "Generating…";
-
-	try {
-		const result = await apiKeysCreate({ label, scopes });
-		closeApiKeyOverlay();
-		document.getElementById("api-key-created-value").textContent = result.key;
-		document
-			.getElementById("api-key-created-overlay")
-			.classList.remove("hidden");
-		await renderApiKeys();
-	} catch (e) {
-		console.error("Generate key failed:", e);
-		showToast("Failed to generate key. Please try again.", "error");
-	} finally {
-		saveBtn.disabled = false;
-		saveBtn.textContent = "Generate";
-	}
-}
-
-function bindApiKeyHandlers() {
-	document
-		.getElementById("api-key-generate-btn")
-		?.addEventListener("click", openApiKeyOverlay);
-	document
-		.getElementById("api-key-overlay-close")
-		?.addEventListener("click", closeApiKeyOverlay);
-	document
-		.getElementById("api-key-overlay-cancel")
-		?.addEventListener("click", closeApiKeyOverlay);
-	document.getElementById("api-key-overlay")?.addEventListener("click", (e) => {
-		if (e.target === e.currentTarget) closeApiKeyOverlay();
-	});
-	document
-		.getElementById("api-key-overlay-save")
-		?.addEventListener("click", handleGenerateKey);
-	document.getElementById("api-key-copy-btn")?.addEventListener("click", () => {
-		const key = document.getElementById("api-key-created-value").textContent;
-		navigator.clipboard
-			.writeText(key)
-			.then(() => showToast("Key copied to clipboard!", "success"))
-			.catch(() => showToast("Copy failed — please copy manually.", "error"));
-	});
-	document
-		.getElementById("api-key-created-done")
-		?.addEventListener("click", () => {
-			document
-				.getElementById("api-key-created-overlay")
-				.classList.add("hidden");
-		});
 }
 
 // ---------- Community rating bootstrap ----------
@@ -911,108 +689,5 @@ export async function loadData() {
 		showToast("Failed to load climbs. Please try again.", "error");
 		console.error("Load error:", err);
 	}
-}
-
-function showLogbookView() {
-	document.getElementById("stats-bar").classList.remove("hidden");
-	document.querySelector(".table-container").classList.remove("hidden");
-	document.getElementById("training-view").classList.add("hidden");
-	document.getElementById("account-view")?.classList.add("hidden");
-	document.getElementById("stats-view")?.classList.add("hidden");
-	document.getElementById("admin-view")?.classList.add("hidden");
-}
-
-function showAccountView() {
-	document.getElementById("stats-bar").classList.add("hidden");
-	document.querySelector(".table-container").classList.add("hidden");
-	document.getElementById("training-view").classList.add("hidden");
-	document.getElementById("stats-view")?.classList.add("hidden");
-	document.getElementById("admin-view")?.classList.add("hidden");
-	document.getElementById("account-view").classList.remove("hidden");
-	// Clear sidebar active state (account is in header, not sidebar)
-	["view-all", "view-projects", "view-sent"].forEach((id) => {
-		document.getElementById(id)?.classList.remove("active");
-	});
-	document.querySelector('[data-view="training"]')?.classList.remove("active");
-	document.getElementById("view-stats")?.classList.remove("active");
-	document.getElementById("view-admin")?.classList.remove("active");
-	document.getElementById("btn-log-send")?.classList.add("hidden");
-	document.getElementById("btn-add-project")?.classList.add("hidden");
-
-	// Populate user info
-	const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
-	const nameEl = document.getElementById("account-name");
-	const emailEl = document.getElementById("account-email");
-	if (nameEl) nameEl.textContent = user?.displayName ?? "Climber";
-	if (emailEl) emailEl.textContent = user?.email ?? "";
-
-	// Populate grade system preference (one-time binding on first open)
-	const gradeSystemEl = document.getElementById("account-grade-system");
-	if (gradeSystemEl && !gradeSystemEl.dataset.bound) {
-		gradeSystemEl.value = getPreferredGradeSystem();
-		gradeSystemEl.addEventListener("change", () => {
-			setPreferredGradeSystem(gradeSystemEl.value);
-		});
-		gradeSystemEl.dataset.bound = "1";
-	} else if (gradeSystemEl) {
-		gradeSystemEl.value = getPreferredGradeSystem();
-	}
-
-	renderApiKeys();
-}
-
-async function showStatsView() {
-	document.getElementById("stats-bar").classList.add("hidden");
-	document.querySelector(".table-container").classList.add("hidden");
-	document.getElementById("training-view").classList.add("hidden");
-	document.getElementById("account-view")?.classList.add("hidden");
-	document.getElementById("admin-view")?.classList.add("hidden");
-	document.getElementById("stats-view").classList.remove("hidden");
-	// Sidebar active state
-	["view-all", "view-projects", "view-sent", "view-account"].forEach((id) => {
-		document.getElementById(id)?.classList.remove("active");
-	});
-	document.querySelector('[data-view="training"]')?.classList.remove("active");
-	document.getElementById("view-admin")?.classList.remove("active");
-	document.getElementById("view-stats")?.classList.add("active");
-	document.getElementById("btn-log-send")?.classList.add("hidden");
-	document.getElementById("btn-add-project")?.classList.add("hidden");
-	// Fetch sessions directly if not yet loaded (avoids calling renderTrainingPage as a side-effect)
-	let sessions = [];
-	try {
-		sessions = await ensureTrainingSessionsLoaded();
-	} catch (e) {
-		console.warn("Stats: could not load training sessions", e);
-	}
-	renderStatsPage(globalThis.allClimbs ?? [], sessions);
-	bindStatsPeriodTabs();
-}
-
-// ---------- Confirm dialog ----------
-
-function showConfirmDialog(title, message) {
-	return new Promise((resolve) => {
-		document.getElementById("confirm-title").textContent = title;
-		document.getElementById("confirm-message").textContent = message;
-		const dialog = document.getElementById("confirm-dialog");
-		dialog.classList.remove("hidden");
-		const ok = document.getElementById("confirm-ok");
-		const cancel = document.getElementById("confirm-cancel");
-		function cleanup() {
-			dialog.classList.add("hidden");
-			ok.removeEventListener("click", onOk);
-			cancel.removeEventListener("click", onCancel);
-		}
-		function onOk() {
-			cleanup();
-			resolve(true);
-		}
-		function onCancel() {
-			cleanup();
-			resolve(false);
-		}
-		ok.addEventListener("click", onOk);
-		cancel.addEventListener("click", onCancel);
-	});
 }
 

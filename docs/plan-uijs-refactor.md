@@ -11,6 +11,9 @@ Chunk 3 ✅ done 2026-11-12 (ui.js 7.78 → 8.23; `project-overlay-ui.js` 10,
 `project-form-model.js` 10; remaining cc>9 in ui.js are exactly the Chunk
 4–6 targets: showAccountView 17, bindFilterHandlers.setActiveView 11,
 gradeBadgeClass 11, showStatsView 10, loadData 10, bindApiKeyHandlers 10).
+Chunk 4 ✅ done 2026-11-13 (ui.js 8.23 → 9.13; `account-ui.js` 10;
+remaining cc>9 in ui.js are exactly the Chunk 5–6 targets:
+gradeBadgeClass 11, bindFilterHandlers.setActiveView 11, loadData 10).
 
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
@@ -116,7 +119,24 @@ method in the codebase. ~450 lines out of ui.js.
 - Depends on Chunk 2's `bindOverlayCommon`/`bindOverlayDeleteHandler` location —
   run after Chunk 2.
 
-## Chunk 4 — Account / Stats / API-keys module (`account-ui.js`)
+## Chunk 4 — Account / Stats / API-keys module (`account-ui.js`) ✅
+
+**Done 2026-11-13:** ui.js 8.23 → 9.13 (693 lines), `account-ui.js` 10.
+- `account-ui.js` — `showAccountView` split into `renderAccountCard` /
+  `bindGradeSystemPreference`; `showStatsView`; `showLogbookView` (panel
+  helper `setMainPanels` + `setActiveSidebarItem`); full API-keys section
+  (`renderApiKeys`, `handleRevokeKey`, `openApiKeyOverlay`,
+  `closeApiKeyOverlay`, `handleGenerateKey`, `bindApiKeyHandlers` split into
+  `bindApiKeyOverlayHandlers` + `bindApiKeyCreatedHandlers`);
+  `handleDeleteAccount`; `showConfirmDialog` (now owned here, exposed on
+  `globalThis` — same shim pattern as training-ui/overlay-common; admin.js
+  comment updated). `setAccountUIMockServices` wired into ui.js
+  `setMockServices`; firebase-auth/firebase-api-keys imports + bindings
+  (view-account, view-stats, delete-account-btn, api-key handlers) moved out
+  of ui.js. `globalThis.showToast` now exposed by ui.js for the account shims.
+- Verified: vitest 203 pass, eslint 0 errors, CodeScene pre-commit safeguard
+  passed (ui.js verdict "improved": showAccountView cc=17, showStatsView
+  cc=10, bindApiKeyHandlers cc=10 all fixed).
 
 - Move: `showAccountView` (cc=17), `showStatsView` (cc=11), `showLogbookView`,
   `bindApiKeyHandlers` (cc=10), `handleGenerateKey`, `closeApiKeyOverlay`,

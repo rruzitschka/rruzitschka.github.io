@@ -52,6 +52,7 @@ export default [
       'app/js/ui-theme.js',
       'app/js/climb-inspector-ui.js',
       'app/js/training-ui.js',
+      'app/js/account-ui.js',
       'app/js/overlay-common.js',
       'app/js/send-overlay-ui.js',
       'app/js/send-form-model.js',
@@ -66,8 +67,8 @@ export default [
     rules: MODULE_RULES,
   },
 
-  // 3. ui.js — ES module that also calls window-global helpers from non-module
-  //    scripts (stats.js, grades.js) loaded before it as plain <script> tags.
+  // 3. ui.js — ES module that also calls window-global helpers from the
+  //    non-module grades.js script loaded before it as a plain <script> tag.
   {
     files: ['app/js/ui.js'],
     languageOptions: {
@@ -75,9 +76,6 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
-        // From stats.js (non-module, window-global)
-        renderStatsPage:   'readonly',
-        bindStatsPeriodTabs: 'readonly',
         // From grades.js (non-module, window-global via `var`)
         GRADES:            'readonly',
         detectGradeSystem: 'readonly',

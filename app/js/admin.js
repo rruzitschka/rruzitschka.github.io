@@ -1,6 +1,6 @@
 // admin.js — Admin panel for central route database moderation (modular SDK)
 // Depends on: firebase-config.js, firebase-routes.js
-// Depends on: escapeHtml, showConfirmDialog (exposed on window by ui.js)
+// Depends on: escapeHtml (ui.js), showConfirmDialog (account-ui.js, exposed on window)
 // Depends on: getPreferredGradeSystem (global from grades.js)
 
 "use strict";
