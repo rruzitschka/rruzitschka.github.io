@@ -543,9 +543,9 @@ function bindFilterHandlers(initialClimbs) {
 	setDataLoader(loadData);
 
 	// Expose helpers for non-module consumers (stats.js, admin.js)
-	window.escapeHtml = escapeHtml;
-	window.showConfirmDialog = showConfirmDialog;
-	window.hideDetailModal = hideDetailModal;
+	globalThis.escapeHtml = escapeHtml;
+	globalThis.showConfirmDialog = showConfirmDialog;
+	globalThis.hideDetailModal = hideDetailModal;
 }
 
 // ---------- Utility ----------
@@ -999,7 +999,7 @@ async function showStatsView() {
 	} catch (e) {
 		console.warn("Stats: could not load training sessions", e);
 	}
-	renderStatsPage(window.allClimbs ?? [], sessions);
+	renderStatsPage(globalThis.allClimbs ?? [], sessions);
 	bindStatsPeriodTabs();
 }
 

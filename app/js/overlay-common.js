@@ -39,7 +39,7 @@ let createCentralRoute = $createCentralRoute;
 let updateCentralRoute = $updateCentralRoute;
 let deleteClimbNote = $deleteClimbNote;
 
-let _loadData = () => {};
+let _loadData = async () => {};
 
 /** Register the mock services used by the shared overlay plumbing. */
 export function setOverlayCommonMockServices(mocks) {
@@ -58,16 +58,16 @@ export function setDataLoader(fn) {
 }
 
 /** Trigger the full data refresh (injected via setDataLoader). */
-export function refreshData() {
-	return _loadData();
+export async function refreshData() {
+	await _loadData();
 }
 
-// ── Shims (ui.js exposes these on window; keeps the dependency one-way) ──
+// ── Shims (ui.js exposes these on globalThis; keeps the dependency one-way) ──
 
-const escapeHtml = (...args) => window.escapeHtml(...args);
-const showConfirmDialog = (...args) => window.showConfirmDialog(...args);
-const getPreferredGradeSystem = () => window.getPreferredGradeSystem();
-const initGradePicker = (...args) => window.initGradePicker(...args);
+const escapeHtml = (...args) => globalThis.escapeHtml(...args);
+const showConfirmDialog = (...args) => globalThis.showConfirmDialog(...args);
+const getPreferredGradeSystem = () => globalThis.getPreferredGradeSystem();
+const initGradePicker = (...args) => globalThis.initGradePicker(...args);
 
 // ── Shared overlay state (central-route soft link + rating provenance) ──
 
@@ -280,7 +280,7 @@ function renderSearchResults(resultsEl, routes, onSelect, overlay) {
             ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)}
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
-            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating != null ? ` · ★ ${r.communityRating.toFixed(1)}` : ""}${r.latitude != null ? " · 📍" : ""}
+            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating == null ? "" : ` · ★ ${r.communityRating.toFixed(1)}`}${r.latitude == null ? "" : " · 📍"}
           </div>
         </div>
       `,

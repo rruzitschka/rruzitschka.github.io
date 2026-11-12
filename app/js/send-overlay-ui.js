@@ -77,11 +77,11 @@ export function setSendOverlayMockServices(mocks) {
 	}
 }
 
-// ── Shims (ui.js exposes these on window; keeps the dependency one-way) ──
+// ── Shims (ui.js exposes these on globalThis; keeps the dependency one-way) ──
 
-const escapeHtml = (...args) => window.escapeHtml(...args);
-const showConfirmDialog = (...args) => window.showConfirmDialog(...args);
-const initGradePicker = (...args) => window.initGradePicker(...args);
+const escapeHtml = (...args) => globalThis.escapeHtml(...args);
+const showConfirmDialog = (...args) => globalThis.showConfirmDialog(...args);
+const initGradePicker = (...args) => globalThis.initGradePicker(...args);
 
 // Gym route types and send-type coercion/visibility rules live in the pure
 // send-style.js module (unit-tested) — this module only applies them to the DOM.
@@ -384,29 +384,27 @@ async function saveSend(closeOverlay) {
 }
 
 function bindSendOverlaySubmit(closeOverlay) {
-	document
-		.getElementById("send-overlay-save")
-		.addEventListener("click", async function () {
-			const routeVal = document.getElementById("so-route").value.trim();
-			if (!routeVal) {
-				markSendRouteError();
-				return;
-			}
-			clearSendRouteError();
+	const btn = document.getElementById("send-overlay-save");
+	btn.addEventListener("click", async () => {
+		const routeVal = document.getElementById("so-route").value.trim();
+		if (!routeVal) {
+			markSendRouteError();
+			return;
+		}
+		clearSendRouteError();
 
-			const btn = this;
-			btn.disabled = true;
-			btn.textContent = "Saving\u2026";
-			try {
-				await saveSend(closeOverlay);
-			} catch (err) {
-				console.error("Save send failed:", err);
-				alert("Save failed: " + (err.message ?? err));
-			} finally {
-				btn.disabled = false;
-				btn.textContent = "Save Send";
-			}
-		});
+		btn.disabled = true;
+		btn.textContent = "Saving\u2026";
+		try {
+			await saveSend(closeOverlay);
+		} catch (err) {
+			console.error("Save send failed:", err);
+			alert("Save failed: " + (err.message ?? err));
+		} finally {
+			btn.disabled = false;
+			btn.textContent = "Save Send";
+		}
+	});
 }
 
 function bindSendOverlayDelete(closeOverlay) {

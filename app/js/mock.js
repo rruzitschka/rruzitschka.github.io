@@ -291,11 +291,11 @@ export async function fetchRouteData(routeIDs) {
   return { ratings, gps, countries };
 }
 
-export function incrementSendCount() {}
-export function incrementProjectCount() {}
-export function decrementProjectCount() {}
-export function completedProject() {}
-export function reportRating() {}
+export function incrementSendCount() { /* no-op: counters live on the route doc in mock mode */ }
+export function incrementProjectCount() { /* no-op: counters live on the route doc in mock mode */ }
+export function decrementProjectCount() { /* no-op: counters live on the route doc in mock mode */ }
+export function completedProject() { /* no-op: counters live on the route doc in mock mode */ }
+export function reportRating() { /* no-op: mock climbs carry their rating on the note itself */ }
 
 // ── Mock banner ────────────────────────────────────────────────────────────
 

@@ -41,11 +41,11 @@ export function setTrainingMockServices(mocks) {
 	if (mocks.fetchSessionSends) fetchSessionSends = mocks.fetchSessionSends;
 }
 
-// ── Shims (ui.js exposes these on window; keeps the dependency one-way) ──
+// ── Shims (ui.js exposes these on globalThis; keeps the dependency one-way) ──
 
-const escapeHtml = (...args) => window.escapeHtml(...args);
-const showConfirmDialog = (...args) => window.showConfirmDialog(...args);
-const hideDetailModal = () => window.hideDetailModal();
+const escapeHtml = (...args) => globalThis.escapeHtml(...args);
+const showConfirmDialog = (...args) => globalThis.showConfirmDialog(...args);
+const hideDetailModal = () => globalThis.hideDetailModal();
 
 // ── Pure helpers ──
 
@@ -346,7 +346,7 @@ export async function loadTrainingData() {
 export async function ensureTrainingSessionsLoaded() {
 	if (trainingLoaded) return allSessions;
 	allSessions = await fetchTrainingSessions();
-	window.allSessions = allSessions;
+	globalThis.allSessions = allSessions;
 	// Mark loaded only after a successful fetch so a failure can retry on
 	// the next Training view open.
 	trainingLoaded = true;
