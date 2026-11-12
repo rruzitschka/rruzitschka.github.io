@@ -7,7 +7,6 @@ import {
 	fetchPhotos as $fetchPhotos,
 	saveClimbNote as $saveClimbNote,
 	fetchAllClimbAscents as $fetchAllClimbAscents,
-	canonicalizeProjectStatus,
 	computeStats as $computeStats,
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
@@ -23,31 +22,25 @@ import {
 import {
 	checkAdminStatus as $checkAdminStatus,
 	getRoute as $getRoute,
-	incrementProjectCount as $incrementProjectCount,
-	decrementProjectCount as $decrementProjectCount,
 	reportRating as $reportRating,
 	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
 import {
-	showAddSendOverlay,
 	showEditSendOverlay,
 	bindSendOverlayHandlers,
 	setSendOverlayMockServices,
 } from "./send-overlay-ui.js";
 import {
-	overlayState,
-	resetOverlayState,
-	syncOverlayCountrySelects,
-	syncFindRouteBtn,
-	bindOverlayCommon,
-	bindOverlayDeleteHandler,
-	fetchRouteOwnershipThenSync,
-	maybeCreateCentralRoute,
-	maybePropagateToRoute,
+	showEditProjectOverlay,
+	bindProjectOverlayHandlers,
+	setProjectOverlayMockServices,
+} from "./project-overlay-ui.js";
+import {
 	setOverlayCommonMockServices,
 	setDataLoader,
-} from "./overlay-common.js";import {
+} from "./overlay-common.js";
+import {
 	showTrainingView,
 	bindTrainingOverlayHandlers,
 	bindPeriodTabs,
@@ -55,10 +48,6 @@ import {
 	ensureTrainingSessionsLoaded,
 	setTrainingMockServices,
 } from "./training-ui.js";
-import {
-	setFindRouteLinked,
-	setFindRouteUnlinked,
-} from "./route-link-ui.js";
 import {
 	syncRouteTypeChipBar,
 	syncTableCardHeader,
@@ -72,7 +61,6 @@ import { renderStarsHtml } from "./ui-theme.js";
 const GRADES = window.GRADES;
 const getPreferredGradeSystem = () => window.getPreferredGradeSystem();
 const setPreferredGradeSystem = (s) => window.setPreferredGradeSystem(s);
-const initGradePicker = (...a) => window.initGradePicker(...a);
 
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
@@ -89,8 +77,6 @@ let apiKeysCreate = $apiKeysCreate;
 let apiKeysRevoke = $apiKeysRevoke;
 let checkAdminStatus = $checkAdminStatus;
 let getRoute = $getRoute;
-let incrementProjectCount = $incrementProjectCount;
-let decrementProjectCount = $decrementProjectCount;
 let reportRating = $reportRating;
 let fetchRouteData = $fetchRouteData;
 
@@ -112,8 +98,6 @@ const SERVICE_MOCK_SETTERS = {
 	getRoute: (fn) => (getRoute = fn),
 	fetchRouteData: (fn) => (fetchRouteData = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),
-	incrementProjectCount: (fn) => (incrementProjectCount = fn),
-	decrementProjectCount: (fn) => (decrementProjectCount = fn),
 	reportRating: (fn) => (reportRating = fn),
 };
 
@@ -127,6 +111,7 @@ export function setMockServices(mocks) {
 	}
 	setOverlayCommonMockServices(mocks);
 	setSendOverlayMockServices(mocks);
+	setProjectOverlayMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 
@@ -1029,191 +1014,5 @@ function showConfirmDialog(title, message) {
 		ok.addEventListener("click", onOk);
 		cancel.addEventListener("click", onCancel);
 	});
-}
-
-function showAddProjectOverlay() {
-	const overlay = document.getElementById("project-overlay");
-	document.getElementById("project-overlay-title").textContent = "Add Project";
-	document.getElementById("po-record-name").value = "";
-	document.getElementById("po-route").value = "";
-	document.getElementById("po-area").value = "";
-	document.getElementById("po-crag").value = "";
-	initGradePicker(document.getElementById("po-difficulty"), null);
-	document.getElementById("po-routetype").value = "Sport";
-	document.getElementById("po-attempts").value = "0";
-	// iOS parity: a new project's date is its first attempt (default today).
-	document.getElementById("po-date").value = new Date()
-		.toISOString()
-		.slice(0, 10);
-	document.getElementById("po-last-attempt-date").value = "";
-	document.getElementById("po-highpoint").value = "";
-	document.getElementById("po-status").value = "active";
-	document.getElementById("po-notes").value = "";
-	document.getElementById("po-mark-sent-section").classList.add("hidden");
-	document.getElementById("project-overlay-delete").classList.add("hidden");
-	document.getElementById("po-route-error").classList.add("hidden");
-	document.getElementById("po-route").classList.remove("error");
-	resetOverlayState();
-	setFindRouteUnlinked("find-route-btn-project");
-	syncFindRouteBtn("find-route-btn-project");
-	syncOverlayCountrySelects();
-	overlay.classList.remove("hidden");
-}
-
-function showEditProjectOverlay(climb) {
-	showAddProjectOverlay();
-	document.getElementById("project-overlay-title").textContent = "Edit Project";
-	document.getElementById("po-record-name").value = climb.recordName ?? "";
-	document.getElementById("po-route").value = climb.route ?? "";
-	document.getElementById("po-area").value = climb.climbingArea ?? "";
-	document.getElementById("po-crag").value = climb.crag ?? "";
-	initGradePicker(
-		document.getElementById("po-difficulty"),
-		climb.difficulty ?? null,
-	);
-	document.getElementById("po-routetype").value = climb.routeType ?? "Sport";
-	document.getElementById("po-attempts").value = climb.attemptCount ?? 0;
-	document.getElementById("po-date").value = climb.date
-		? climb.date.toISOString().slice(0, 10)
-		: "";
-	document.getElementById("po-last-attempt-date").value = climb.lastAttemptDate
-		? climb.lastAttemptDate.toISOString().slice(0, 10)
-		: "";
-	document.getElementById("po-highpoint").value = climb.highPoint ?? "";
-	document.getElementById("po-status").value =
-		canonicalizeProjectStatus(climb.projectStatus) ?? "active";
-	document.getElementById("po-notes").value = climb.noteText ?? "";
-	document.getElementById("po-mark-sent-section").classList.remove("hidden");
-	document.getElementById("project-overlay-delete").classList.remove("hidden");
-
-	if (climb.centralRouteID) {
-		overlayState.centralRouteID = climb.centralRouteID;
-		overlayState.centralRouteName = climb.route || "";
-		overlayState.centralRouteCrag = climb.crag || "";
-		overlayState.centralRouteArea = climb.climbingArea || "";
-		overlayState.centralRouteCreatedBy = null;
-		setFindRouteLinked("find-route-btn-project", climb.route, null);
-		syncFindRouteBtn("find-route-btn-project");
-		fetchRouteOwnershipThenSync(
-			climb.centralRouteID,
-			"find-route-btn-project",
-			climb.route,
-		);
-	}
-	syncOverlayCountrySelects();
-}
-
-function bindProjectOverlayHandlers() {
-	const closeOverlay = bindOverlayCommon({
-		overlayId: "project-overlay",
-		fieldPrefix: "po",
-		findRouteBtnId: "find-route-btn-project",
-	});
-
-	document
-		.getElementById("project-overlay-save")
-		.addEventListener("click", async function () {
-			const routeVal = document.getElementById("po-route").value.trim();
-			if (!routeVal) {
-				document.getElementById("po-route").classList.add("error");
-				document.getElementById("po-route-error").classList.remove("hidden");
-				return;
-			}
-			document.getElementById("po-route").classList.remove("error");
-			document.getElementById("po-route-error").classList.add("hidden");
-
-			const btn = this;
-			btn.disabled = true;
-			btn.textContent = "Saving\u2026";
-			try {
-				const recordName =
-					document.getElementById("po-record-name").value || undefined;
-				const lastAttemptVal = document.getElementById("po-last-attempt-date").value;
-				const poDateVal = document.getElementById("po-date").value;
-
-				const centralID = await maybeCreateCentralRoute("po", routeVal);
-
-				await saveClimbNote({
-					recordName,
-					id: recordName ? undefined : crypto.randomUUID().toUpperCase(),
-					route: routeVal,
-					climbingArea: document.getElementById("po-area").value.trim() || null,
-					crag: document.getElementById("po-crag").value.trim() || null,
-					difficulty: document.getElementById("po-difficulty").value || null,
-					sendType: "Project",
-					date: poDateVal ? new Date(poDateVal) : null,
-					routeType: document.getElementById("po-routetype").value,
-					attemptCount: Number(document.getElementById("po-attempts").value) || 0,
-					lastAttemptDate: lastAttemptVal ? new Date(lastAttemptVal) : null,
-					highPoint: document.getElementById("po-highpoint").value.trim() || null,
-					projectStatus: document.getElementById("po-status").value,
-					noteText: document.getElementById("po-notes").value.trim() || null,
-					centralRouteID: centralID ?? null,
-					reportedRating: 0, // projects never contribute to community rating
-				});
-
-				// Community rating — retract if a previously linked send had reported a rating
-				// (can happen when converting a send to a project via edit)
-				if (
-					overlayState.previousReportedRating > 0
-					&& overlayState.originalCentralRouteID
-				) {
-					reportRating(overlayState.originalCentralRouteID, 0, overlayState.previousReportedRating);
-				}
-
-				maybePropagateToRoute(centralID, "po", routeVal);
-
-				if (centralID) {
-					const isNew = !recordName;
-					const projectStatus = document.getElementById("po-status").value;
-					if (isNew) {
-						incrementProjectCount(centralID);
-					} else if (projectStatus === "abandoned") {
-						decrementProjectCount(centralID);
-					}
-				}
-
-				closeOverlay();
-				await loadData();
-			} catch (err) {
-				console.error("Save project failed:", err);
-				alert("Save failed: " + (err.message ?? err));
-			} finally {
-				btn.disabled = false;
-				btn.textContent = "Save Project";
-			}
-		});
-
-	bindOverlayDeleteHandler({
-		deleteBtnId: "project-overlay-delete",
-		recordFieldId: "po-record-name",
-		routeFieldId: "po-route",
-		label: "Project",
-		closeOverlay,
-	});
-
-	document
-		.getElementById("po-mark-sent")
-		.addEventListener("click", function () {
-			const projectRecordName = document.getElementById("po-record-name").value;
-			const savedCentralRouteID = overlayState.centralRouteID; // capture before closeOverlay() resets it
-			const savedCentralRouteCreatedBy = overlayState.centralRouteCreatedBy;
-			const prefill = {
-				route: document.getElementById("po-route").value,
-				climbingArea: document.getElementById("po-area").value,
-				crag: document.getElementById("po-crag").value,
-				difficulty: document.getElementById("po-difficulty").value,
-				routeType: document.getElementById("po-routetype").value,
-				projectRecordName,
-				centralRouteID: savedCentralRouteID,
-				centralRouteCreatedBy: savedCentralRouteCreatedBy,
-			};
-			closeOverlay();
-			showAddSendOverlay(prefill);
-		});
-
-	document
-		.getElementById("btn-add-project")
-		.addEventListener("click", showAddProjectOverlay);
 }
 

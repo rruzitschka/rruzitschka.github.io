@@ -55,6 +55,8 @@ export default [
       'app/js/overlay-common.js',
       'app/js/send-overlay-ui.js',
       'app/js/send-form-model.js',
+      'app/js/project-overlay-ui.js',
+      'app/js/project-form-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

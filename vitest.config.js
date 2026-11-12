@@ -18,6 +18,7 @@ export default defineConfig({
         "app/js/grades.js",
         "app/js/ui-theme.js",
         "app/js/send-form-model.js",
+        "app/js/project-form-model.js",
         "app/js/training-ui.js",
       ],
     },

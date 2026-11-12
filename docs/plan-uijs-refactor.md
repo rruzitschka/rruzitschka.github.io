@@ -7,6 +7,10 @@ Chunk 2 ✅ done 2026-11-11 (ui.js 5.9 → 7.78 — goal ≥ 7.0 reached early;
 `overlay-common.js` 10, `send-overlay-ui.js` 10, `send-form-model.js` 10;
 `bindSendOverlayHandlers` cc=30 gone from ui.js, worst remaining method is
 now `bindProjectOverlayHandlers` cc=18 → Chunk 3).
+Chunk 3 ✅ done 2026-11-12 (ui.js 7.78 → 8.23; `project-overlay-ui.js` 10,
+`project-form-model.js` 10; remaining cc>9 in ui.js are exactly the Chunk
+4–6 targets: showAccountView 17, bindFilterHandlers.setActiveView 11,
+gradeBadgeClass 11, showStatsView 10, loadData 10, bindApiKeyHandlers 10).
 
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
@@ -84,10 +88,27 @@ method in the codebase. ~450 lines out of ui.js.
   save-payload builder, ascent validation, style-pill normalization. Unit-test those.
 - `bindOverlayCommon` stays as the shared overlay plumbing (close/error handlers).
 
-## Chunk 3 — Project overlay module (`project-overlay-ui.js`)
+## Chunk 3 — Project overlay module (`project-overlay-ui.js`) ✅
+
+**Done 2026-11-12:** ui.js no longer owns any overlay code.
+- `project-overlay-ui.js` (Code Health 10) — add/edit project overlay,
+  `bindProjectOverlayHandlers` split into `bindProjectOverlaySubmit`
+  (cc ≈ 4), `bindProjectOverlayDelete`, `bindProjectMarkAsSent` (the plan's
+  "bindProjectCompletion" — the project → send transition);
+  `saveProject` decomposed into `retractPreviousRating` /
+  `applyProjectCounters` / `buildMarkAsSentPrefill`. Grade-picker shim
+  moved here. `setProjectOverlayMockServices`.
+- `project-form-model.js` (pure, unit-tested in
+  `tests/project-form-model.test.js`) — `buildProjectSavePayload`,
+  `projectCounterChange` (increment on new / decrement on abandoned),
+  `coerceAttemptCount`, `validateProjectDates` (new soft guard: last
+  attempt cannot predate the first attempt).
+- Depends on Chunk 2's overlay-common location — both overlay modules now
+  import from `overlay-common.js`.
 
 - Move: `showAddProjectOverlay`, `showEditProjectOverlay`, `bindProjectOverlayHandlers`
-  (cc=18, 101 LoC), `fetchRouteOwnershipThenSync`, grade-picker glue (`initGradePicker`
+  (cc=18, 101 LoC), `fetchRouteOwnershipThenSync` (lives in overlay-common
+  since Chunk 2), grade-picker glue (`initGradePicker`
   shim lives in ui.js — move it here).
 - Split `bindProjectOverlayHandlers` into: `bindProjectOverlayFields`,
   `bindProjectOverlaySubmit`, `bindProjectCompletion` (send→project transition).
