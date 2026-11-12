@@ -15,9 +15,12 @@ After changing code, run `code_health_review` on the changed files. If Code Heal
 3. `code_health_review` on every changed code file (no drop, report score)
 4. `pre_commit_code_health_safeguard`
 5. `graphify update .` (repo root)
-6. Mock-mode smoke: `node serve.cjs` → `http://localhost:8080/app/?mock=true`
+6. **Reviewer subagent on the staged diff** — dispatch the `reviewer` agent
+   (pi subagent extension, GPT-6 Luna high thinking) via
+   `git diff --staged`; fix all Critical findings before committing.
+7. Mock-mode smoke: `node serve.cjs` → `http://localhost:8080/app/?mock=true`
    — views open, overlays open, save flows work. Have the user verify.
-7. Commit (one commit per chunk), then request push approval.
+8. Commit (one commit per chunk), then request push approval.
 
 ## SonarQube Push Gate (SendLogWebsite project)
 
