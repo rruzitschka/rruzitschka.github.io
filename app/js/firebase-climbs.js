@@ -44,7 +44,7 @@ const PROJECT_STATUS_CANONICAL = {
 	abandoned: "abandoned",
 };
 /** Convert a display-facing projectStatus to the canonical value stored in Firestore. */
-function canonicalizeProjectStatus(raw) {
+export function canonicalizeProjectStatus(raw) {
 	return PROJECT_STATUS_CANONICAL[raw] ?? raw?.toLowerCase() ?? null;
 }
 

@@ -1,18 +1,13 @@
 // ui.js — Dashboard UI rendering and interaction (modular SDK)
 
-import { db, auth } from "./firebase-config.js";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "./firebase-config.js";
 import {
 	fetchClimbs as $fetchClimbs,
 	fetchAscents as $fetchAscents,
-	canonicalizeSendType,
-	normalizeSendType,
-	saveClimbNote as $saveClimbNote,
-	deleteClimbNote as $deleteClimbNote,
-	saveAscent as $saveAscent,
-	deleteAscent as $deleteAscent,
 	fetchPhotos as $fetchPhotos,
+	saveClimbNote as $saveClimbNote,
 	fetchAllClimbAscents as $fetchAllClimbAscents,
+	canonicalizeProjectStatus,
 	computeStats as $computeStats,
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
@@ -26,21 +21,33 @@ import {
 	apiKeysRevoke as $apiKeysRevoke,
 } from "./firebase-api-keys.js";
 import {
-	searchRoutes as $searchRoutes,
-	createCentralRoute as $createCentralRoute,
-	updateCentralRoute as $updateCentralRoute,
-	shouldClearSoftLink as $shouldClearSoftLink,
 	checkAdminStatus as $checkAdminStatus,
 	getRoute as $getRoute,
-	incrementSendCount as $incrementSendCount,
 	incrementProjectCount as $incrementProjectCount,
 	decrementProjectCount as $decrementProjectCount,
-	completedProject as $completedProject,
 	reportRating as $reportRating,
 	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
 import {
+	showAddSendOverlay,
+	showEditSendOverlay,
+	bindSendOverlayHandlers,
+	setSendOverlayMockServices,
+} from "./send-overlay-ui.js";
+import {
+	overlayState,
+	resetOverlayState,
+	syncOverlayCountrySelects,
+	syncFindRouteBtn,
+	bindOverlayCommon,
+	bindOverlayDeleteHandler,
+	fetchRouteOwnershipThenSync,
+	maybeCreateCentralRoute,
+	maybePropagateToRoute,
+	setOverlayCommonMockServices,
+	setDataLoader,
+} from "./overlay-common.js";import {
 	showTrainingView,
 	bindTrainingOverlayHandlers,
 	bindPeriodTabs,
@@ -48,10 +55,6 @@ import {
 	ensureTrainingSessionsLoaded,
 	setTrainingMockServices,
 } from "./training-ui.js";
-import {
-	syncCountrySelects as _syncCountrySelects,
-	overlayCountryChange,
-} from "./overlay-country.js";
 import {
 	setFindRouteLinked,
 	setFindRouteUnlinked,
@@ -63,15 +66,7 @@ import {
 	bindClimbRowClick,
 	syncInspectorForPage,
 } from "./climb-inspector-ui.js";
-import {
-	GYM_ROUTE_TYPES,
-	coerceSendTypeForRouteType,
-	isStyleTabHidden,
-} from "./send-style.js";
-import {
-	renderCommunityOwnerIndicatorHtml,
-	renderStarsHtml,
-} from "./ui-theme.js";
+import { renderStarsHtml } from "./ui-theme.js";
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
 const GRADES = window.GRADES;
@@ -84,9 +79,6 @@ let fetchClimbs = $fetchClimbs;
 let fetchAscents = $fetchAscents;
 let fetchAllClimbAscents = $fetchAllClimbAscents;
 let saveClimbNote = $saveClimbNote;
-let deleteClimbNote = $deleteClimbNote;
-let saveAscent = $saveAscent;
-let deleteAscent = $deleteAscent;
 let fetchPhotos = $fetchPhotos;
 let computeStats = $computeStats;
 let filterClimbs = $filterClimbs;
@@ -95,16 +87,10 @@ let deleteAccount = $deleteAccount;
 let apiKeysList = $apiKeysList;
 let apiKeysCreate = $apiKeysCreate;
 let apiKeysRevoke = $apiKeysRevoke;
-let searchRoutes = $searchRoutes;
-let createCentralRoute = $createCentralRoute;
-let updateCentralRoute = $updateCentralRoute;
-const shouldClearSoftLink = $shouldClearSoftLink;
 let checkAdminStatus = $checkAdminStatus;
 let getRoute = $getRoute;
-let incrementSendCount = $incrementSendCount;
 let incrementProjectCount = $incrementProjectCount;
 let decrementProjectCount = $decrementProjectCount;
-let completedProject = $completedProject;
 let reportRating = $reportRating;
 let fetchRouteData = $fetchRouteData;
 
@@ -115,9 +101,6 @@ const SERVICE_MOCK_SETTERS = {
 	fetchAscents: (fn) => (fetchAscents = fn),
 	fetchAllClimbAscents: (fn) => (fetchAllClimbAscents = fn),
 	saveClimbNote: (fn) => (saveClimbNote = fn),
-	deleteClimbNote: (fn) => (deleteClimbNote = fn),
-	saveAscent: (fn) => (saveAscent = fn),
-	deleteAscent: (fn) => (deleteAscent = fn),
 	fetchPhotos: (fn) => (fetchPhotos = fn),
 	computeStats: (fn) => (computeStats = fn),
 	filterClimbs: (fn) => (filterClimbs = fn),
@@ -126,16 +109,11 @@ const SERVICE_MOCK_SETTERS = {
 	apiKeysList: (fn) => (apiKeysList = fn),
 	apiKeysCreate: (fn) => (apiKeysCreate = fn),
 	apiKeysRevoke: (fn) => (apiKeysRevoke = fn),
-	searchRoutes: (fn) => (searchRoutes = fn),
 	getRoute: (fn) => (getRoute = fn),
 	fetchRouteData: (fn) => (fetchRouteData = fn),
-	createCentralRoute: (fn) => (createCentralRoute = fn),
-	updateCentralRoute: (fn) => (updateCentralRoute = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),
-	incrementSendCount: (fn) => (incrementSendCount = fn),
 	incrementProjectCount: (fn) => (incrementProjectCount = fn),
 	decrementProjectCount: (fn) => (decrementProjectCount = fn),
-	completedProject: (fn) => (completedProject = fn),
 	reportRating: (fn) => (reportRating = fn),
 };
 
@@ -147,6 +125,8 @@ export function setMockServices(mocks) {
 	for (const [key, set] of Object.entries(SERVICE_MOCK_SETTERS)) {
 		if (mocks[key]) set(mocks[key]);
 	}
+	setOverlayCommonMockServices(mocks);
+	setSendOverlayMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 
@@ -158,20 +138,10 @@ let _currentPage = 1;
 let _filteredClimbs = [];
 const ITEMS_PER_PAGE = 20;
 
-// Central route soft link state (cleared when overlay closes without selection)
-let _centralRouteID = null;
-let _centralRouteName = "";
-let _centralRouteCrag = "";
-let _centralRouteArea = "";
-let _centralRouteCreatedBy = null;
-let _pendingNewCentralRoute = null;
-let _previousReportedRating = 0; // reportedRating when edit overlay was opened
-let _originalCentralRouteID = null; // centralRouteID when edit overlay was opened
 let _communityRatings = new Map(); // routeID -> communityRating; fetched once per session
 let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
 let _routeCountries = new Map(); // routeID -> ISO country code (only when set); fetched once per session
 let _routeDataFetched = false; // set when fetchRouteData succeeded; retry on next load otherwise
-let _centralRouteCountry; // country of the route linked in the open overlay; undefined = not yet known
 /** @type {Map<string, Array>} */
 
 const SEND_CLASSES = {
@@ -567,6 +537,10 @@ function bindFilterHandlers(initialClimbs) {
 	bindTrainingOverlayHandlers();
 	bindApiKeyHandlers();
 	bindPeriodTabs();
+
+	// Inject the full-refresh callback so the overlay modules can trigger
+	// loadData without a circular module import.
+	setDataLoader(loadData);
 
 	// Expose helpers for non-module consumers (stats.js, admin.js)
 	window.escapeHtml = escapeHtml;
@@ -1057,391 +1031,6 @@ function showConfirmDialog(title, message) {
 	});
 }
 
-// ---------- Star rating picker ----------
-
-let currentStarRating = 0;
-
-function setStarRating(value) {
-	currentStarRating = value;
-	document.querySelectorAll("#so-rating span").forEach((span, i) => {
-		span.classList.toggle("filled", i < value);
-	});
-}
-
-function bindStarPicker() {
-	document.querySelectorAll("#so-rating span").forEach((span) => {
-		span.addEventListener("click", () =>
-			setStarRating(Number(span.dataset.value)),
-		);
-		span.addEventListener("mouseenter", () => {
-			const v = Number(span.dataset.value);
-			document.querySelectorAll("#so-rating span").forEach((s, i) => {
-				s.classList.toggle("filled", i < v);
-			});
-		});
-		span.addEventListener("mouseleave", () => setStarRating(currentStarRating));
-	});
-}
-
-// Gym route types and send-type coercion/visibility rules live in the pure
-// send-style.js module (unit-tested) — ui.js only applies them to the DOM.
-
-/** Tab visibility: boulder shows Flash/Top, rope shows rope styles (gyms
- * without pinkpoint/all free); a legacy send type that matches no visible
- * tab stays selectable (iOS keeps legacy types selectable on edits). */
-function syncStyleTabVisibility(current, routeType) {
-	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		tab.classList.toggle(
-			"hidden",
-			isStyleTabHidden(tab.dataset.style, current, routeType),
-		);
-	});
-}
-
-/**
- * Syncs the send overlay's gym-sensitive UI to the selected route type:
- * Crag label ↔ Gym (+ hide the climbing-area field), and which send-type
- * tabs are visible. With `normalize` (user type switch), the send type is
- * coerced like iOS. Legacy send types on existing notes are preserved and
- * their tab kept visible.
- */
-/** Gym notes use the crag field for the gym name (ADR 0005); guarded so a
- * missing element (deploy skew) cannot throw. */
-function syncCragFieldForGym(isGym) {
-	const cragLabel = document.getElementById("so-crag-label");
-	if (cragLabel) cragLabel.textContent = isGym ? "Gym" : "Crag";
-	const cragInput = document.getElementById("so-crag");
-	if (cragInput)
-		cragInput.placeholder = isGym
-			? "e.g. Boulderhalle Wien"
-			: "e.g. La Face";
-}
-
-function syncSendOverlayForRouteType(normalize = false) {
-	const routeType = document.getElementById("so-routetype").value;
-	const isGym = GYM_ROUTE_TYPES.has(routeType);
-	// Area and country belong to the central route DB, which gym notes never
-	// touch (ADR 0005). Optional chaining: a cached old index.html paired
-	// with fresh JS (deploy skew) must never throw and kill the overlay.
-	syncCragFieldForGym(isGym);
-	document.getElementById("so-area-group")?.classList.toggle("hidden", isGym);
-	document
-		.getElementById("so-country-group")
-		?.classList.toggle("hidden", isGym);
-
-	let current = canonicalizeSendType(
-		document.getElementById("so-sendtype").value,
-	);
-	if (normalize && current !== "project") {
-		const next = coerceSendTypeForRouteType(current, routeType);
-		if (next !== current) {
-			current = next;
-			setStylePill(normalizeSendType(next));
-		}
-	}
-
-	syncStyleTabVisibility(current, routeType);
-}
-
-function setStylePill(value) {
-	const styleMap = {
-		Redpoint: "active-rp",
-		"On Sight": "active-os",
-		"Top Rope": "active-tr",
-		"All Free": "active-af",
-		Pinkpoint: "active-pk",
-		Flash: "active-fl",
-		Top: "active-tp",
-	};
-	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		// Only reset the active state — `className = ...` would also strip the
-		// hidden class that route-type visibility sync relies on.
-		tab.classList.remove(
-			"active-rp",
-			"active-os",
-			"active-tr",
-			"active-af",
-			"active-pk",
-			"active-fl",
-			"active-tp",
-		);
-		if (tab.dataset.style === value) tab.classList.add(styleMap[value] ?? "");
-	});
-	const hidden = document.getElementById("so-sendtype");
-	if (hidden) hidden.value = value;
-}
-
-// ---------- Route search overlay ----------
-
-// setFindRouteLinked / setFindRouteUnlinked live in route-link-ui.js
-
-/**
- * Build and inject a route search overlay into the DOM.
- * @param {string} displaySystem - User's grade system ('French'|'YDS'|'UIAA')
- * @param {function} onSelect - called with (route, isNew) when user picks/creates a route
- */
-function buildRouteSearchOverlay(displaySystem, onSelect) {
-	document.getElementById("route-search-overlay")?.remove();
-
-	const overlay = document.createElement("div");
-	overlay.id = "route-search-overlay";
-	overlay.className = "modal-overlay active";
-	overlay.innerHTML = `
-    <div class="modal-content" style="max-width:500px;max-height:80vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-      <div class="modal-header" style="padding:1rem 1.25rem;border-bottom:1px solid var(--border-color);flex-shrink:0;">
-        <h3 class="modal-title">Find Route</h3>
-        <button class="modal-close" id="route-search-close">&times;</button>
-      </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <input type="text" id="route-search-name" placeholder="Route name…"
-               class="form-input" autocomplete="off" />
-        <input type="text" id="route-search-crag" placeholder="Crag (search standalone or combine)"
-               class="form-input" autocomplete="off" />
-      </div>
-      <div id="route-search-results" style="overflow-y:auto;flex:1;padding:0 12px 12px;">
-        <p class="text-muted" style="font-size:13px;">Type at least 2 characters to search.</p>
-      </div>
-      <div style="padding:12px;border-top:1px solid var(--border-color);flex-shrink:0;">
-        <button id="route-search-create" class="btn btn-secondary" style="width:100%;display:none;">
-          + Create new route
-        </button>
-      </div>
-    </div>
-  `;
-
-	document.body.appendChild(overlay);
-
-	let searchTimer = null;
-
-	function doSearch() {
-		const name = document.getElementById("route-search-name").value.trim();
-		const crag = document.getElementById("route-search-crag").value.trim();
-		const createBtn = document.getElementById("route-search-create");
-		const resultsEl = document.getElementById("route-search-results");
-
-		createBtn.style.display = name.length >= 2 ? "block" : "none";
-		createBtn.textContent = `+ Create "${name}"`;
-
-		// Mirror iOS RouteSearchView: trigger as soon as name >= 2 OR crag >= 2
-		if (name.length < 2 && crag.length < 2) {
-			resultsEl.innerHTML =
-				'<p class="text-muted" style="font-size:13px;">Type at least 2 characters in route name or crag to search.</p>';
-			return;
-		}
-
-		resultsEl.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:var(--text-muted,#94a3b8);font-size:13px;">
-        <div style="width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:var(--accent-color,#3b82f6);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
-        Searching…
-      </div>`;
-
-		searchRoutes(name, crag || null, displaySystem, 20)
-			.then((routes) => {
-				if (!routes.length) {
-					resultsEl.innerHTML =
-						'<p class="text-muted" style="font-size:13px;">No routes found. Use the button below to create a new one.</p>';
-					return;
-				}
-				const currentUID = auth.currentUser?.uid ?? null;
-				resultsEl.innerHTML = routes
-					.map(
-						(r) => `
-        <div class="route-search-result" data-id="${r.id}" style="
-          padding:10px 8px;border-bottom:1px solid var(--border-color);cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${escapeHtml(r.name)}${r.createdBy === currentUID ? renderCommunityOwnerIndicatorHtml(true) : renderCommunityOwnerIndicatorHtml(false)}</strong>
-            <span style="color:var(--accent-color);font-weight:600;">${escapeHtml(r.displayGrade)}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);">
-            ${escapeHtml(r.crag)}${r.climbingArea ? " · " + escapeHtml(r.climbingArea) : ""} · ${escapeHtml(r.routeType)}
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
-            ✓ ${r.sendCount} sends · ${r.projectCount} projecting${r.communityRating != null ? ` · ★ ${r.communityRating.toFixed(1)}` : ""}${r.latitude != null ? " · 📍" : ""}
-          </div>
-        </div>
-      `,
-					)
-					.join("");
-
-				resultsEl.querySelectorAll(".route-search-result").forEach((el) => {
-					el.addEventListener("click", () => {
-						const route = routes.find((r) => r.id === el.dataset.id);
-						if (route) {
-							onSelect(route, false);
-							overlay.remove();
-						}
-					});
-				});
-			})
-			.catch((err) => {
-				console.error("Route search error:", err);
-				resultsEl.innerHTML =
-					'<p style="color:red;font-size:13px;">Search failed. Check your connection.</p>';
-			});
-	}
-
-	["route-search-name", "route-search-crag"].forEach((id) => {
-		document.getElementById(id).addEventListener("input", () => {
-			clearTimeout(searchTimer);
-			searchTimer = setTimeout(doSearch, 300);
-		});
-	});
-
-	document
-		.getElementById("route-search-create")
-		.addEventListener("click", () => {
-			const name = document.getElementById("route-search-name").value.trim();
-			const crag = document.getElementById("route-search-crag").value.trim();
-
-			const resultsEl = document.getElementById("route-search-results");
-			const existingItems = resultsEl.querySelectorAll(".route-search-result");
-			const hasDupes = [...existingItems].some((el) => {
-				const nameEl = el.querySelector("strong");
-				return (
-					nameEl && nameEl.textContent.toLowerCase() === name.toLowerCase()
-				);
-			});
-
-			const proceed = () => {
-				const newRoute = {
-					id: null,
-					name,
-					climbingArea: "",
-					crag,
-					grade: "",
-					displayGrade: "",
-					routeType: "Sport",
-					isNew: true,
-				};
-				onSelect(newRoute, true);
-				overlay.remove();
-			};
-
-			if (hasDupes) {
-				// Mirror iOS RouteSearchView: show a proper modal instead of a browser confirm()
-				showConfirmDialog(
-					"Route Already Exists?",
-					`Similar routes were found at this crag. Create \u201c${name}\u201d as a new entry anyway?`,
-				).then((ok) => {
-					if (ok) proceed();
-				});
-			} else {
-				proceed();
-			}
-		});
-
-	document
-		.getElementById("route-search-close")
-		.addEventListener("click", () => overlay.remove());
-	overlay.addEventListener("click", (e) => {
-		if (e.target === overlay) overlay.remove();
-	});
-
-	setTimeout(() => document.getElementById("route-search-name")?.focus(), 50);
-}
-
-// ---------- Send overlay ----------
-
-function showAddSendOverlay(prefill = {}) {
-	const overlay = document.getElementById("send-overlay");
-	document.getElementById("send-overlay-title").textContent = "Log Send";
-	document.getElementById("so-record-name").value = "";
-	document.getElementById("so-route").value = prefill.route ?? "";
-	document.getElementById("so-area").value = prefill.climbingArea ?? "";
-	document.getElementById("so-crag").value = prefill.crag ?? "";
-	initGradePicker(
-		document.getElementById("so-difficulty"),
-		prefill.difficulty ?? null,
-	);
-	document.getElementById("so-routetype").value = prefill.routeType ?? "Sport";
-	document.getElementById("so-date").value = new Date()
-		.toISOString()
-		.slice(0, 10);
-	document.getElementById("so-notes").value = "";
-	setStarRating(0);
-	setStylePill("Redpoint");
-	syncSendOverlayForRouteType();
-	document.getElementById("so-ascents-section").classList.add("hidden");
-	document.getElementById("so-ascent-form").classList.add("hidden");
-	document.getElementById("so-ascent-toggle").textContent = "+ Add";
-	document.getElementById("send-overlay-delete").classList.add("hidden");
-	document.getElementById("so-route-error").classList.add("hidden");
-	document.getElementById("so-route").classList.remove("error");
-	overlay.dataset.projectRecordName = prefill.projectRecordName ?? "";
-	_centralRouteID = null;
-	_pendingNewCentralRoute = null;
-	_centralRouteCreatedBy = null;
-	_centralRouteCountry = undefined;
-	setFindRouteUnlinked("find-route-btn-send");
-
-	// Restore soft link if coming from a linked project (mark-as-sent flow)
-	if (prefill.centralRouteID) {
-		_centralRouteID = prefill.centralRouteID;
-		_centralRouteName = prefill.route || "";
-		_centralRouteCrag = prefill.crag || "";
-		_centralRouteArea = prefill.climbingArea || "";
-		_centralRouteCreatedBy = prefill.centralRouteCreatedBy ?? null;
-		setFindRouteLinked(
-			"find-route-btn-send",
-			prefill.route,
-			_centralRouteCreatedBy,
-		);
-		// Fetch country asynchronously so the country select can prefill
-		fetchRouteOwnershipThenSync(
-			prefill.centralRouteID,
-			"find-route-btn-send",
-			prefill.route,
-		);
-	}
-
-	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-	overlay.classList.remove("hidden");
-}
-
-function showEditSendOverlay(climb) {
-	showAddSendOverlay();
-	document.getElementById("send-overlay-title").textContent = "Edit Send";
-	document.getElementById("so-record-name").value = climb.recordName ?? "";
-	document.getElementById("so-route").value = climb.route ?? "";
-	document.getElementById("so-area").value = climb.climbingArea ?? "";
-	document.getElementById("so-crag").value = climb.crag ?? "";
-	initGradePicker(
-		document.getElementById("so-difficulty"),
-		climb.difficulty ?? null,
-	);
-	document.getElementById("so-routetype").value = climb.routeType ?? "Sport";
-	document.getElementById("so-date").value = climb.date
-		? climb.date.toISOString().slice(0, 10)
-		: "";
-	document.getElementById("so-notes").value = climb.noteText ?? "";
-	setStarRating(climb.rating ?? 0);
-	setStylePill(climb.sendType ?? "Redpoint");
-	syncSendOverlayForRouteType();
-	document.getElementById("so-ascents-section").classList.remove("hidden");
-	document.getElementById("send-overlay-delete").classList.remove("hidden");
-	renderAscentsList(climb);
-
-	_previousReportedRating = climb.reportedRating ?? 0;
-	_originalCentralRouteID = climb.centralRouteID ?? null;
-
-	if (climb.centralRouteID) {
-		_centralRouteID = climb.centralRouteID;
-		_centralRouteName = climb.route || "";
-		_centralRouteCrag = climb.crag || "";
-		_centralRouteArea = climb.climbingArea || "";
-		_centralRouteCreatedBy = null;
-		setFindRouteLinked("find-route-btn-send", climb.route, null);
-		// Fetch createdBy + country asynchronously to update ownership icon
-		// and the country select (owner-only editing)
-		fetchRouteOwnershipThenSync(
-			climb.centralRouteID,
-			"find-route-btn-send",
-			climb.route,
-		);
-	}
-	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-}
-
 function showAddProjectOverlay() {
 	const overlay = document.getElementById("project-overlay");
 	document.getElementById("project-overlay-title").textContent = "Add Project";
@@ -1464,12 +1053,10 @@ function showAddProjectOverlay() {
 	document.getElementById("project-overlay-delete").classList.add("hidden");
 	document.getElementById("po-route-error").classList.add("hidden");
 	document.getElementById("po-route").classList.remove("error");
-	_centralRouteID = null;
-	_pendingNewCentralRoute = null;
-	_centralRouteCreatedBy = null;
-	_centralRouteCountry = undefined;
+	resetOverlayState();
 	setFindRouteUnlinked("find-route-btn-project");
-	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
+	syncFindRouteBtn("find-route-btn-project");
+	syncOverlayCountrySelects();
 	overlay.classList.remove("hidden");
 }
 
@@ -1493,381 +1080,27 @@ function showEditProjectOverlay(climb) {
 		? climb.lastAttemptDate.toISOString().slice(0, 10)
 		: "";
 	document.getElementById("po-highpoint").value = climb.highPoint ?? "";
-	document.getElementById("po-status").value = climb.projectStatus ?? "active";
+	document.getElementById("po-status").value =
+		canonicalizeProjectStatus(climb.projectStatus) ?? "active";
 	document.getElementById("po-notes").value = climb.noteText ?? "";
 	document.getElementById("po-mark-sent-section").classList.remove("hidden");
 	document.getElementById("project-overlay-delete").classList.remove("hidden");
 
 	if (climb.centralRouteID) {
-		_centralRouteID = climb.centralRouteID;
-		_centralRouteName = climb.route || "";
-		_centralRouteCrag = climb.crag || "";
-		_centralRouteArea = climb.climbingArea || "";
-		_centralRouteCreatedBy = null;
+		overlayState.centralRouteID = climb.centralRouteID;
+		overlayState.centralRouteName = climb.route || "";
+		overlayState.centralRouteCrag = climb.crag || "";
+		overlayState.centralRouteArea = climb.climbingArea || "";
+		overlayState.centralRouteCreatedBy = null;
 		setFindRouteLinked("find-route-btn-project", climb.route, null);
+		syncFindRouteBtn("find-route-btn-project");
 		fetchRouteOwnershipThenSync(
 			climb.centralRouteID,
 			"find-route-btn-project",
 			climb.route,
 		);
 	}
-	_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-}
-
-// ── Overlay shared helpers ──────────────────────────────────────────────────
-
-/**
- * Fetch the linked route's ownership + country asynchronously, update the
- * soft-link ownership icon and the country selects. Shared by the Send and
- * Project overlays after they link a central route.
- */
-function fetchRouteOwnershipThenSync(routeID, findRouteBtnId, routeLabel) {
-	getDoc(doc(db, "routes", routeID))
-		.then((routeSnap) => {
-			if (!routeSnap.exists()) return;
-			_centralRouteCreatedBy = routeSnap.data().createdBy ?? null;
-			_centralRouteCountry = routeSnap.data().country ?? null;
-			setFindRouteLinked(findRouteBtnId, routeLabel, _centralRouteCreatedBy);
-			_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-		})
-		.catch(() => {});
-}
-
-/**
- * Shared setup for Send and Project overlays.
- * Wires close/cancel/backdrop, the "find route" button, and soft-link clearing.
- * Returns a closeOverlay() function for use in save/delete handlers.
- */
-function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId }) {
-	function closeOverlay() {
-		document.getElementById(overlayId).classList.add("hidden");
-		_centralRouteID = null;
-		_centralRouteName = "";
-		_centralRouteCrag = "";
-		_centralRouteArea = "";
-		_centralRouteCreatedBy = null;
-		_pendingNewCentralRoute = null;
-		_previousReportedRating = 0;
-		_originalCentralRouteID = null;
-		_centralRouteCountry = undefined;
-		setFindRouteUnlinked(findRouteBtnId);
-		_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-	}
-
-	document
-		.getElementById(`${overlayId}-close`)
-		.addEventListener("click", closeOverlay);
-	document
-		.getElementById(`${overlayId}-cancel`)
-		.addEventListener("click", closeOverlay);
-	document.getElementById(overlayId).addEventListener("click", (e) => {
-		if (e.target === e.currentTarget) closeOverlay();
-	});
-
-	document.getElementById(findRouteBtnId).addEventListener("click", () => {
-		buildRouteSearchOverlay(getPreferredGradeSystem(), (route, isNew) => {
-			document.getElementById(`${p}-route`).value = route.name || "";
-			document.getElementById(`${p}-area`).value = route.climbingArea || "";
-			document.getElementById(`${p}-crag`).value = route.crag || "";
-			if (route.displayGrade)
-				initGradePicker(
-					document.getElementById(`${p}-difficulty`),
-					route.displayGrade,
-				);
-			if (route.routeType)
-				document.getElementById(`${p}-routetype`).value = route.routeType;
-			_centralRouteID = route.id;
-			_centralRouteName = route.name || "";
-			_centralRouteCrag = route.crag || "";
-			_centralRouteArea = route.climbingArea || "";
-			_centralRouteCreatedBy = route.createdBy ?? null;
-			_centralRouteCountry = route.country ?? null;
-			if (isNew) {
-				_pendingNewCentralRoute = route;
-				_centralRouteID = null;
-				_centralRouteCreatedBy = null;
-			}
-			setFindRouteLinked(findRouteBtnId, route.name, _centralRouteCreatedBy);
-			_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-		});
-	});
-
-	[`${p}-route`, `${p}-crag`, `${p}-area`].forEach((fieldId) => {
-		document.getElementById(fieldId)?.addEventListener("input", () => {
-			const isOwner =
-				_centralRouteCreatedBy &&
-				_centralRouteCreatedBy === auth.currentUser?.uid;
-			if (
-				_centralRouteID &&
-				!isOwner &&
-				shouldClearSoftLink(
-					{
-						name: _centralRouteName,
-						crag: _centralRouteCrag,
-						area: _centralRouteArea,
-					},
-					{
-						name: document.getElementById(`${p}-route`).value,
-						crag: document.getElementById(`${p}-crag`).value,
-						area: document.getElementById(`${p}-area`).value,
-					},
-				)
-			) {
-				_centralRouteID = null;
-				setFindRouteUnlinked(findRouteBtnId);
-				_syncCountrySelects({ uid: auth.currentUser?.uid, centralRouteID: _centralRouteID, pendingNewCentralRoute: _pendingNewCentralRoute, createdBy: _centralRouteCreatedBy, country: _centralRouteCountry });
-			}
-		});
-	});
-
-	return closeOverlay;
-}
-
-/** Binds the delete button for Send or Project overlays. */
-function bindOverlayDeleteHandler({
-	deleteBtnId,
-	recordFieldId,
-	routeFieldId,
-	label,
-	closeOverlay,
-}) {
-	document
-		.getElementById(deleteBtnId)
-		.addEventListener("click", async function () {
-			const recordName = document.getElementById(recordFieldId).value;
-			const name = document.getElementById(routeFieldId).value;
-			const confirmed = await showConfirmDialog(
-				`Delete ${label}?`,
-				`"${name}" will be permanently deleted.`,
-			);
-			if (!confirmed) return;
-			try {
-				await deleteClimbNote(recordName);
-				closeOverlay();
-				await loadData();
-			} catch (err) {
-				alert("Delete failed: " + (err.message ?? err));
-			}
-		});
-}
-
-/**
- * Creates a central route if _pendingNewCentralRoute is set.
- * Returns the resolved centralID (may be unchanged if no pending route).
- */
-async function _maybeCreateCentralRoute(fieldPrefix, routeVal) {
-	if (!_pendingNewCentralRoute) return _centralRouteID;
-	const p = fieldPrefix;
-	let centralID = _centralRouteID;
-	try {
-		centralID = await createCentralRoute({
-			name: routeVal,
-			climbingArea: document.getElementById(`${p}-area`).value.trim() || "",
-			crag: document.getElementById(`${p}-crag`).value.trim() || "",
-			grade: document.getElementById(`${p}-difficulty`).value || "",
-			gradeSystem: getPreferredGradeSystem(),
-			routeType: document.getElementById(`${p}-routetype`).value,
-			country:
-				document.getElementById(`${p}-country`)?.value.trim().toUpperCase() || null,
-		});
-		_centralRouteID = centralID;
-	} catch (err) {
-		console.warn("Failed to create central route:", err);
-		// Don't block save if central route creation fails
-	}
-	_pendingNewCentralRoute = null;
-	return centralID;
-}
-
-/** Propagates overlay field edits back to central route if the current user is the creator. */
-function _maybePropagateToRoute(centralID, fieldPrefix, routeVal, isGym = false) {
-	// Gym notes never write back to the central route DB (ADR 0005).
-	if (isGym) return;
-	if (!centralID || _centralRouteCreatedBy !== auth.currentUser?.uid) return;
-	const p = fieldPrefix;
-	updateCentralRoute(centralID, {
-		name: routeVal,
-		climbingArea: document.getElementById(`${p}-area`).value.trim() || "",
-		crag: document.getElementById(`${p}-crag`).value.trim() || "",
-		grade: document.getElementById(`${p}-difficulty`).value || "",
-		gradeSystem: getPreferredGradeSystem(),
-		routeType: document.getElementById(`${p}-routetype`).value,
-		// {} until the linked route's country is known — a fast save before the
-		// route fetch resolved must not silently wipe the country. "" → clears.
-		...overlayCountryChange(p, _centralRouteCountry),
-	});
-}
-
-/** Adds an ascent from the send overlay's inline ascent form. */
-async function submitAscentFromOverlay() {
-	const climbRecordName = document.getElementById("so-record-name").value;
-	if (!climbRecordName) return;
-	const dateVal = document.getElementById("so-ascent-date").value;
-	const typeVal = document.getElementById("so-ascent-type").value;
-	const notesVal = document.getElementById("so-ascent-notes").value.trim();
-	try {
-		await saveAscent({
-			id: crypto.randomUUID(),
-			date: dateVal ? new Date(dateVal) : new Date(),
-			sendType: typeVal,
-			notes: notesVal || null,
-			climbNoteRecordName: climbRecordName,
-		});
-		document.getElementById("so-ascent-date").value = "";
-		document.getElementById("so-ascent-notes").value = "";
-		document.getElementById("so-ascent-form").classList.add("hidden");
-		document.getElementById("so-ascent-toggle").textContent = "+ Add";
-		await loadData();
-		await renderAscentsList({ recordName: climbRecordName });
-	} catch (err) {
-		alert("Add ascent failed: " + (err.message ?? err));
-	}
-}
-
-function bindSendOverlayHandlers() {
-	const closeOverlay = bindOverlayCommon({
-		overlayId: "send-overlay",
-		fieldPrefix: "so",
-		findRouteBtnId: "find-route-btn-send",
-	});
-
-	document.querySelectorAll("#so-style-tabs .style-tab").forEach((tab) => {
-		tab.addEventListener("click", () => setStylePill(tab.dataset.style));
-	});
-
-	document
-		.getElementById("so-routetype")
-		.addEventListener("change", () => syncSendOverlayForRouteType(true));
-
-	document
-		.getElementById("send-overlay-save")
-		.addEventListener("click", async function () {
-			const routeVal = document.getElementById("so-route").value.trim();
-			if (!routeVal) {
-				document.getElementById("so-route").classList.add("error");
-				document.getElementById("so-route-error").classList.remove("hidden");
-				return;
-			}
-			document.getElementById("so-route").classList.remove("error");
-			document.getElementById("so-route-error").classList.add("hidden");
-
-			const btn = this;
-			btn.disabled = true;
-			btn.textContent = "Saving\u2026";
-			try {
-				const recordName =
-					document.getElementById("so-record-name").value || undefined;
-				const projectRecordName =
-					document.getElementById("send-overlay").dataset.projectRecordName;
-
-				const routeTypeVal = document.getElementById("so-routetype").value;
-				const isGym = GYM_ROUTE_TYPES.has(routeTypeVal);
-				// Gym notes are hard-gated from the central route DB (ADR 0005):
-				// no central doc creation, no link (a converted note's link is
-				// cleared), no rating/counter writes.
-				if (isGym) _pendingNewCentralRoute = null;
-				const centralID = isGym
-					? null
-					: await _maybeCreateCentralRoute("so", routeVal);
-
-				await saveClimbNote({
-					recordName,
-					id: recordName ? undefined : crypto.randomUUID().toUpperCase(),
-					route: routeVal,
-					climbingArea: document.getElementById("so-area").value.trim() || null,
-					crag: document.getElementById("so-crag").value.trim() || null,
-					difficulty: document.getElementById("so-difficulty").value || null,
-					date: document.getElementById("so-date").value
-						? new Date(document.getElementById("so-date").value)
-						: null,
-					sendType: document.getElementById("so-sendtype").value,
-					routeType: routeTypeVal,
-					rating: currentStarRating,
-					reportedRating:
-						centralID && currentStarRating > 0 ? currentStarRating : 0,
-					noteText: document.getElementById("so-notes").value.trim() || null,
-					centralRouteID: centralID ?? null,
-				});
-
-				// Community rating — new sends (previousRating = 0) handled in block above;
-				// edits use delta logic based on link state. Gym notes never write
-				// to routes/ (ADR 0005).
-				if (recordName && !isGym) {
-					const sameRoute = centralID && centralID === _originalCentralRouteID;
-					const linkCleared = !centralID && Boolean(_originalCentralRouteID);
-					const newLink = Boolean(centralID) && !sameRoute;
-
-					if (sameRoute) {
-						reportRating(centralID, currentStarRating, _previousReportedRating);
-					} else if (linkCleared) {
-						if (_previousReportedRating > 0) {
-							reportRating(_originalCentralRouteID, 0, _previousReportedRating);
-						}
-					} else if (newLink) {
-						if (_originalCentralRouteID && _previousReportedRating > 0) {
-							reportRating(_originalCentralRouteID, 0, _previousReportedRating);
-						}
-						reportRating(centralID, currentStarRating, 0);
-					}
-				}
-
-				_maybePropagateToRoute(centralID, "so", routeVal, isGym);
-
-				if (centralID) {
-					if (projectRecordName) {
-						// Coming from mark-as-sent: decrement projectCount + increment sendCount atomically
-						completedProject(centralID);
-					} else {
-						incrementSendCount(centralID);
-					}
-				}
-
-				if (projectRecordName) {
-					try {
-						await deleteClimbNote(projectRecordName);
-					} catch (delErr) {
-						console.error("Mark as Sent: project delete failed", delErr);
-						alert(
-							"Send saved, but the original project could not be deleted \u2014 please delete it manually.",
-						);
-					}
-				}
-
-				closeOverlay();
-				await loadData();
-			} catch (err) {
-				console.error("Save send failed:", err);
-				alert("Save failed: " + (err.message ?? err));
-			} finally {
-				btn.disabled = false;
-				btn.textContent = "Save Send";
-			}
-		});
-
-	bindOverlayDeleteHandler({
-		deleteBtnId: "send-overlay-delete",
-		recordFieldId: "so-record-name",
-		routeFieldId: "so-route",
-		label: "Send",
-		closeOverlay,
-	});
-
-	document
-		.getElementById("so-ascent-toggle")
-		.addEventListener("click", function () {
-			const form = document.getElementById("so-ascent-form");
-			const isHidden = form.classList.toggle("hidden");
-			this.textContent = isHidden ? "+ Add" : "\u2715";
-		});
-
-	document
-		.getElementById("so-ascent-add")
-		.addEventListener("click", submitAscentFromOverlay);
-
-	document
-		.getElementById("btn-log-send")
-		.addEventListener("click", showAddSendOverlay);
-	bindStarPicker();
+	syncOverlayCountrySelects();
 }
 
 function bindProjectOverlayHandlers() {
@@ -1895,12 +1128,10 @@ function bindProjectOverlayHandlers() {
 			try {
 				const recordName =
 					document.getElementById("po-record-name").value || undefined;
-				const lastAttemptVal = document.getElementById(
-					"po-last-attempt-date",
-				).value;
+				const lastAttemptVal = document.getElementById("po-last-attempt-date").value;
 				const poDateVal = document.getElementById("po-date").value;
 
-				const centralID = await _maybeCreateCentralRoute("po", routeVal);
+				const centralID = await maybeCreateCentralRoute("po", routeVal);
 
 				await saveClimbNote({
 					recordName,
@@ -1912,11 +1143,9 @@ function bindProjectOverlayHandlers() {
 					sendType: "Project",
 					date: poDateVal ? new Date(poDateVal) : null,
 					routeType: document.getElementById("po-routetype").value,
-					attemptCount:
-						Number(document.getElementById("po-attempts").value) || 0,
+					attemptCount: Number(document.getElementById("po-attempts").value) || 0,
 					lastAttemptDate: lastAttemptVal ? new Date(lastAttemptVal) : null,
-					highPoint:
-						document.getElementById("po-highpoint").value.trim() || null,
+					highPoint: document.getElementById("po-highpoint").value.trim() || null,
 					projectStatus: document.getElementById("po-status").value,
 					noteText: document.getElementById("po-notes").value.trim() || null,
 					centralRouteID: centralID ?? null,
@@ -1925,11 +1154,14 @@ function bindProjectOverlayHandlers() {
 
 				// Community rating — retract if a previously linked send had reported a rating
 				// (can happen when converting a send to a project via edit)
-				if (_previousReportedRating > 0 && _originalCentralRouteID) {
-					reportRating(_originalCentralRouteID, 0, _previousReportedRating);
+				if (
+					overlayState.previousReportedRating > 0
+					&& overlayState.originalCentralRouteID
+				) {
+					reportRating(overlayState.originalCentralRouteID, 0, overlayState.previousReportedRating);
 				}
 
-				_maybePropagateToRoute(centralID, "po", routeVal);
+				maybePropagateToRoute(centralID, "po", routeVal);
 
 				if (centralID) {
 					const isNew = !recordName;
@@ -1964,8 +1196,8 @@ function bindProjectOverlayHandlers() {
 		.getElementById("po-mark-sent")
 		.addEventListener("click", function () {
 			const projectRecordName = document.getElementById("po-record-name").value;
-			const savedCentralRouteID = _centralRouteID; // capture before closeOverlay() resets it
-			const savedCentralRouteCreatedBy = _centralRouteCreatedBy;
+			const savedCentralRouteID = overlayState.centralRouteID; // capture before closeOverlay() resets it
+			const savedCentralRouteCreatedBy = overlayState.centralRouteCreatedBy;
 			const prefill = {
 				route: document.getElementById("po-route").value,
 				climbingArea: document.getElementById("po-area").value,
@@ -1983,43 +1215,5 @@ function bindProjectOverlayHandlers() {
 	document
 		.getElementById("btn-add-project")
 		.addEventListener("click", showAddProjectOverlay);
-}
-
-// ---------- Ascent list ----------
-
-async function renderAscentsList(climb) {
-	const container = document.getElementById("so-ascents-list");
-	// Always fresh: the overlay should reflect ascents added elsewhere (e.g.
-	// in the iOS app) since the last open.
-	const ascents = await fetchAscents(climb.recordName);
-	container.innerHTML = ascents
-		.map((a) => {
-			const d = a.date
-				? new Date(a.date).toLocaleDateString("en-US", {
-						month: "short",
-						day: "numeric",
-						year: "numeric",
-					})
-				: "\u2014";
-			return `<div class="ascent-row">
-      <span class="ascent-date">${d}</span>
-      <span class="ascent-type">${escapeHtml(a.sendType ?? "Redpoint")}</span>
-      ${a.notes ? `<span class="ascent-notes">${escapeHtml(a.notes)}</span>` : '<span class="ascent-notes"></span>'}
-      <button class="ascent-delete" data-record="${escapeHtml(a.recordName)}" title="Delete ascent">✕</button>
-    </div>`;
-		})
-		.join("");
-
-	container.querySelectorAll(".ascent-delete").forEach((btn) => {
-		btn.addEventListener("click", async () => {
-			const confirmed = await showConfirmDialog(
-				"Delete Ascent?",
-				"This ascent record will be removed.",
-			);
-			if (!confirmed) return;
-			await deleteAscent(btn.dataset.record);
-			await renderAscentsList(climb);
-		});
-	});
 }
 

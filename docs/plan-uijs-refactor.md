@@ -3,6 +3,10 @@
 **Status:** open · **Baseline:** ui.js Code Health 5.3 (2026-11-11), 2352 lines, 106 functions.
 
 **Progress:** Chunk 1 ✅ done (ui.js Code Health 5.3 → 5.9, `training-ui.js` 10.0).
+Chunk 2 ✅ done 2026-11-11 (ui.js 5.9 → 7.78 — goal ≥ 7.0 reached early;
+`overlay-common.js` 10, `send-overlay-ui.js` 10, `send-form-model.js` 10;
+`bindSendOverlayHandlers` cc=30 gone from ui.js, worst remaining method is
+now `bindProjectOverlayHandlers` cc=18 → Chunk 3).
 
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
@@ -41,9 +45,31 @@ test are fixed and documented in `plan-new-ui-gui-followups.md`
 - Removes: `bindTrainingOverlayHandlers` cc=13, `renderTrainingPage` cc=13,
   `showTrainingView` cc=10 from ui.js.
 
-## Chunk 2 — Send overlay module (`send-overlay-ui.js`)
+## Chunk 2 — Send overlay module (`send-overlay-ui.js`) ✅
 
-Biggest win: `bindSendOverlayHandlers` (cc=30, 122 LoC, 4 bumps) is the worst
+**Done 2026-11-11 (mock-mode smoke test verified by user, incl. follow-up
+fixes: mock projectStatus → canonical values + defensive normalize,
+"Find in Community DB" hidden while the soft link is active):** Three-way split, dependencies one-way (no circular
+imports):
+- `overlay-common.js` — shared overlay plumbing: `overlayState` (central-route
+  soft-link state shared by Send + Project overlays), `bindOverlayCommon`,
+  `bindOverlayDeleteHandler`, `buildRouteSearchOverlay`,
+  `fetchRouteOwnershipThenSync`, `maybeCreateCentralRoute`,
+  `maybePropagateToRoute`, `setDataLoader`/`refreshData` (loadData injected —
+  no ui.js cycle), `setOverlayCommonMockServices`. Code Health 10.
+- `send-overlay-ui.js` — add/edit send overlay, star picker, style-tab /
+  route-type sync, inline ascent form, ascent list. `bindSendOverlayHandlers`
+  split into per-concern binders (`bindSendOverlaySubmit` cc ≈ 4,
+  `bindSendOverlayDelete`, `bindAscentForm`); save flow decomposed into
+  `saveSend` / `applySendRatingReports` / `applySendCounters` /
+  `deleteProjectRecord`. `setSendOverlayMockServices`. Code Health 10.
+- `send-form-model.js` — pure, unit-tested (`tests/send-form-model.test.js`):
+  `stylePillClass`, `buildSendSavePayload`, `sendRatingReportCalls`
+  (community-rating delta logic), `buildAscentInput`. Code Health 10.
+- `ui.js` keeps the project overlay (Chunk 3) wired to `overlayState` + the
+  shared helpers; eslint config gained the three new modules.
+
+Biggest win: `bindSendOverlayHandlers` (cc=30, 122 LoC, 4 bumps) was the worst
 method in the codebase. ~450 lines out of ui.js.
 
 - Move: `showAddSendOverlay`, `showEditSendOverlay`, `bindSendOverlayHandlers`,

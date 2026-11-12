@@ -52,6 +52,9 @@ export default [
       'app/js/ui-theme.js',
       'app/js/climb-inspector-ui.js',
       'app/js/training-ui.js',
+      'app/js/overlay-common.js',
+      'app/js/send-overlay-ui.js',
+      'app/js/send-form-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

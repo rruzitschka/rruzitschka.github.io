@@ -73,6 +73,26 @@ remaining live work is item 6 after each push.
    `renderTrainingDetailHtml` as the card body; keep the session list
    selection driving the pane. Decide modal fallback behaviour for
    narrow screens.
+8. **"Add Attempt" flow in the project overlay (iOS parity, agreed
+   2026-11-11)** — the web project overlay only has the raw Attempts count
+   field. iOS `AttemptLogView.swift` has the real flow: date, duration,
+   was-successful toggle, high point, notes → increments attemptCount,
+   sets lastAttemptDate, prepends "Attempt #N" (+ duration when it was a
+   failed try) to the project notes, sets status `active` if unset, and on
+   success marks the project `completed`, flips sendType to `redpoint`,
+   sets the send date + climbDuration, and bumps the central route's
+   attempt counter (fire-and-forget). Port as a section in the project
+   overlay: pure attempt-entry builder in a form-model module + unit
+   tests, wired like `send-form-model.js`.
+9. **Multi-Pitch UI (web gap, agreed 2026-11-11)** — the web treats
+   Multi-Pitch identically to Sport (rope style tabs, nothing else);
+   selecting it changes nothing. iOS has the richer model
+   (`MultiPitchPlanSection`: pitches + equipment). The CSV export already
+   carries the ClimbNote-level fields (`numberOfPitches`,
+   `approachNotes`, `descentNotes`, `gearNotes`), so the data model
+   partially exists client-side. Plan a proper web UI (pitch list +
+   equipment in the send overlay, inspector display) after Chunk 3 of
+   `plan-uijs-refactor.md` — it touches the same overlay code.
 
 ## Mock parity (fixed 2026-11-11)
 
