@@ -1,6 +1,8 @@
 # Plan — ui.js refactor (Brain Class → focused modules)
 
-**Status:** open · **Baseline:** ui.js Code Health 5.3 (2026-11-11), 2352 lines, 106 functions.
+**Status:** done (Chunks 1–7 complete 2026-11-13) · **Baseline:** ui.js Code
+Health 5.3 (2026-11-11), 2352 lines, 106 functions. **Still pending:** the
+innerHTML-sanitizer sweep below (not part of the refactor chunks).
 
 **Progress:** Chunk 1 ✅ done (ui.js Code Health 5.3 → 5.9, `training-ui.js` 10.0).
 Chunk 2 ✅ done 2026-11-11 (ui.js 5.9 → 7.78 — goal ≥ 7.0 reached early;
@@ -208,14 +210,18 @@ function cc > 9) is fully reached.
   safeguard passed (ui.js verdict "improved": setActiveView cc=11 and
   loadData cc=10 fixed).
 
-## Chunk 7 — Optional: grade picker & shared overlay plumbing
+## Chunk 7 — Optional: grade picker & shared overlay plumbing ✅
 
-- `gradeBadgeClass` (cc=11) → pure helper in `ui-theme.js` (grade-array driven).
-	  *(Partially addressed in Chunk 5: pure + injectable + unit-tested in
-	  `climb-table-ui.js`; a move to `ui-theme.js` remains optional.)*
-- `bindOverlayCommon."input"` complex conditionals (2 expressions) → encapsulate.
-- `bindSendOverlayHandlers`-style bumps: verify no remaining function has > 2
-  nested-conditional bumps (Bumpy Road).
+**Closed 2026-11-13 (verification pass — no code changes needed):**
+- `gradeBadgeClass` — addressed differently in Chunk 5: pure, injectable
+  (`grades` param), unit-tested in `climb-table-ui.js`; single consumer, so a
+  move to `ui-theme.js` would be churn without benefit.
+- `bindOverlayCommon."input"` complex conditionals — already encapsulated:
+  the logic lives in `softLinkShouldBeCleared()` (extracted during Chunks
+  2–3).
+- Bumpy Road check: `code_health_review` across all 12 app modules — every
+  file scores Code Health 10; no function above cc 9, no nested-conditional
+  findings.
 
 ## Pending — innerHTML sanitizer sweep (not urgent, not a realistic risk today)
 

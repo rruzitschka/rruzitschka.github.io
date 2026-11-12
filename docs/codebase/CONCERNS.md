@@ -9,8 +9,8 @@ Known debt and risk areas. Update as items are resolved/discovered.
    `send-overlay-ui.js`, `project-overlay-ui.js`, `overlay-common.js`,
    `account-ui.js`, `climb-table-ui.js`, `view-switcher.js`,
    `send-form-model.js`, `project-form-model.js`; ui.js now 430 lines,
-   Code Health 5.3 → 10, no function cc > 9. Optional Chunk 7 (grade picker
-   polish) and the pending innerHTML-sanitizer sweep remain in the plan.
+   Code Health 5.3 → 10, no function cc > 9. All chunks (1–7) closed;
+   the pending innerHTML-sanitizer sweep remains in the plan.
 2. **Deploy skew between `index.html` and `app/js/*.js`** — GitHub Pages
    caches 10 min; a browser can pair fresh JS with stale HTML (or reverse).
    Overlay sync paths are guarded with optional chaining, but any new
