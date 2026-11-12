@@ -211,9 +211,25 @@ function cc > 9) is fully reached.
 ## Chunk 7 — Optional: grade picker & shared overlay plumbing
 
 - `gradeBadgeClass` (cc=11) → pure helper in `ui-theme.js` (grade-array driven).
+	  *(Partially addressed in Chunk 5: pure + injectable + unit-tested in
+	  `climb-table-ui.js`; a move to `ui-theme.js` remains optional.)*
 - `bindOverlayCommon."input"` complex conditionals (2 expressions) → encapsulate.
 - `bindSendOverlayHandlers`-style bumps: verify no remaining function has > 2
   nested-conditional bumps (Bumpy Road).
+
+## Pending — innerHTML sanitizer sweep (not urgent, not a realistic risk today)
+
+`app/js` has 52 `innerHTML =` assignments across 12 files; all user-data
+interpolations are currently `escapeHtml`-wrapped by convention, so there is
+no known exploitable path — but the protection is one missed wrapper away
+from breaking, and pi-lens (`no-inner-html-js`) flags 4 sites as blocking
+(see account-ui.js, climb-table-ui.js; admin.js etc. flagged too).
+
+Plan: add DOMPurify (import-map CDN entry, same pattern as Firebase/Leaflet),
+wrap as `setInnerHtml(el, html)` in `ui-theme.js`, and sweep all sites —
+including the legacy non-module scripts (`stats.js`, `admin.js`), which need
+a loading path that works without ES-module imports. Est. ~2–3 h as its own
+chunk; verify with the mock-mode smoke test.
 
 **Ordering:** 1 → 2 → 3 → 4 → 5 → 6 → 7. Chunks 1–2 unblock 3; 4–5 are independent
 of 2–3 but sequenced after for review simplicity. Each chunk ends with: commit,
