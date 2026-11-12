@@ -66,13 +66,19 @@ remaining live work is item 6 after each push.
 
 ## Open follow-ups (2026-11-11)
 
-7. **Training details in the sidebar (Route Inspector)** — present the
-   training session detail in the right-hand inspector pane like the Send
-   details, instead of the current overlay modal. Reuse the Route Detail
-   Inspector chrome (`.insp-grid` rows, sections, Edit button) and
-   `renderTrainingDetailHtml` as the card body; keep the session list
-   selection driving the pane. Decide modal fallback behaviour for
-   narrow screens.
+7. **Training details in the sidebar (Route Inspector)** — ✅ done 2026-11-12:
+   `#training-view` now has its own split workspace (`.training-workspace`:
+   session list card + `#training-inspector` aside, same grid/responsive
+   stack-under-980px as the logbook). Session-row click →
+   `selectSessionInInspector(session)` in `training-ui.js` — mirrors
+   `selectClimbInInspector`: `renderTrainingDetailHtml` card body, selected-row
+   highlight (`.session-row.cs-row-selected`), Edit button →
+   `showEditTrainingOverlay`, async attached-sends fetch guarded on
+   `isConnected`. `renderTrainingPage` re-syncs the selection after each
+   render (keep-selected, else first, else empty state);
+   `renderInspectorEmptyHtml` takes an optional message. The detail modal
+   (`showTrainingDetailModal`) was deleted — no modal fallback, the pane
+   stacks below the list on narrow screens.
 8. **"Add Attempt" flow in the project overlay (iOS parity, agreed
    2026-11-11)** — the web project overlay only has the raw Attempts count
    field. iOS `AttemptLogView.swift` has the real flow: date, duration,

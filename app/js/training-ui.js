@@ -1,6 +1,7 @@
-// training-ui.js — Training view: session detail modal, log-session overlay,
-// session list rendering, and period filter. Moved out of ui.js as part of
-// the new-UI refactor (docs/plan-uijs-refactor.md, Chunk 1).
+// training-ui.js — Training view: session detail inspector pane, log-session
+// overlay, session list rendering, and period filter. Moved out of ui.js as
+// part of the new-UI refactor (docs/plan-uijs-refactor.md, Chunk 1); the
+// detail pane follows plan-new-ui-gui-followups.md item 7.
 //
 // ui.js keeps only the view-switch wiring (showTrainingView) and the
 // one-time handler binding (bindTrainingOverlayHandlers).
@@ -17,6 +18,7 @@ import {
 import { fetchSessionSends as $fetchSessionSends } from "./firebase-climbs.js";
 import {
 	renderTrainingDetailHtml,
+	renderInspectorEmptyHtml,
 	buildSessionSendsTableHtml,
 } from "./ui-theme.js";
 import {
@@ -45,7 +47,6 @@ export function setTrainingMockServices(mocks) {
 
 const escapeHtml = (...args) => globalThis.escapeHtml(...args);
 const showConfirmDialog = (...args) => globalThis.showConfirmDialog(...args);
-const hideDetailModal = () => globalThis.hideDetailModal();
 
 // ── Pure helpers ──
 
@@ -137,9 +138,58 @@ export function showTrainingView() {
 	loadTrainingData();
 }
 
-// ── Session detail modal ──
+// ── Session detail inspector pane (same pattern as the Route Inspector) ──
 
-/** Fills the attached-sends section in the open session detail modal with
+let _selectedSessionRecord = null;
+
+function highlightSelectedSession() {
+	const listEl = document.getElementById("training-list");
+	if (!listEl) return;
+	listEl.querySelectorAll(".session-row").forEach((row) => {
+		row.classList.toggle(
+			"cs-row-selected",
+			row.dataset.record === _selectedSessionRecord,
+		);
+	});
+}
+
+/** Select a training session into the right-hand inspector pane and wire its
+ * action buttons. Mirrors selectClimbInInspector for the Training view. */
+export function selectSessionInInspector(session) {
+	const pane = document.getElementById("training-inspector");
+	if (!pane) return;
+
+	if (!session) {
+		_selectedSessionRecord = null;
+		pane.innerHTML = renderInspectorEmptyHtml(
+			"Select a session to inspect details, warm-up routes, and attached sends.",
+		);
+		return;
+	}
+
+	_selectedSessionRecord = session.recordName ?? null;
+	highlightSelectedSession();
+	pane.innerHTML = renderTrainingDetailHtml(session);
+	document
+		.getElementById("training-detail-edit-btn")
+		.addEventListener("click", () => {
+			showEditTrainingOverlay(session);
+		});
+
+	if (session.type === GYM_SESSION_TYPE) {
+		updateSessionSends(session.id);
+	}
+}
+
+/** Keep a valid selection for the currently rendered session list. */
+function syncInspectorForSessions(sessions) {
+	const existing = sessions.find(
+		(s) => s.recordName === _selectedSessionRecord,
+	);
+	selectSessionInInspector(existing ?? sessions[0] ?? null);
+}
+
+/** Fills the attached-sends section in the open session detail pane with
  * the linked climbs. sessionID links are authoritative — any same-day check
  * is iOS-only at attach time. */
 async function updateSessionSends(sessionId) {
@@ -147,7 +197,7 @@ async function updateSessionSends(sessionId) {
 	if (!section?.isConnected) return;
 	try {
 		const sends = await fetchSessionSends(sessionId);
-		if (!section.isConnected) return; // modal closed while fetching
+		if (!section.isConnected) return; // selection changed while fetching
 		section.classList.remove("train-sends-pending");
 		section.innerHTML = sends.length
 			? buildSessionSendsTableHtml(sends)
@@ -155,25 +205,6 @@ async function updateSessionSends(sessionId) {
 	} catch {
 		section.innerHTML = `<div class="insp-empty-row">Attached sends: —</div>`;
 	}
-}
-
-export function showTrainingDetailModal(session) {
-	const overlay = document.getElementById("modal-overlay");
-	const content = document.getElementById("modal-content");
-	content.innerHTML = renderTrainingDetailHtml(session);
-	overlay.style.display = "flex";
-	document.body.style.overflow = "hidden";
-
-	if (session.type === GYM_SESSION_TYPE) {
-		updateSessionSends(session.id);
-	}
-
-	document
-		.getElementById("training-detail-edit-btn")
-		.addEventListener("click", () => {
-			hideDetailModal();
-			showEditTrainingOverlay(session);
-		});
 }
 
 function showAddTrainingOverlay() {
@@ -279,7 +310,7 @@ export function bindTrainingOverlayHandlers() {
 		const row = e.target.closest(".session-row");
 		if (!row) return;
 		const session = getSessionByRecordName(row.dataset.record);
-		if (session) showTrainingDetailModal(session);
+		if (session) selectSessionInInspector(session);
 	});
 }
 
@@ -371,6 +402,7 @@ export function renderTrainingPage(sessions, period) {
 			.map((s) => sessionRowHtml(s))
 			.join("") ||
 		'<p style="color:#94a3b8;font-size:.875rem;padding:.5rem 0">No sessions in this period.</p>';
+	syncInspectorForSessions(filtered);
 }
 
 export function bindPeriodTabs() {

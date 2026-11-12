@@ -101,8 +101,11 @@ export function renderRouteTypeChipsHtml(types, activeType = "") {
  *
  * @returns {string}
  */
-export function renderInspectorEmptyHtml() {
-	return `<div class="insp-empty">Select a climb row to inspect route details, ascents, and coordinates.</div>`;
+export function renderInspectorEmptyHtml(message) {
+	const text = escapeInspectorHtml(
+		message ?? "Select a climb row to inspect route details, ascents, and coordinates.",
+	);
+	return `<div class="insp-empty">${text}</div>`;
 }
 
 function renderInspectorAreaCrag(climb) {
