@@ -14,6 +14,9 @@ gradeBadgeClass 11, showStatsView 10, loadData 10, bindApiKeyHandlers 10).
 Chunk 4 ✅ done 2026-11-13 (ui.js 8.23 → 9.13; `account-ui.js` 10;
 remaining cc>9 in ui.js are exactly the Chunk 5–6 targets:
 gradeBadgeClass 11, bindFilterHandlers.setActiveView 11, loadData 10).
+Chunk 5 ✅ done 2026-11-13 (ui.js 9.13 → 9.41; `climb-table-ui.js` 10;
+remaining cc>9 in ui.js are exactly the Chunk 6 targets:
+bindFilterHandlers.setActiveView 11, loadData 10).
 
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
@@ -152,6 +155,20 @@ method in the codebase. ~450 lines out of ui.js.
 - `formatDate` also feeds `climb-inspector-ui.js` via deps — move it to
   `ui-theme.js` (pure) and pass it down, or keep a shared `format.js`.
 - All pure → direct unit tests (`tests/climb-table-ui.test.js`).
+
+## Chunk 5 — Table & rendering helpers (`climb-table-ui.js`) ✅
+
+**Done 2026-11-13:** ui.js 9.13 → 9.41 (463 lines), `climb-table-ui.js` 10.
+- `climb-table-ui.js` — `renderStatsBar`, `renderClimbsTable` (split into
+  `pageWindow`/`appendRow`), `renderPagination`, `populateFilters`,
+  `showLoading`, `showToast`, `hideDetailModal`, table/pagination state
+  (`resetTablePage` exported for filter changes), route-data maps
+  (`setRouteData`), `setClimbTableMockServices` (getRoute/fetchAscents/
+  fetchPhotos). Pure `gradeBadgeClass` (decomposed to cc ≤ 9, injectable
+  grade arrays) + `formatDate` unit-tested in `tests/climb-table-ui.test.js`.
+  ui.js now injects nothing DOM-related into climb-inspector-ui — the
+  inspectorDeps builder moved with the table.
+- Verified: vitest 212 pass, eslint 0 errors.
 
 ## Chunk 6 — ui.js slim-down & Brain Class resolution
 

@@ -1,10 +1,7 @@
-// ui.js — Dashboard UI rendering and interaction (modular SDK)
+// ui.js — Dashboard data loading and filter/view wiring (modular SDK)
 
-import { auth } from "./firebase-config.js";
 import {
 	fetchClimbs as $fetchClimbs,
-	fetchAscents as $fetchAscents,
-	fetchPhotos as $fetchPhotos,
 	saveClimbNote as $saveClimbNote,
 	fetchAllClimbAscents as $fetchAllClimbAscents,
 	computeStats as $computeStats,
@@ -16,18 +13,15 @@ import {
 } from "./account-ui.js";
 import {
 	checkAdminStatus as $checkAdminStatus,
-	getRoute as $getRoute,
 	reportRating as $reportRating,
 	fetchRouteData as $fetchRouteData,
 } from "./firebase-routes.js";
 import { showAdminView } from "./admin.js";
 import {
-	showEditSendOverlay,
 	bindSendOverlayHandlers,
 	setSendOverlayMockServices,
 } from "./send-overlay-ui.js";
 import {
-	showEditProjectOverlay,
 	bindProjectOverlayHandlers,
 	setProjectOverlayMockServices,
 } from "./project-overlay-ui.js";
@@ -43,27 +37,27 @@ import {
 	setTrainingMockServices,
 } from "./training-ui.js";
 import {
-	syncRouteTypeChipBar,
-	syncTableCardHeader,
-	buildClimbRowCellsHtml,
-	bindClimbRowClick,
-	syncInspectorForPage,
-} from "./climb-inspector-ui.js";
-import { renderStarsHtml } from "./ui-theme.js";
+	renderStatsBar,
+	renderClimbsTable,
+	populateFilters,
+	showLoading,
+	showToast,
+	hideDetailModal,
+	resetTablePage,
+	setRouteData,
+	setClimbTableMockServices,
+} from "./climb-table-ui.js";
 
-// Grades API — provided by grades.js (regular script, always loaded before modules)
-const GRADES = window.GRADES;
+// Grades API lives in grades.js (regular script); grade helpers moved to
+// climb-table-ui.js.
 
 // ── Mutable service references (can be overridden by setMockServices) ──
 let fetchClimbs = $fetchClimbs;
-let fetchAscents = $fetchAscents;
 let fetchAllClimbAscents = $fetchAllClimbAscents;
 let saveClimbNote = $saveClimbNote;
-let fetchPhotos = $fetchPhotos;
 let computeStats = $computeStats;
 let filterClimbs = $filterClimbs;
 let checkAdminStatus = $checkAdminStatus;
-let getRoute = $getRoute;
 let reportRating = $reportRating;
 let fetchRouteData = $fetchRouteData;
 
@@ -71,13 +65,10 @@ let fetchRouteData = $fetchRouteData;
 // setMockServices constant-size when new services are added).
 const SERVICE_MOCK_SETTERS = {
 	fetchClimbs: (fn) => (fetchClimbs = fn),
-	fetchAscents: (fn) => (fetchAscents = fn),
 	fetchAllClimbAscents: (fn) => (fetchAllClimbAscents = fn),
 	saveClimbNote: (fn) => (saveClimbNote = fn),
-	fetchPhotos: (fn) => (fetchPhotos = fn),
 	computeStats: (fn) => (computeStats = fn),
 	filterClimbs: (fn) => (filterClimbs = fn),
-	getRoute: (fn) => (getRoute = fn),
 	fetchRouteData: (fn) => (fetchRouteData = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),
 	reportRating: (fn) => (reportRating = fn),
@@ -95,6 +86,7 @@ export function setMockServices(mocks) {
 	setSendOverlayMockServices(mocks);
 	setProjectOverlayMockServices(mocks);
 	setAccountUIMockServices(mocks);
+	setClimbTableMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 
@@ -102,224 +94,8 @@ export function setMockServices(mocks) {
 
 let _allClimbs = [];
 let _currentRefresh = null;
-let _currentPage = 1;
-let _filteredClimbs = [];
-const ITEMS_PER_PAGE = 20;
 
-let _communityRatings = new Map(); // routeID -> communityRating; fetched once per session
-let _gpsData = new Map(); // routeID -> {latitude, longitude, country}
-let _routeCountries = new Map(); // routeID -> ISO country code (only when set); fetched once per session
 let _routeDataFetched = false; // set when fetchRouteData succeeded; retry on next load otherwise
-/** @type {Map<string, Array>} */
-
-const SEND_CLASSES = {
-	Redpoint: "send-rp",
-	"On Sight": "send-os",
-	"Top Rope": "send-tr",
-	"All Free": "send-af",
-	Project: "send-proj",
-	Pinkpoint: "send-pp",
-};
-
-// "Hard" threshold: top ~25% of each grade system
-// French ≥ 8b+, UIAA ≥ 11+, YDS ≥ 5.14a
-function gradeBadgeClass(difficulty) {
-	if (!difficulty) return "grade-normal";
-	const fr = GRADES?.French ?? [];
-	const uiaa = GRADES?.UIAA ?? [];
-	const yds = GRADES?.YDS ?? [];
-	const frIdx = fr.indexOf(difficulty);
-	const uiaaIdx = uiaa.indexOf(difficulty);
-	const ydsIdx = yds.indexOf(difficulty);
-	if (frIdx !== -1)
-		return frIdx >= fr.indexOf("8b+") ? "grade-hard" : "grade-normal";
-	if (uiaaIdx !== -1)
-		return uiaaIdx >= uiaa.indexOf("11+") ? "grade-hard" : "grade-normal";
-	if (ydsIdx !== -1)
-		return ydsIdx >= yds.indexOf("5.14a") ? "grade-hard" : "grade-normal";
-	return "grade-normal";
-}
-
-function formatDate(date) {
-	if (!date) return "—";
-	return date.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
-}
-
-// ---------- Stats Bar ----------
-
-function renderStatsBar(stats) {
-	document.getElementById("stat-total").textContent = stats.total ?? "—";
-	document.getElementById("stat-this-year").textContent = stats.thisYear ?? "—";
-	document.getElementById("stat-streak").textContent = stats.streak ?? "0";
-	document.getElementById("stat-hardest").textContent =
-		stats.hardestThisYear || "—";
-}
-
-// ---------- Climbs Table ----------
-
-function renderClimbsTable(climbs) {
-	_filteredClimbs = climbs || [];
-	const tbody = document.getElementById("climbs-tbody");
-	const table = document.getElementById("climbs-table");
-	const empty = document.getElementById("empty-state");
-	const inspectorDeps = {
-		gpsData: _gpsData,
-		routeCountries: _routeCountries,
-		communityRatings: _communityRatings,
-		sendClasses: SEND_CLASSES,
-		formatDate,
-		currentUID: () => auth.currentUser?.uid ?? null,
-		getRoute,
-		fetchAscents,
-		fetchPhotos,
-		showEditSendOverlay,
-		showEditProjectOverlay,
-	};
-
-	tbody.innerHTML = "";
-
-	if (_filteredClimbs.length === 0) {
-		table.style.display = "none";
-		empty.style.display = "block";
-		renderPagination(0, 0);
-		syncTableCardHeader(0, 0, 0);
-		syncInspectorForPage([], inspectorDeps);
-		return;
-	}
-
-	table.style.display = "";
-	empty.style.display = "none";
-
-	const totalPages = Math.ceil(_filteredClimbs.length / ITEMS_PER_PAGE);
-	if (_currentPage > totalPages) _currentPage = totalPages;
-	const start = (_currentPage - 1) * ITEMS_PER_PAGE;
-	const pageClimbs = _filteredClimbs.slice(start, start + ITEMS_PER_PAGE);
-
-	for (const climb of pageClimbs) {
-		const rowMeta = {
-			gradeClass: gradeBadgeClass(climb.difficulty),
-			sendClass: SEND_CLASSES[climb.sendType] ?? "send-proj",
-			dateText: formatDate(climb.date),
-			starsHtml: renderStarsHtml(climb.rating),
-		};
-		const tr = document.createElement("tr");
-		tr.style.cursor = "pointer";
-		tr.innerHTML = buildClimbRowCellsHtml(climb, rowMeta, inspectorDeps);
-		bindClimbRowClick(tr, climb, inspectorDeps);
-		tbody.appendChild(tr);
-	}
-
-	renderPagination(_filteredClimbs.length, totalPages);
-	syncTableCardHeader(_filteredClimbs.length, start, pageClimbs.length);
-	syncInspectorForPage(pageClimbs, inspectorDeps);
-}
-
-function renderPagination(total, totalPages) {
-	const bar = document.getElementById("pagination-bar");
-	if (!bar) return;
-	if (totalPages <= 1) {
-		bar.classList.add("hidden");
-		return;
-	}
-	bar.classList.remove("hidden");
-	bar.innerHTML = `
-    <button class="page-btn" id="page-prev" ${_currentPage <= 1 ? "disabled" : ""}>&#8249; Prev</button>
-    <span class="page-info">Page ${_currentPage} of ${totalPages} <span class="page-count">(${total} climbs)</span></span>
-    <button class="page-btn" id="page-next" ${_currentPage >= totalPages ? "disabled" : ""}>Next &#8250;</button>
-  `;
-	document.getElementById("page-prev").addEventListener("click", () => {
-		if (_currentPage > 1) {
-			_currentPage--;
-			renderClimbsTable(_filteredClimbs);
-		}
-	});
-	document.getElementById("page-next").addEventListener("click", () => {
-		if (_currentPage < totalPages) {
-			_currentPage++;
-			renderClimbsTable(_filteredClimbs);
-		}
-	});
-}
-
-// ---------- Detail Modal ----------
-
-function hideDetailModal() {
-	document.getElementById("modal-overlay").style.display = "none";
-	document.body.style.overflow = "";
-}
-
-// ---------- Toast ----------
-
-function showToast(message, type = "info") {
-	const toast = document.getElementById("toast");
-	toast.textContent = message;
-	toast.className = `toast toast-${type}`;
-	setTimeout(() => {
-		toast.className = "toast hidden";
-	}, 3000);
-}
-
-// ---------- Loading skeleton ----------
-
-function showLoading(visible) {
-	const skeleton = document.getElementById("loading-skeleton");
-	const table = document.getElementById("climbs-table");
-	if (visible) {
-		skeleton.style.display = "";
-		table.style.display = "none";
-	} else {
-		skeleton.style.display = "none";
-	}
-}
-
-// ---------- Populate filters ----------
-
-function populateFilters(climbs) {
-	const areaSelect = document.getElementById("filter-area");
-	const yearSelect = document.getElementById("filter-year");
-	const typeSelect = document.getElementById("filter-routetype");
-
-	const areas = [
-		...new Set(climbs.map((c) => c.climbingArea).filter(Boolean)),
-	].sort((a, b) => a.localeCompare(b));
-	const years = [
-		...new Set(climbs.filter((c) => c.date).map((c) => c.date.getFullYear())),
-	].sort((a, b) => b - a);
-	const types = [
-		...new Set(climbs.map((c) => c.routeType).filter(Boolean)),
-	].sort((a, b) => a.localeCompare(b));
-
-	areaSelect.innerHTML = '<option value="">All Areas</option>';
-	for (const area of areas) {
-		const opt = document.createElement("option");
-		opt.value = area;
-		opt.textContent = area;
-		areaSelect.appendChild(opt);
-	}
-
-	yearSelect.innerHTML = '<option value="">All Years</option>';
-	for (const year of years) {
-		const opt = document.createElement("option");
-		opt.value = year;
-		opt.textContent = year;
-		yearSelect.appendChild(opt);
-	}
-
-	if (typeSelect) {
-		typeSelect.innerHTML = '<option value="">All Types</option>';
-		for (const type of types) {
-			const opt = document.createElement("option");
-			opt.value = type;
-			opt.textContent = type;
-			typeSelect.appendChild(opt);
-		}
-	}
-	syncRouteTypeChipBar(types);
-}
 
 // ---------- User chip ----------
 
@@ -352,7 +128,7 @@ function bindFilterHandlers(initialClimbs) {
 	let activeView = "all"; // 'all' | 'projects' | 'sent'
 
 	function refresh() {
-		_currentPage = 1; // reset to first page on any filter/search change
+		resetTablePage(); // reset to first page on any filter/search change
 		const area = document.getElementById("filter-area").value;
 		const year = document.getElementById("filter-year").value;
 		const sendType = document.getElementById("filter-sendtype").value;
@@ -672,9 +448,7 @@ export async function loadData() {
 			fetchRouteData(linkedIDs)
 				.then(({ ratings, gps, countries }) => {
 					_routeDataFetched = true; // failed fetches retry on next list load
-					_communityRatings = ratings;
-					_gpsData = gps;
-					_routeCountries = countries;
+					setRouteData({ ratings, gps, countries });
 					if (_currentRefresh) _currentRefresh();
 				})
 				.catch(() => {});

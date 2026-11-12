@@ -53,6 +53,7 @@ export default [
       'app/js/climb-inspector-ui.js',
       'app/js/training-ui.js',
       'app/js/account-ui.js',
+      'app/js/climb-table-ui.js',
       'app/js/overlay-common.js',
       'app/js/send-overlay-ui.js',
       'app/js/send-form-model.js',
@@ -67,8 +68,7 @@ export default [
     rules: MODULE_RULES,
   },
 
-  // 3. ui.js — ES module that also calls window-global helpers from the
-  //    non-module grades.js script loaded before it as a plain <script> tag.
+  // 3. ui.js — ES module (all helpers now live in focused view modules).
   {
     files: ['app/js/ui.js'],
     languageOptions: {
@@ -76,11 +76,8 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
-        // From grades.js (non-module, window-global via `var`)
-        GRADES:            'readonly',
-        detectGradeSystem: 'readonly',
-        // From ui.js itself (declared as `function escapeHtml` at module scope
-        // and re-used in template literals throughout the same file)
+        // Declared as `function escapeHtml` at module scope and re-used in
+        // template literals throughout the same file
         escapeHtml:        'readonly',
         showToast:         'readonly',
       },

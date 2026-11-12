@@ -63,7 +63,8 @@ on a held-back branch until the release.
 
 | Module | Responsibility |
 | --- | --- |
-| `ui.js` | Main dashboard: climbs table, filters/view-switching, CSV export, detail modal (~690 lines after Chunks 2–4 of `docs/plan-uijs-refactor.md` — Code Health 9.13; remaining cc>9 are Chunk 5–6 targets) |
+| `ui.js` | Dashboard data loading, filter/search wiring, CSV export, community-rating bootstrap (~460 lines after Chunks 2–5 of `docs/plan-uijs-refactor.md` — Code Health 9.41; remaining cc>9 are Chunk 6 targets) |
+| `climb-table-ui.js` | Climbs table: stats bar, table rows, pagination, filter options, grade badge (`gradeBadgeClass`), `formatDate`, toast, loading skeleton, route-data maps (Chunk 5 of the ui.js refactor; pure helpers unit-tested in `tests/climb-table-ui.test.js`) |
 | `account-ui.js` | Account view (user card, grade-system preference, API keys overlay), stats view, logbook view panels, confirm dialog, account deletion (Chunk 4 of the ui.js refactor) |
 | `training-ui.js` | Training view: session list, log/edit overlay, detail modal, period filters (Chunk 1 of the ui.js refactor) |
 | `send-overlay-ui.js` | Send overlay: add/edit send, star picker, style-tab/route-type sync, inline ascent form + ascent list, save flow (Chunk 2) |
