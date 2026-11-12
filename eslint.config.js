@@ -54,6 +54,7 @@ export default [
       'app/js/training-ui.js',
       'app/js/account-ui.js',
       'app/js/climb-table-ui.js',
+      'app/js/view-switcher.js',
       'app/js/overlay-common.js',
       'app/js/send-overlay-ui.js',
       'app/js/send-form-model.js',

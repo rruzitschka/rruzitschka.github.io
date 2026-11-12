@@ -63,8 +63,9 @@ on a held-back branch until the release.
 
 | Module | Responsibility |
 | --- | --- |
-| `ui.js` | Dashboard data loading, filter/search wiring, CSV export, community-rating bootstrap (~460 lines after Chunks 2–5 of `docs/plan-uijs-refactor.md` — Code Health 9.41; remaining cc>9 are Chunk 6 targets) |
+| `ui.js` | Dashboard data loading (`loadData` split into `applyLoadedClimbs`/`scheduleSideLoads`), filter/search wiring, CSV export, community-rating bootstrap (~430 lines after Chunks 2–6 of `docs/plan-uijs-refactor.md` — Code Health 10, no function cc > 9; refactor goal reached) |
 | `climb-table-ui.js` | Climbs table: stats bar, table rows, pagination, filter options, grade badge (`gradeBadgeClass`), `formatDate`, toast, loading skeleton, route-data maps (Chunk 5 of the ui.js refactor; pure helpers unit-tested in `tests/climb-table-ui.test.js`) |
+| `view-switcher.js` | Sidebar All/Projects/Sent view switching: active states, view label, context-aware header action buttons (Chunk 6 of the ui.js refactor) |
 | `account-ui.js` | Account view (user card, grade-system preference, API keys overlay), stats view, logbook view panels, confirm dialog, account deletion (Chunk 4 of the ui.js refactor) |
 | `training-ui.js` | Training view: session list, log/edit overlay, detail modal, period filters (Chunk 1 of the ui.js refactor) |
 | `send-overlay-ui.js` | Send overlay: add/edit send, star picker, style-tab/route-type sync, inline ascent form + ascent list, save flow (Chunk 2) |

@@ -8,9 +8,9 @@ import {
 	filterClimbs as $filterClimbs,
 } from "./firebase-climbs.js";
 import {
-	showLogbookView,
 	setAccountUIMockServices,
 } from "./account-ui.js";
+import { bindViewSwitcher } from "./view-switcher.js";
 import {
 	checkAdminStatus as $checkAdminStatus,
 	reportRating as $reportRating,
@@ -125,9 +125,8 @@ function updateCountBadges(filtered) {
 function bindFilterHandlers(initialClimbs) {
 	_allClimbs = initialClimbs;
 	window.allClimbs = initialClimbs;
-	let activeView = "all"; // 'all' | 'projects' | 'sent'
 
-	function refresh() {
+	function refresh(view = viewSwitcher.getActiveView()) {
 		resetTablePage(); // reset to first page on any filter/search change
 		const area = document.getElementById("filter-area").value;
 		const year = document.getElementById("filter-year").value;
@@ -150,15 +149,17 @@ function bindFilterHandlers(initialClimbs) {
 		updateCountBadges(filtered);
 
 		// Apply sidebar view filter on top
-		if (activeView === "projects")
+		if (view === "projects")
 			filtered = filtered.filter((c) => Boolean(c.isProject));
-		else if (activeView === "sent")
+		else if (view === "sent")
 			filtered = filtered.filter((c) => !c.isProject);
 
 		renderClimbsTable(filtered);
 	}
 
 	_currentRefresh = refresh;
+
+	const viewSwitcher = bindViewSwitcher({ refresh });
 
 	[
 		"filter-area",
@@ -174,59 +175,6 @@ function bindFilterHandlers(initialClimbs) {
 	document.getElementById("search-input").addEventListener("input", () => {
 		clearTimeout(searchTimer);
 		searchTimer = setTimeout(refresh, 300);
-	});
-
-	// Sidebar view links
-	function setActiveView(view) {
-		activeView = view;
-		showLogbookView();
-		document.getElementById("stats-view")?.classList.add("hidden");
-		["view-all", "view-projects", "view-sent"].forEach((id) => {
-			document.getElementById(id)?.classList.remove("active");
-		});
-		// Deactivate training, stats and admin sidebar items
-		document
-			.querySelector('[data-view="training"]')
-			?.classList.remove("active");
-		document.getElementById("view-stats")?.classList.remove("active");
-		document.getElementById("view-admin")?.classList.remove("active");
-		const viewMap = {
-			all: "view-all",
-			projects: "view-projects",
-			sent: "view-sent",
-		};
-		const labelMap = {
-			all: "All Climbs",
-			projects: "Projects",
-			sent: "Sent Climbs",
-		};
-		document.getElementById(viewMap[view])?.classList.add("active");
-		const lbl = document.getElementById("view-label");
-		if (lbl) lbl.textContent = labelMap[view] ?? "All Climbs";
-		// Context-aware action button
-		const logSendBtn = document.getElementById("btn-log-send");
-		const addProjectBtn = document.getElementById("btn-add-project");
-		if (logSendBtn && addProjectBtn) {
-			logSendBtn.classList.toggle(
-				"hidden",
-				view === "projects" || view === "training",
-			);
-			addProjectBtn.classList.toggle("hidden", view !== "projects");
-		}
-		refresh();
-	}
-
-	document.getElementById("view-all")?.addEventListener("click", (e) => {
-		e.preventDefault();
-		setActiveView("all");
-	});
-	document.getElementById("view-projects")?.addEventListener("click", (e) => {
-		e.preventDefault();
-		setActiveView("projects");
-	});
-	document.getElementById("view-sent")?.addEventListener("click", (e) => {
-		e.preventDefault();
-		setActiveView("sent");
 	});
 
 	// Initial badge update
@@ -411,57 +359,72 @@ async function bootstrapCommunityRatings(climbs) {
 
 export async function loadData() {
 	showLoading(true);
+	let climbs;
 	try {
-		const climbs = await fetchClimbs();
+		climbs = await fetchClimbs();
 		await fetchAllClimbAscents(climbs);
-		showLoading(false);
-		_allClimbs = climbs;
-		window.allClimbs = climbs;
-		const stats = computeStats(climbs);
-		renderStatsBar(stats);
-		populateFilters(climbs);
-		if (_currentRefresh) {
-			_currentRefresh();
-		} else {
-			renderClimbsTable(climbs);
-			bindFilterHandlers(climbs);
-		}
-		// Training badge must show the session count on first load, not only
-		// after the Training view is opened (user-reported). Fire-and-forget:
-		// the climbs view renders without waiting for this.
-		loadTrainingData().catch((err) =>
-			console.warn("Training sessions could not be loaded", err),
-		);
-		// Reveal admin sidebar item if current user is an admin
-		checkAdminStatus().then((isAdmin) => {
-			document
-				.getElementById("view-admin")
-				?.classList.toggle("hidden", !isAdmin);
-		});
-
-		// Fetch community ratings once per session and re-render table with them
-		// Mirrors SendLogsView.task { guard communityRatings.isEmpty else { return } } in iOS
-		const linkedIDs = [
-			...new Set(climbs.map((c) => c.centralRouteID).filter(Boolean)),
-		];
-		if (!_routeDataFetched && linkedIDs.length > 0) {
-			fetchRouteData(linkedIDs)
-				.then(({ ratings, gps, countries }) => {
-					_routeDataFetched = true; // failed fetches retry on next list load
-					setRouteData({ ratings, gps, countries });
-					if (_currentRefresh) _currentRefresh();
-				})
-				.catch(() => {});
-		}
-
-		// One-time bootstrap: report ratings for sends linked before this feature existed
-		bootstrapCommunityRatings(climbs).catch((err) =>
-			console.warn("bootstrapCommunityRatings failed:", err),
-		);
 	} catch (err) {
 		showLoading(false);
 		showToast("Failed to load climbs. Please try again.", "error");
 		console.error("Load error:", err);
+		return;
 	}
+	showLoading(false);
+	applyLoadedClimbs(climbs);
+}
+
+/** Render the freshly loaded climbs and schedule the fire-and-forget side loads. */
+function applyLoadedClimbs(climbs) {
+	_allClimbs = climbs;
+	window.allClimbs = climbs;
+	renderStatsBar(computeStats(climbs));
+	populateFilters(climbs);
+	if (_currentRefresh) {
+		_currentRefresh();
+	} else {
+		renderClimbsTable(climbs);
+		bindFilterHandlers(climbs);
+	}
+	scheduleSideLoads(climbs);
+}
+
+function scheduleSideLoads(climbs) {
+	// Training badge must show the session count on first load, not only
+	// after the Training view is opened (user-reported). Fire-and-forget:
+	// the climbs view renders without waiting for this.
+	loadTrainingData().catch((err) =>
+		console.warn("Training sessions could not be loaded", err),
+	);
+	// Reveal admin sidebar item if current user is an admin
+	revealAdminSidebarItem();
+	// Fetch community ratings once per session and re-render table with them
+	// Mirrors SendLogsView.task { guard communityRatings.isEmpty else { return } } in iOS
+	fetchCommunityRouteData(climbs);
+	// One-time bootstrap: report ratings for sends linked before this feature existed
+	bootstrapCommunityRatings(climbs).catch((err) =>
+		console.warn("bootstrapCommunityRatings failed:", err),
+	);
+}
+
+function revealAdminSidebarItem() {
+	checkAdminStatus().then((isAdmin) => {
+		document
+			.getElementById("view-admin")
+			?.classList.toggle("hidden", !isAdmin);
+	});
+}
+
+function fetchCommunityRouteData(climbs) {
+	const linkedIDs = [
+		...new Set(climbs.map((c) => c.centralRouteID).filter(Boolean)),
+	];
+	if (_routeDataFetched || linkedIDs.length === 0) return;
+	fetchRouteData(linkedIDs)
+		.then(({ ratings, gps, countries }) => {
+			_routeDataFetched = true; // failed fetches retry on next list load
+			setRouteData({ ratings, gps, countries });
+			if (_currentRefresh) _currentRefresh();
+		})
+		.catch(() => {});
 }
 

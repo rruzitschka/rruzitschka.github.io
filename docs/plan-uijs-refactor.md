@@ -17,6 +17,9 @@ gradeBadgeClass 11, bindFilterHandlers.setActiveView 11, loadData 10).
 Chunk 5 ✅ done 2026-11-13 (ui.js 9.13 → 9.41; `climb-table-ui.js` 10;
 remaining cc>9 in ui.js are exactly the Chunk 6 targets:
 bindFilterHandlers.setActiveView 11, loadData 10).
+Chunk 6 ✅ done 2026-11-13 (ui.js 9.41 → 10 — **refactor goal reached**:
+green ≥ 7.0 and no function cc > 9; `view-switcher.js` 10; ui.js 430 lines,
+under the Brain Class threshold).
 
 **Goal:** split `ui.js` into focused view modules so Code Health reaches green (≥ 7.0)
 and no single function exceeds cc ≈ 9. Every chunk is independently executable,
@@ -186,6 +189,24 @@ threshold (functions ≈ 40–50).
   if module list changed.
 
 ---
+
+## Chunk 6 — ui.js slim-down & Brain Class resolution ✅
+
+**Done 2026-11-13:** ui.js 9.41 → **10** (430 lines), `view-switcher.js` 10.
+No function in ui.js exceeds cc 9 — the refactor goal (green ≥ 7.0, no
+function cc > 9) is fully reached.
+- `view-switcher.js` — `bindViewSwitcher({ refresh })` extracted from
+  `bindFilterHandlers.setActiveView`: sidebar All/Projects/Sent active
+  states (`setSidebarActiveItem`), view label, context-aware header action
+  buttons (`syncHeaderActionButtons`); returns `getActiveView` so filter
+  refreshes re-apply the current view.
+- `loadData` (was cc=10) split into `loadData` (fetch + error handling) /
+  `applyLoadedClimbs` (render + first-bind) / `scheduleSideLoads` /
+  `revealAdminSidebarItem` / `fetchCommunityRouteData`.
+- `docs/codebase/STRUCTURE.md` updated with the new module rows.
+- Verified: vitest 212 pass, eslint 0 errors, CodeScene pre-commit
+  safeguard passed (ui.js verdict "improved": setActiveView cc=11 and
+  loadData cc=10 fixed).
 
 ## Chunk 7 — Optional: grade picker & shared overlay plumbing
 
