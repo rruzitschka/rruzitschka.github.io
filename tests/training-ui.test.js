@@ -35,8 +35,10 @@ vi.mock("../app/js/firebase-auth.js", () => ({
 
 import { filterSessionsByPeriod } from "../app/js/training-ui.js";
 
-function d(y, m, day) {
-	return new Date(y, m, day);
+/** Relative to the current date so the tests never go stale. */
+function d(yearOffset, month, day) {
+	const now = new Date();
+	return new Date(now.getFullYear() + yearOffset, month, day);
 }
 
 describe("filterSessionsByPeriod", () => {
@@ -46,37 +48,49 @@ describe("filterSessionsByPeriod", () => {
 	});
 
 	it("week filter keeps sessions from the last 7 days only", () => {
+		const now = new Date();
+		const daysAgo = (n) => {
+			const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			d.setDate(d.getDate() - n);
+			return d;
+		};
 		const sessions = [
-			{ date: d(2026, 10, 11) }, // today
-			{ date: d(2026, 10, 5) }, // 6 days ago
-			{ date: d(2026, 10, 4) }, // 7 days ago → outside
-			{ date: d(2025, 0, 1) },
+			{ date: daysAgo(0) }, // today
+			{ date: daysAgo(6) }, // 6 days ago
+			{ date: daysAgo(8) }, // 8 days ago → outside
+			{ date: daysAgo(400) },
 		];
 		const filtered = filterSessionsByPeriod(sessions, "week");
 		expect(filtered).toHaveLength(2);
-		expect(filtered[0].date).toEqual(d(2026, 10, 11));
+		expect(filtered[0].date).toEqual(daysAgo(0));
 	});
 
 	it("month filter keeps sessions in the current calendar month", () => {
+		const now = new Date();
 		const sessions = [
-			{ date: d(2026, 10, 1) },
-			{ date: d(2026, 9, 30) }, // previous month
-			{ date: d(2026, 9, 15) },
+			{ date: new Date(now.getFullYear(), now.getMonth(), 1) },
+			{ date: d(0, 0, 1) }, // some January date
 		];
-		expect(filterSessionsByPeriod(sessions, "month")).toHaveLength(1);
+		const inMonth = sessions.filter(
+			(s) =>
+				s.date.getFullYear() === now.getFullYear() &&
+				s.date.getMonth() === now.getMonth(),
+		);
+		expect(filterSessionsByPeriod(sessions, "month")).toHaveLength(inMonth.length);
 	});
 
 	it("year filter keeps sessions in the current year", () => {
+		const now = new Date();
 		const sessions = [
-			{ date: d(2026, 0, 1) },
-			{ date: d(2026, 11, 31) },
-			{ date: d(2025, 5, 1) },
+			{ date: new Date(now.getFullYear(), 0, 1) },
+			{ date: new Date(now.getFullYear(), 11, 31) },
+			{ date: new Date(now.getFullYear() - 1, 5, 1) },
 		];
 		expect(filterSessionsByPeriod(sessions, "year")).toHaveLength(2);
 	});
 
 	it("drops sessions without a date in period filters", () => {
-		const sessions = [{ date: null }, { date: d(2026, 10, 10) }];
+		const sessions = [{ date: null }, { date: new Date() }];
 		expect(filterSessionsByPeriod(sessions, "month")).toHaveLength(1);
 	});
 

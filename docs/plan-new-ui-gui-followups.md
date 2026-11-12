@@ -64,6 +64,31 @@ remaining live work is item 6 after each push.
    push: verify filters/chips/inspector/edit overlays/Training/Stats/Admin
    with real Firebase data (mock mode already exercises the pane).
 
+## Open follow-ups (2026-11-11)
+
+7. **Training details in the sidebar (Route Inspector)** — present the
+   training session detail in the right-hand inspector pane like the Send
+   details, instead of the current overlay modal. Reuse the Route Detail
+   Inspector chrome (`.insp-grid` rows, sections, Edit button) and
+   `renderTrainingDetailHtml` as the card body; keep the session list
+   selection driving the pane. Decide modal fallback behaviour for
+   narrow screens.
+
+## Mock parity (fixed 2026-11-11)
+
+- `fetchAllClimbAscents` was never mocked — mock mode hit real Firestore
+  in `loadData()` and the logbook stayed empty. Now mocked from the
+  embedded `MOCK_CLIMBS` ascents.
+- `reportRating`/`incrementSendCount`/`incrementProjectCount`/
+  `decrementProjectCount`/`completedProject` were `const` bindings in
+  `ui.js`, so `setMockServices` could never override them. Now `let` +
+  registered in `SERVICE_MOCK_SETTERS`.
+- `training-ui.js` imported `fetchSessionSends` from `firebase-training.js`
+  (it lives in `firebase-climbs.js`) — a hard module-load SyntaxError;
+  fixed. Static import/export check across all `app/js` modules passes.
+- `tests/training-ui.test.js` week/month/year tests were date-sensitive;
+  rewritten relative to the current date.
+
 ## Done in this redesign (for reference)
 
 - Chalk & Sky theme, header w/ login status, v4-style sidebar (flat filter

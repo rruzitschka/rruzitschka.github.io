@@ -11,10 +11,10 @@ import {
 	fetchTrainingSessions as $fetchTrainingSessions,
 	saveTrainingSession as $saveTrainingSession,
 	deleteTrainingSession as $deleteTrainingSession,
-	fetchSessionSends as $fetchSessionSends,
 	computeTrainingStats,
 	TYPE_EMOJI,
 } from "./firebase-training.js";
+import { fetchSessionSends as $fetchSessionSends } from "./firebase-climbs.js";
 import {
 	renderTrainingDetailHtml,
 	buildSessionSendsTableHtml,

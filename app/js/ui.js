@@ -101,11 +101,11 @@ let updateCentralRoute = $updateCentralRoute;
 const shouldClearSoftLink = $shouldClearSoftLink;
 let checkAdminStatus = $checkAdminStatus;
 let getRoute = $getRoute;
-const incrementSendCount = $incrementSendCount;
-const incrementProjectCount = $incrementProjectCount;
-const decrementProjectCount = $decrementProjectCount;
-const completedProject = $completedProject;
-const reportRating = $reportRating;
+let incrementSendCount = $incrementSendCount;
+let incrementProjectCount = $incrementProjectCount;
+let decrementProjectCount = $decrementProjectCount;
+let completedProject = $completedProject;
+let reportRating = $reportRating;
 let fetchRouteData = $fetchRouteData;
 
 // Service name → setter for the mutable bindings above (keeps
@@ -132,6 +132,11 @@ const SERVICE_MOCK_SETTERS = {
 	createCentralRoute: (fn) => (createCentralRoute = fn),
 	updateCentralRoute: (fn) => (updateCentralRoute = fn),
 	checkAdminStatus: (fn) => (checkAdminStatus = fn),
+	incrementSendCount: (fn) => (incrementSendCount = fn),
+	incrementProjectCount: (fn) => (incrementProjectCount = fn),
+	decrementProjectCount: (fn) => (decrementProjectCount = fn),
+	completedProject: (fn) => (completedProject = fn),
+	reportRating: (fn) => (reportRating = fn),
 };
 
 /**

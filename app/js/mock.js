@@ -78,6 +78,13 @@ export async function deleteAscent(recordName) {
   console.log('[Mock] deleted Ascent', recordName);
 }
 
+export async function fetchAllClimbAscents(climbs) {
+  if (!climbs.length) return;
+  for (const climb of climbs) {
+    climb.ascents = await fetchAscents(climb.recordName);
+  }
+}
+
 export async function fetchAscents(noteRecordName) {
   const climb = MOCK_CLIMBS.find((c) => c.recordName === noteRecordName);
   return climb ? [...(climb.ascents ?? [])] : [];
@@ -288,6 +295,7 @@ export function incrementSendCount() {}
 export function incrementProjectCount() {}
 export function decrementProjectCount() {}
 export function completedProject() {}
+export function reportRating() {}
 
 // ── Mock banner ────────────────────────────────────────────────────────────
 
