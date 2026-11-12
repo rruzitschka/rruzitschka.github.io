@@ -75,7 +75,7 @@ export const SEND_CLASSES = {
 // Grades API — provided by grades.js (regular script, always loaded before
 // modules). Injectable for unit tests (no window in node).
 function activeGrades() {
-	return typeof window === "undefined" ? {} : (window.GRADES ?? {});
+	return globalThis.window?.GRADES ?? {};
 }
 
 /** CSS class for the grade badge ("grade-hard" = top ~25% of each system:

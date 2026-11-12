@@ -45,8 +45,8 @@ const renderStatsPage = (...args) => globalThis.renderStatsPage(...args);
 const bindStatsPeriodTabs = (...args) => globalThis.bindStatsPeriodTabs(...args);
 
 // Grades API — provided by grades.js (regular script, always loaded before modules)
-const getPreferredGradeSystem = () => window.getPreferredGradeSystem();
-const setPreferredGradeSystem = (s) => window.setPreferredGradeSystem(s);
+const getPreferredGradeSystem = () => globalThis.getPreferredGradeSystem();
+const setPreferredGradeSystem = (s) => globalThis.setPreferredGradeSystem(s);
 
 // ── View panel helpers ──
 
@@ -194,7 +194,7 @@ async function handleDeleteAccount() {
 	if (!confirmed) return;
 	try {
 		await deleteAccount();
-		window.location.href = "../login.html";
+		globalThis.location.href = "../login.html";
 	} catch (err) {
 		console.error("Delete account failed:", err);
 		showToast("Failed to delete account. Please try again.", "error");
