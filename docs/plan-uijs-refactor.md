@@ -20,12 +20,15 @@ overlays open, save flows work.
 
 Easiest, most self-contained win. ~250 lines out of ui.js.
 
-**Done 2026-11-11:** `training-ui.js` (10.0) with all training view logic,
+**Done 2026-11-11 (incl. mock-mode smoke test, verified by user):**
+`training-ui.js` (Code Health 10) with all training view logic,
 `showTrainingDetailModal`, overlays, `filterSessionsByPeriod` (pure, unit-tested
 in `tests/training-ui.test.js`), `sessionFormPayload` (DOM read helper),
 `setTrainingMockServices` for mock mode. `ui.js` keeps only imports +
 `loadData` wiring. `showStatsView` shares the session cache via
-`ensureTrainingSessionsLoaded()`.
+`ensureTrainingSessionsLoaded()`. Mock parity gaps found during the smoke
+test are fixed and documented in `plan-new-ui-gui-followups.md`
+("Mock parity (fixed 2026-11-11)"); commits `8b52e94` + `c369d0c`.
 
 - Move: `showTrainingView`, `showTrainingDetailModal`, `showAddTrainingOverlay`,
   `showEditTrainingOverlay`, `bindTrainingOverlayHandlers` (cc=13), `loadTrainingData`,
