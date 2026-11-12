@@ -2,11 +2,13 @@
 
 Known debt and risk areas. Update as items are resolved/discovered.
 
-1. **ui.js is a 2600-line monolith** — mean complexity is above the Sonar
-   threshold, several functions exceed complexity limits, ~100 functions in
-   one module. Mitigation pattern established: extract DOM helpers
-   (`route-line-ui.js`, `route-link-ui.js`) and pure rules (`send-style.js`,
-   `route-entries.js`). Continue slicing on every touch, don't big-bang.
+1. **ui.js was a 2600-line monolith** — being sliced down by
+   `docs/plan-uijs-refactor.md` (Chunks 1–2 done 2026-11-11: training UI →
+   `training-ui.js`, send overlay → `send-overlay-ui.js` + `overlay-common.js`
+   + `send-form-model.js`; ui.js ~1230 lines, Code Health 5.3 → 7.78).
+   Remaining: project overlay (Chunk 3, `bindProjectOverlayHandlers` cc=18),
+   account/stats/API-keys (Chunk 4), table helpers (Chunk 5), slim-down
+   (Chunk 6).
 2. **Deploy skew between `index.html` and `app/js/*.js`** — GitHub Pages
    caches 10 min; a browser can pair fresh JS with stale HTML (or reverse).
    Overlay sync paths are guarded with optional chaining, but any new
