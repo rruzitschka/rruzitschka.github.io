@@ -219,6 +219,23 @@ remaining live work is item 6 after each push.
     - Gates: standard sequence; functions/src needs no changes unless
       Storage rules or photo-doc shape change (check Firebase Storage rules
       for web-domain CORS + write access for the web app auth user).
+12. **Route-type chips: order, colors, Gym grouping** — agreed 2026-11-13:
+    the chips confused via alphabetical scatter and the colored dots had no
+    counterpart in the table. ✅ done 2026-11-13: `buildRouteTypeChips` now
+    orders canonically (ROUTE_TYPE_CHIP_ORDER: Sport, Multi-Pitch, Trad,
+    Boulder, Gym — data-driven as before, unknown/legacy types appended
+    alphabetically), merges Gym Boulder into one "Gym" chip, and renders the
+    type color as label **font** (no dot) via `routeTypeColorClass`
+    (rt-text-*, same iOS StatsView palette as the dots, now CSS variables).
+    The table Type column badge gets the same font color
+    (`buildCompactClimbRowCellsHtml`). `filterClimbs` groups Gym + Gym
+    Boulder under the Gym filter via pure `matchesRouteTypeFilter`
+    (extracted for CodeScene complexity). The hidden select's options are
+    derived via `orderRouteTypeFilterValues` (chip-value parity — a
+    Gym-Boulder-only logbook still gets a "Gym" option); Classic mode is
+    unreachable (no theme switch since `4c369d9`), so the select is pure
+    state holder. Active chips switch the colored label to the accent-on
+    foreground (palette colors read poorly on the light accent fill).
 
 ## Mock parity (fixed 2026-11-11)
 

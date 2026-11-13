@@ -7,6 +7,8 @@ import { describe, it, expect } from "vitest";
 import {
 	ROUTE_TYPE_DOT_MAP,
 	routeTypeDotClass,
+	routeTypeColorClass,
+	orderRouteTypeFilterValues,
 	escapeInspectorHtml,
 	buildRouteTypeChips,
 	renderRouteTypeChipsHtml,
@@ -43,21 +45,67 @@ describe("route-type dots & filter chips", () => {
 		expect(Object.keys(ROUTE_TYPE_DOT_MAP)).toHaveLength(6);
 	});
 
-	it("buildRouteTypeChips prepends All Types and marks active chip", () => {
-		const chips = buildRouteTypeChips(["Sport", "", "Boulder"], "Boulder");
+	it("routeTypeColorClass mirrors the dot palette for the font", () => {
+		expect(routeTypeColorClass("Sport")).toBe("rt-text-sport");
+		expect(routeTypeColorClass("Gym Boulder")).toBe("rt-text-gymboulder");
+		expect(routeTypeColorClass("Unknown")).toBe("rt-text-default");
+		expect(routeTypeColorClass(null)).toBe("rt-text-default");
+	});
+
+	it("buildRouteTypeChips prepends All Types, orders canonically, marks active", () => {
+		// input order is data-driven (a Set), display order is canonical:
+		// Sport, Multi-Pitch, Trad, Boulder, Gym — NOT alphabetical
+		const chips = buildRouteTypeChips(
+			["Boulder", "Gym", "Sport", "Multi-Pitch"],
+			"Boulder",
+		);
 		expect(chips).toEqual([
-			{ value: "", label: "All Types", dotClass: null, active: false },
-			{ value: "Sport", label: "Sport", dotClass: "rt-sport", active: false },
-			{ value: "Boulder", label: "Boulder", dotClass: "rt-boulder", active: true },
+			{ value: "", label: "All Types", colorClass: null, active: false },
+			{ value: "Sport", label: "Sport", colorClass: "rt-text-sport", active: false },
+			{ value: "Multi-Pitch", label: "Multi-Pitch", colorClass: "rt-text-multipitch", active: false },
+			{ value: "Boulder", label: "Boulder", colorClass: "rt-text-boulder", active: true },
+			{ value: "Gym", label: "Gym", colorClass: "rt-text-gym", active: false },
 		]);
 		expect(buildRouteTypeChips(null)[0].active).toBe(true);
 	});
 
-	it("renderRouteTypeChipsHtml renders buttons with active state and dot spans", () => {
+	it("buildRouteTypeChips merges Gym Boulder into the Gym chip", () => {
+		const chips = buildRouteTypeChips(["Gym Boulder"], "");
+		expect(chips.map((c) => c.value)).toEqual(["", "Gym"]);
+		expect(chips[1].colorClass).toBe("rt-text-gym");
+	});
+
+	it("merged Gym chip is active for a raw Gym Boulder filter too", () => {
+		const chips = buildRouteTypeChips(["Gym", "Gym Boulder"], "Gym Boulder");
+		expect(chips.find((c) => c.value === "Gym").active).toBe(true);
+		expect(chips.find((c) => c.value === "Sport")?.active ?? false).toBe(false);
+	});
+
+	it("buildRouteTypeChips appends unknown types alphabetically", () => {
+		const chips = buildRouteTypeChips(["Deep Water Solo", "Sport"], "");
+		expect(chips.map((c) => c.value)).toEqual(["", "Sport", "Deep Water Solo"]);
+		expect(chips[2].colorClass).toBe("rt-text-default");
+	});
+
+	it("orderRouteTypeFilterValues feeds the hidden select in chip parity", () => {
+		// logbook with ONLY Gym Boulder climbs: the merged Gym chip's value
+		// must exist as a select option, or clicking it would clear the filter
+		expect(orderRouteTypeFilterValues(["Gym Boulder"])).toEqual(["Gym"]);
+		expect(orderRouteTypeFilterValues(["Gym", "Boulder"])).toEqual([
+			"Boulder",
+			"Gym",
+		]);
+		expect(orderRouteTypeFilterValues([])).toEqual([]);
+		expect(orderRouteTypeFilterValues(null)).toEqual([]);
+	});
+
+	it("renderRouteTypeChipsHtml renders buttons with active state and colored labels", () => {
 		const html = renderRouteTypeChipsHtml(["Sport", "Trad"], "Sport");
 		expect(html).toContain('data-routetype=""');
 		expect(html).toContain('class="rt-chip active" data-routetype="Sport"');
-		expect(html).toContain('class="rt-dot rt-sport"');
+		// font color instead of a dot — same palette as the table Type column
+		expect(html).toContain('<span class="rt-text-sport">Sport</span>');
+		expect(html).not.toContain("rt-dot");
 		expect(html).toContain('data-routetype="Trad"');
 	});
 

@@ -411,7 +411,23 @@ html[data-theme="chalk-sky"] .rt-chip.active {
 	font-weight: 600;
 }
 
-/* iOS route-type dots (StatsView.getRouteTypeColor) */
+/* Active chip: switch the colored label to the accent-on foreground —
+   palette colors like #ff9f0a read poorly on the light accent fill. */
+html[data-theme="chalk-sky"] .rt-chip.active span {
+	color: var(--cs-accent-on);
+}
+
+/* iOS route-type palette (StatsView.getRouteTypeColor) — shared by the
+   dots and the font-color variants (chips, table Type column) */
+:root {
+	--rt-color-sport: #007aff;
+	--rt-color-boulder: #ff9f0a;
+	--rt-color-multipitch: #bf5af2;
+	--rt-color-trad: #34c759;
+	--rt-color-gym: #00c7be;
+	--rt-color-gymboulder: #30d158;
+	--rt-color-default: #8b949e;
+}
 .rt-dot {
 	width: 7px;
 	height: 7px;
@@ -419,13 +435,44 @@ html[data-theme="chalk-sky"] .rt-chip.active {
 	display: inline-block;
 	flex-shrink: 0;
 }
-.rt-sport { background: #007aff; }
-.rt-boulder { background: #ff9f0a; }
-.rt-multipitch { background: #bf5af2; }
-.rt-trad { background: #34c759; }
-.rt-gym { background: #00c7be; }
-.rt-gymboulder { background: #30d158; }
-.rt-default { background: #8b949e; }
+.rt-sport { background: var(--rt-color-sport); }
+.rt-boulder { background: var(--rt-color-boulder); }
+.rt-multipitch { background: var(--rt-color-multipitch); }
+.rt-trad { background: var(--rt-color-trad); }
+.rt-gym { background: var(--rt-color-gym); }
+.rt-gymboulder { background: var(--rt-color-gymboulder); }
+.rt-default { background: var(--rt-color-default); }
+
+/* Font-color variants. The grouped compound selectors keep the color above
+   the theme-scoped .rt-chip / .type-badge base rules (specificity). */
+.rt-text-sport,
+html[data-theme="chalk-sky"] .type-badge.rt-text-sport {
+	color: var(--rt-color-sport);
+}
+.rt-text-boulder,
+html[data-theme="chalk-sky"] .type-badge.rt-text-boulder {
+	color: var(--rt-color-boulder);
+}
+.rt-text-multipitch,
+html[data-theme="chalk-sky"] .type-badge.rt-text-multipitch {
+	color: var(--rt-color-multipitch);
+}
+.rt-text-trad,
+html[data-theme="chalk-sky"] .type-badge.rt-text-trad {
+	color: var(--rt-color-trad);
+}
+.rt-text-gym,
+html[data-theme="chalk-sky"] .type-badge.rt-text-gym {
+	color: var(--rt-color-gym);
+}
+.rt-text-gymboulder,
+html[data-theme="chalk-sky"] .type-badge.rt-text-gymboulder {
+	color: var(--rt-color-gymboulder);
+}
+.rt-text-default,
+html[data-theme="chalk-sky"] .type-badge.rt-text-default {
+	color: var(--rt-color-default);
+}
 
 html[data-theme="chalk-sky"] .btn-action {
 	background: var(--cs-accent);

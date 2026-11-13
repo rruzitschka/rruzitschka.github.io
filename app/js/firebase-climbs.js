@@ -379,6 +379,22 @@ export function computeStats(climbs) {
 	};
 }
 
+/**
+ * Route-type filter match (pure): the Gym filter covers gym routes AND gym
+ * boulders (one chip, iOS gym feature); every other type is a strict match.
+ *
+ * @param {string|undefined} climbRouteType
+ * @param {string|undefined} filter selected route type ("" = no filter)
+ * @returns {boolean}
+ */
+export function matchesRouteTypeFilter(climbRouteType, filter) {
+	if (!filter) return true;
+	if (filter === "Gym") {
+		return climbRouteType === "Gym" || climbRouteType === "Gym Boulder";
+	}
+	return climbRouteType === filter;
+}
+
 export function filterClimbs(
 	climbs,
 	{ area, year, sendType, routeType, search, sort } = {},
@@ -390,7 +406,9 @@ export function filterClimbs(
 			(c) => c.date && c.date.getFullYear() === parseInt(year),
 		);
 	if (sendType) result = result.filter((c) => c.sendType === sendType);
-	if (routeType) result = result.filter((c) => c.routeType === routeType);
+	if (routeType) {
+		result = result.filter((c) => matchesRouteTypeFilter(c.routeType, routeType));
+	}
 	if (search) {
 		const q = search.toLowerCase();
 		result = result.filter(

@@ -27,6 +27,30 @@ export function routeTypeDotClass(routeType) {
 }
 
 /**
+ * CSS class for the route-type font color (same palette as the dots —
+ * used by the filter chips and the table's Type column).
+ *
+ * @param {string|null|undefined} routeType
+ * @returns {string}
+ */
+export function routeTypeColorClass(routeType) {
+	return routeTypeDotClass(routeType).replace("rt-", "rt-text-");
+}
+
+/** Canonical chip display order — NOT alphabetical (the old sort scattered
+ * related types); mirrors the iOS StatsView palette order. Types the user
+ * never logged get no chip (data-driven bar); unknown/legacy types are
+ * appended alphabetically so nothing disappears. */
+const ROUTE_TYPE_CHIP_ORDER = [
+	"Sport",
+	"Multi-Pitch",
+	"Trad",
+	"Boulder",
+	"Gym",
+	"Gym Boulder",
+];
+
+/**
  * Escape HTML special characters for safe template interpolation.
  *
  * @param { unknown } str
@@ -45,11 +69,42 @@ export function escapeInspectorHtml(str) {
 }
 
 /**
+ * Ordered, Gym-merged route-type values for the chip bar and the hidden
+ * filter select (pure): canonical order (ROUTE_TYPE_CHIP_ORDER), Gym Boulder
+ * merged into Gym (the filter side groups them too), unknown/legacy types
+ * appended alphabetically so nothing disappears.
+ *
+ * @param {string[]} types distinct route types present in user's logbook
+ * @returns {string[]}
+ */
+export function orderRouteTypeFilterValues(types) {
+	const present = new Set((types ?? []).filter(Boolean));
+	const ordered = [];
+	for (const t of ROUTE_TYPE_CHIP_ORDER) {
+		if (t === "Gym Boulder") continue; // merged into the Gym chip
+		const show =
+			t === "Gym"
+				? present.has("Gym") || present.has("Gym Boulder")
+				: present.has(t);
+		if (show) ordered.push(t);
+	}
+	const known = new Set(ROUTE_TYPE_CHIP_ORDER);
+	for (const t of [...present]
+		.filter((u) => !known.has(u))
+		.sort((a, b) => a.localeCompare(b))) {
+		ordered.push(t);
+	}
+	return ordered;
+}
+
+/**
  * Build descriptor objects for the iOS-style route-type filter chip bar.
+ * Every type keeps its raw value/label (e.g. "Multi-Pitch"); see
+ * orderRouteTypeFilterValues for the ordering and Gym-merge rules.
  *
  * @param {string[]} types distinct route types present in user's logbook
  * @param {string} [activeType=""] currently active route-type filter
- * @returns {Array<{ value: string, label: string, dotClass: string|null, active: boolean }>}
+ * @returns {Array<{ value: string, label: string, colorClass: string|null, active: boolean }>}
  */
 export function buildRouteTypeChips(types, activeType = "") {
 	const current = activeType ?? "";
@@ -57,24 +112,30 @@ export function buildRouteTypeChips(types, activeType = "") {
 		{
 			value: "",
 			label: "All Types",
-			dotClass: null,
+			colorClass: null,
 			active: current === "",
 		},
 	];
-	for (const t of types ?? []) {
-		if (!t) continue;
+	for (const t of orderRouteTypeFilterValues(types)) {
 		chips.push({
 			value: t,
 			label: t,
-			dotClass: routeTypeDotClass(t),
-			active: current === t,
+			colorClass: routeTypeColorClass(t),
+			// The merged Gym chip also represents a raw legacy "Gym Boulder"
+			// filter value (e.g. a stored filter state from before the merge).
+			active:
+				t === "Gym"
+					? current === "Gym" || current === "Gym Boulder"
+					: current === t,
 		});
 	}
 	return chips;
 }
 
 /**
- * Render HTML for the route-type filter chip bar.
+ * Render HTML for the route-type filter chip bar. The type color lives in
+ * the label font (no dot) — the same color repeats in the table's Type
+ * column, so chips and rows read as one system.
  *
  * @param {string[]} types
  * @param {string} [activeType=""]
@@ -84,12 +145,12 @@ export function renderRouteTypeChipsHtml(types, activeType = "") {
 	return buildRouteTypeChips(types, activeType)
 		.map((chip) => {
 			const activeCls = chip.active ? " active" : "";
-			const dot = chip.dotClass
-				? `<span class="rt-dot ${chip.dotClass}"></span>`
-				: "";
 			const val = escapeInspectorHtml(chip.value);
 			const lbl = escapeInspectorHtml(chip.label);
-			return `<button type="button" class="rt-chip${activeCls}" data-routetype="${val}">${dot}${lbl}</button>`;
+			const color = chip.colorClass
+				? `<span class="${escapeInspectorHtml(chip.colorClass)}">${lbl}</span>`
+				: lbl;
+			return `<button type="button" class="rt-chip${activeCls}" data-routetype="${val}">${color}</button>`;
 		})
 		.join("");
 }
@@ -316,7 +377,7 @@ export function buildCompactClimbRowCellsHtml(climb, rowMeta, deps) {
 	return `
       <td><div class="cs-route-cell" title="${routeName}"><strong>${routeName}</strong>${indicators}</div></td>
       <td title="${escapeInspectorHtml(areaCragText)}">${renderAreaCragCell(climb)}</td>
-      <td><span class="type-badge">${escapeInspectorHtml(climb.routeType || "—")}</span></td>
+      <td><span class="type-badge ${escapeInspectorHtml(routeTypeColorClass(climb.routeType))}">${escapeInspectorHtml(climb.routeType || "—")}</span></td>
       <td><span class="badge ${escapeInspectorHtml(rowMeta.gradeClass)}">${grade}</span></td>
       <td class="cs-date-cell" title="${fullDate}">${dateText}</td>
       <td><span class="badge ${escapeInspectorHtml(rowMeta.sendClass)} cs-style-badge" title="${fullStyle}">${abbr}</span></td>

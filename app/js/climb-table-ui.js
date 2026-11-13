@@ -24,7 +24,7 @@ import {
 	bindClimbRowClick,
 	syncInspectorForPage,
 } from "./climb-inspector-ui.js";
-import { renderStarsHtml } from "./ui-theme.js";
+import { orderRouteTypeFilterValues, renderStarsHtml } from "./ui-theme.js";
 
 // ── Mutable service references (can be overridden by setClimbTableMockServices) ──
 
@@ -282,11 +282,15 @@ export function populateFilters(climbs) {
 	}
 
 	if (typeSelect) {
+		// Chip-value parity: the select must offer exactly the chip values, or
+		// clicking a chip could target a missing option and silently clear the
+		// filter (e.g. a logbook with only "Gym Boulder" climbs → merged "Gym"
+		// chip, no raw "Gym" option). Same order/merge as the chip bar.
 		typeSelect.innerHTML = '<option value="">All Types</option>';
-		for (const type of types) {
+		for (const value of orderRouteTypeFilterValues(types)) {
 			const opt = document.createElement("option");
-			opt.value = type;
-			opt.textContent = type;
+			opt.value = value;
+			opt.textContent = value;
 			typeSelect.appendChild(opt);
 		}
 	}
