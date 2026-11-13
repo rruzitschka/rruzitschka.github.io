@@ -2,6 +2,8 @@
 // Usage: imported dynamically by the init script when ?mock=true
 // All exported functions match the signatures of the real firebase-* modules.
 
+import { normalizeSendType } from './send-style.js';
+
 // ── Mock user ──────────────────────────────────────────────────────────────
 
 const MOCK_USER = {
@@ -39,7 +41,13 @@ export function deleteAccount() {
 export async function fetchClimbs() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('empty') === '1') return [];
-  return [...MOCK_CLIMBS];
+  // Read normalization parity with firebase-climbs.fetchClimbs: Firestore
+  // (and the mock store) hold the lowercase canonical send type; the UI
+  // expects Title Case ("redpoint" → "Redpoint" → "RP" badge).
+  return MOCK_CLIMBS.map((c) => {
+    const sendType = normalizeSendType(c.sendType);
+    return { ...c, sendType, isProject: sendType === 'Project' };
+  });
 }
 
 /** Merge-style semantics like the real buildClimbNoteDoc: keys not part of
@@ -312,10 +320,13 @@ export function reportRating() { /* no-op: mock climbs carry their rating on the
 
 // ── Mock banner ────────────────────────────────────────────────────────────
 
-const banner = document.createElement('div');
-banner.textContent = '🧪 Mock Mode — test data only';
-banner.style.cssText = 'background:#f97316;color:white;text-align:center;padding:6px;font-weight:600;font-size:0.85rem;position:relative;z-index:9999;';
-document.body.prepend(banner);
+// Guarded so the module can load in non-DOM environments (unit tests).
+if (typeof document !== 'undefined') {
+  const banner = document.createElement('div');
+  banner.textContent = '🧪 Mock Mode — test data only';
+  banner.style.cssText = 'background:#f97316;color:white;text-align:center;padding:6px;font-weight:600;font-size:0.85rem;position:relative;z-index:9999;';
+  document.body.prepend(banner);
+}
 
 // =============================================================================
 // Mock data
