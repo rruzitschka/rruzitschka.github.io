@@ -29,8 +29,8 @@ export function fitScale(width, height) {
  * the same image is added to several notes.
  */
 export function buildPhotoFileName(noteId, uuid = crypto.randomUUID()) {
-	const safeNote = String(noteId || "").replace(/[^A-Za-z0-9_-]/g, "") || "photo";
-	return `${safeNote}_${String(uuid).replace(/[^A-Za-z0-9-]/g, "")}.jpg`;
+	const safeNote = String(noteId || "").replaceAll(/[^A-Za-z0-9_-]/g, "") || "photo";
+	return `${safeNote}_${String(uuid).replaceAll(/[^A-Za-z0-9-]/g, "")}.jpg`;
 }
 
 /** Storage object path — must match the iOS FirebasePhotoUploader layout. */
