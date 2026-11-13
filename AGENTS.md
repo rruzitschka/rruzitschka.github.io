@@ -18,6 +18,21 @@ After changing code, run `code_health_review` on the changed files. If Code Heal
 6. **Reviewer subagent on the staged diff** — dispatch the `reviewer` agent
    (pi subagent extension, GPT-6 Luna high thinking) via
    `git diff --staged`; fix all Critical findings before committing.
+
+   Reviewer quirks (learned 2026-11-13):
+   - **cwd quirk:** the pi subagent tool rejects `cwd` together with a task
+     ("Provide exactly one mode"), so the reviewer always runs in the *other*
+     repo's cwd and sees no staged diff → it stops with "Nothing is staged".
+     **Workaround:** write the diff to a file and point the task at it:
+     `git diff --staged > /tmp/review-staged.diff`, then dispatch with a task
+     starting "do NOT run any git commands — the ONLY input is
+     /tmp/review-staged.diff; read it with the read tool".
+   - **Repeat findings:** the reviewer starts each pass from zero and
+     re-raises findings that were already declined. Preface the task with the
+     declined findings **and their justification** (with file/line evidence).
+   - **Fix rounds:** for data-integrity-heavy changes, re-dispatch to verify
+     fixes; for trivial diffs, do one full review and verify fixes locally
+     instead of re-dispatching per round (saves cycle time and tokens).
 7. Mock-mode smoke: `node serve.cjs` → `http://localhost:8080/app/?mock=true`
    — views open, overlays open, save flows work. Have the user verify.
 8. Commit (one commit per chunk), then request push approval.
