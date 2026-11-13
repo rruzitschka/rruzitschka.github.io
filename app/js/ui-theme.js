@@ -116,6 +116,14 @@ export function formatDateInput(date = new Date()) {
  * local midnight of the intended (UTC calendar) date so hydration doesn't
  * shift the day in non-UTC timezones. New local-midnight records are
  * untouched. */
+/** Pitch count tolerance: "" / garbage → 0, clamped to 0–99 (iOS Stepper
+ * limit from MultiPitchPlanFormFields). */
+export function coercePitchCount(raw) {
+	const n = Number(raw);
+	if (Number.isNaN(n)) return 0;
+	return Math.min(99, Math.max(0, Math.floor(n)));
+}
+
 export function normalizeLegacyUtcMidnight(date) {
 	if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
 	// Exact UTC midnight ⇔ the epoch milliseconds are a whole number of days.
@@ -463,6 +471,40 @@ export function renderInspectorPhotosHtml(photos) {
  * }} [meta]
  * @returns {string}
  */
+/**
+ * Multi-Pitch Plan section for the Route Inspector (iOS parity with
+ * MultiPitchPlanSection.planDetailsCard): Pitches / Approach / Descent /
+ * Gear. Renders nothing unless the climb is Multi-Pitch with plan data —
+ * like iOS's hasPlanDetails.
+ *
+ * @param {object|null|undefined} climb
+ * @returns {string} HTML ("" when not applicable)
+ */
+export function renderMultiPitchPlanHtml(climb) {
+	if (!climb || climb.routeType !== "Multi-Pitch") return "";
+	const pitches = Number(climb.numberOfPitches) || 0;
+	const noteRows = [
+		["Approach", climb.approachNotes],
+		["Descent", climb.descentNotes],
+		["Gear", climb.gearNotes],
+	]
+		.filter(([, text]) => Boolean(text))
+		.map(
+			([label, text]) =>
+				`<div class="insp-sec"><span>${escapeInspectorHtml(label)}</span></div>` +
+				`<div class="insp-note-body">${escapeInspectorHtml(text)}</div>`,
+		)
+		.join("");
+	if (pitches <= 0 && !noteRows) return "";
+	const header =
+		`<div class="insp-sec"><span>Multi-Pitch Plan</span>` +
+		(pitches > 0
+			? `<span>${pitches} pitch${pitches === 1 ? "" : "es"}</span>`
+			: "") +
+		`</div>`;
+	return header + noteRows;
+}
+
 export function renderInspectorHtml(climb, meta = {}) {
 	if (!climb) return renderInspectorEmptyHtml();
 
@@ -512,6 +554,7 @@ export function renderInspectorHtml(climb, meta = {}) {
 			</div>
 		</div>
 		${renderInspectorProjectSection(climb)}
+		${renderMultiPitchPlanHtml(climb)}
 		<div id="inspector-ascents-container"></div>
 		<div id="inspector-gps-container"><div class="insp-sec insp-coords-row"><span>Coordinates</span><span class="insp-coords-pending">—</span></div></div>
 		<div id="inspector-photos-container"></div>

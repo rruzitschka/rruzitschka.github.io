@@ -6,7 +6,7 @@
 
 "use strict";
 
-import { parseLocalDate } from "./ui-theme.js";
+import { parseLocalDate, coercePitchCount } from "./ui-theme.js";
 
 /** Trim and collapse an optional string to null when empty. */
 export function emptyToNull(value) {
@@ -19,6 +19,9 @@ export function coerceAttemptCount(raw) {
 	if (Number.isNaN(n)) return 0;
 	return n < 0 ? 0 : Math.floor(n);
 }
+
+/** Pitch count tolerance lives in ui-theme.js (coercePitchCount) — shared
+ * with send-form-model.js and the attempt flow. */
 
 /**
  * Project dates must not be inverted: the last attempt cannot be before
@@ -57,6 +60,21 @@ export function buildProjectSavePayload(fields) {
 		attemptCount: coerceAttemptCount(fields.attempts),
 		lastAttemptDate: parseLocalDate(fields.lastAttemptDate),
 		highPoint: emptyToNull(fields.highPoint),
+		// undefined → not written → a merge save keeps the stored value (the
+		// caller omits the plan fields for non-Multi-Pitch types; iOS keeps
+		// the plan data when the type flips back and forth).
+		numberOfPitches:
+			fields.pitches === undefined ? undefined : coercePitchCount(fields.pitches),
+		approachNotes:
+			fields.approachNotes === undefined
+				? undefined
+				: emptyToNull(fields.approachNotes),
+		descentNotes:
+			fields.descentNotes === undefined
+				? undefined
+				: emptyToNull(fields.descentNotes),
+		gearNotes:
+			fields.gearNotes === undefined ? undefined : emptyToNull(fields.gearNotes),
 		projectStatus: fields.projectStatus,
 		noteText: emptyToNull(fields.noteText),
 		centralRouteID: centralRouteID ?? null,

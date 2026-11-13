@@ -103,15 +103,20 @@ remaining live work is item 6 after each push.
    flow. Known limitation (pre-existing, shared with Save Project): clearing
    a central-route link cannot clear the stored `centralRouteID` via
    merge-save.
-9. **Multi-Pitch UI (web gap, agreed 2026-11-11)** — the web treats
-   Multi-Pitch identically to Sport (rope style tabs, nothing else);
-   selecting it changes nothing. iOS has the richer model
-   (`MultiPitchPlanSection`: pitches + equipment). The CSV export already
-   carries the ClimbNote-level fields (`numberOfPitches`,
-   `approachNotes`, `descentNotes`, `gearNotes`), so the data model
-   partially exists client-side. Plan a proper web UI (pitch list +
-   equipment in the send overlay, inspector display) after Chunk 3 of
-   `plan-uijs-refactor.md` — it touches the same overlay code.
+9. **Multi-Pitch UI (web gap, agreed 2026-11-11)** — ✅ done 2026-11-12:
+   "Multi-Pitch Plan" section (Pitches 0–99, Approach, Descent, Gear) in
+   the send and project overlays, **visible only when Type = Multi-Pitch**
+   (iOS parity), and a pure `renderMultiPitchPlanHtml` inspector section
+   (rendered only for Multi-Pitch with plan data — `hasPlanDetails` parity).
+   `firebase-climbs.js` now fetches/writes the plan fields (the CSV export
+   previously exported blanks); merge semantics distinguish `undefined`
+   (not part of the save → merge-preserved, e.g. Sport↔Multi-Pitch flips
+   keep plan data like iOS) from `null` (explicit clear). Shared helpers in
+   `ui-theme.js` (`coercePitchCount`) and `overlay-common.js`
+   (`syncMultiPitchSection`, `fill/resetMultiPitchFields`,
+   `multiPitchFieldsFromOverlay`). Out of scope (iOS-only): Navigate-to-Start
+   (inspector already has Coordinates) and topo photos (web RoutePhoto has
+   no isTopo flag).
 
 ## Mock parity (fixed 2026-11-11)
 

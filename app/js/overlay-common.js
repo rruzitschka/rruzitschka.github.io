@@ -91,6 +91,61 @@ export const overlayState = {
 };
 
 /** Reset all shared overlay state (used by closeOverlay). */
+// ── Multi-Pitch plan fields (shared by Send + Project overlays) ──────────
+/** Toggle a Multi-Pitch plan section by the route-type select value. */
+export function syncMultiPitchSection(routetypeEl, sectionId) {
+	const section = document.getElementById(sectionId);
+	if (!section) return;
+	section.classList.toggle(
+		"hidden",
+		routetypeEl?.value !== "Multi-Pitch",
+	);
+}
+
+
+/** Multi-Pitch plan fields from the overlay — {} for other route types
+ * (undefined fields are merge-preserved, matching iOS plan-data retention). */
+export function multiPitchFieldsFromOverlay(routetypeEl, base) {
+	if (routetypeEl?.value !== "Multi-Pitch") return {};
+	// Optional chaining for deploy skew (cached old index.html + fresh JS):
+	// a missing input yields undefined → merge-preserved, not lost.
+	return {
+		pitches: document.getElementById(`${base}-pitches`)?.value,
+		approachNotes: document.getElementById(`${base}-approach`)?.value,
+		descentNotes: document.getElementById(`${base}-descent`)?.value,
+		gearNotes: document.getElementById(`${base}-gear`)?.value,
+	};
+}
+
+/** Reset the Multi-Pitch plan inputs (iOS MultiPitchPlanFormFields defaults:
+ * 0 pitches, empty notes). pitchesId is the first field's id; the others are
+ * derived by the -approach/-descent/-gear suffixes. */
+export function resetMultiPitchFields(pitchesId) {
+	const base = pitchesId.replace(/-pitches$/, "");
+	const el = document.getElementById(pitchesId);
+	if (el) el.value = "0";
+	for (const suffix of ["approach", "descent", "gear"]) {
+		const f = document.getElementById(`${base}-${suffix}`);
+		if (f) f.value = "";
+	}
+}
+
+/** Fill the Multi-Pitch plan inputs from a climb (number null → 0). */
+export function fillMultiPitchFields(climb, pitchesId) {
+	const base = pitchesId.replace(/-pitches$/, "");
+	const el = document.getElementById(pitchesId);
+	if (el) el.value = String(climb?.numberOfPitches ?? 0);
+	const fields = {
+		approach: climb?.approachNotes ?? "",
+		descent: climb?.descentNotes ?? "",
+		gear: climb?.gearNotes ?? "",
+	};
+	for (const [suffix, value] of Object.entries(fields)) {
+		const f = document.getElementById(`${base}-${suffix}`);
+		if (f) f.value = value;
+	}
+}
+
 export function resetOverlayState() {
 	overlayState.centralRouteID = null;
 	overlayState.centralRouteName = "";

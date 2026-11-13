@@ -84,6 +84,10 @@ export async function fetchClimbs() {
 				projectNotes: d.projectNotes ?? null,
 				highPoint: d.highPoint ?? null,
 				climbDuration: d.climbDuration ?? 0,
+				numberOfPitches: d.numberOfPitches ?? 0,
+				approachNotes: d.approachNotes ?? null,
+				descentNotes: d.descentNotes ?? null,
+				gearNotes: d.gearNotes ?? null,
 				centralRouteID: d.centralRouteID ?? null,
 				reportedRating: d.reportedRating ?? 0,
 				ascents: [], // loaded lazily via fetchAscents() when detail modal opens
@@ -211,6 +215,35 @@ function buildClimbNoteDoc(id, note) {
 	return docData;
 }
 
+/** Project/planning fields — written only when set, so a merge-style save
+ * keeps the stored value otherwise. */
+function applyProjectNoteFields(docData, note) {
+	if (note.projectStatus)
+		docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
+	if (note.projectNotes) docData.projectNotes = note.projectNotes;
+	if (note.highPoint) docData.highPoint = note.highPoint;
+	if (note.climbDuration != null) docData.climbDuration = note.climbDuration;
+	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
+}
+
+/** Multi-Pitch plan fields (iOS MultiPitchPlanFormFields). undefined = not
+ * part of this save (merge keeps the stored value); null = explicitly cleared
+ * (written as null so the field can be cleared). */
+function applyMultiPitchNoteFields(docData, note) {
+	if (note.numberOfPitches !== undefined) {
+		docData.numberOfPitches = note.numberOfPitches;
+	}
+	if (note.approachNotes !== undefined) {
+		docData.approachNotes = note.approachNotes;
+	}
+	if (note.descentNotes !== undefined) {
+		docData.descentNotes = note.descentNotes;
+	}
+	if (note.gearNotes !== undefined) {
+		docData.gearNotes = note.gearNotes;
+	}
+}
+
 /** Optional note fields — written only when set, so a merge-style save
  * keeps the stored value otherwise. Dates convert to Firestore Timestamps. */
 function applyOptionalNoteFields(docData, note) {
@@ -218,12 +251,8 @@ function applyOptionalNoteFields(docData, note) {
 		docData.lastAttemptDate = Timestamp.fromDate(
 			new Date(note.lastAttemptDate),
 		);
-	if (note.projectStatus)
-		docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
-	if (note.projectNotes) docData.projectNotes = note.projectNotes;
-	if (note.highPoint) docData.highPoint = note.highPoint;
-	if (note.climbDuration != null) docData.climbDuration = note.climbDuration;
-	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
+	applyProjectNoteFields(docData, note);
+	applyMultiPitchNoteFields(docData, note);
 }
 
 export async function saveClimbNote(note) {

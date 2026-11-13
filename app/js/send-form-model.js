@@ -6,7 +6,7 @@
 
 "use strict";
 
-import { parseLocalDate } from "./ui-theme.js";
+import { parseLocalDate, coercePitchCount } from "./ui-theme.js";
 
 /** Trim and collapse an optional string to null when empty. */
 function emptyToNull(value) {
@@ -17,6 +17,9 @@ function emptyToNull(value) {
 function reportedRatingFor(centralRouteID, rating) {
 	return centralRouteID && rating > 0 ? rating : 0;
 }
+
+/** Pitch count tolerance lives in ui-theme.js (coercePitchCount) — shared
+ * with project-form-model.js and the attempt flow. */
 
 /** style → CSS class for the send-overlay style tabs. */
 export function stylePillClass(value) {
@@ -50,6 +53,21 @@ export function buildSendSavePayload(fields) {
 		date: parseLocalDate(fields.date),
 		sendType: fields.sendType,
 		routeType: fields.routeType,
+		// undefined → not written → a merge save keeps the stored value (the
+		// caller omits the plan fields for non-Multi-Pitch types; iOS keeps
+		// the plan data when the type flips back and forth).
+		numberOfPitches:
+			fields.pitches === undefined ? undefined : coercePitchCount(fields.pitches),
+		approachNotes:
+			fields.approachNotes === undefined
+				? undefined
+				: emptyToNull(fields.approachNotes),
+		descentNotes:
+			fields.descentNotes === undefined
+				? undefined
+				: emptyToNull(fields.descentNotes),
+		gearNotes:
+			fields.gearNotes === undefined ? undefined : emptyToNull(fields.gearNotes),
 		rating,
 		reportedRating: reportedRatingFor(centralRouteID, rating),
 		noteText: emptyToNull(fields.noteText),

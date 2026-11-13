@@ -31,6 +31,10 @@ import {
 	resetOverlayState,
 	syncOverlayCountrySelects,
 	syncFindRouteBtn,
+	syncMultiPitchSection,
+	resetMultiPitchFields,
+	fillMultiPitchFields,
+	multiPitchFieldsFromOverlay,
 	bindOverlayCommon,
 	bindOverlayDeleteHandler,
 	fetchRouteOwnershipThenSync,
@@ -80,6 +84,7 @@ export function showAddProjectOverlay() {
 	initGradePicker(document.getElementById("po-difficulty"), null);
 	document.getElementById("po-routetype").value = "Sport";
 	document.getElementById("po-attempts").value = "0";
+	resetMultiPitchFields("po-mp-pitches");
 	// iOS parity: a new project's date is its first attempt (default today).
 	document.getElementById("po-date").value = formatDateInput();
 	document.getElementById("po-last-attempt-date").value = "";
@@ -93,10 +98,11 @@ export function showAddProjectOverlay() {
 	resetOverlayState();
 	setFindRouteUnlinked("find-route-btn-project");
 	syncFindRouteBtn("find-route-btn-project");
-	syncOverlayCountrySelects();
+		syncOverlayCountrySelects();
 	overlay.classList.remove("hidden");
 	currentProject = null;
 	syncAttemptSectionVisibility();
+	syncMultiPitchSectionVisibility();
 }
 
 export function showEditProjectOverlay(climb) {
@@ -111,6 +117,7 @@ export function showEditProjectOverlay(climb) {
 		climb.difficulty ?? null,
 	);
 	document.getElementById("po-routetype").value = climb.routeType ?? "Sport";
+	fillMultiPitchFields(climb, "po-mp-pitches");
 	document.getElementById("po-attempts").value = climb.attemptCount ?? 0;
 	// Local calendar dates — these inputs round-trip with attempt payloads
 	// that parse date-only strings as local dates (see attempt-form-model.js).
@@ -141,6 +148,7 @@ export function showEditProjectOverlay(climb) {
 	syncOverlayCountrySelects();
 	currentProject = climb;
 	syncAttemptSectionVisibility();
+	syncMultiPitchSectionVisibility();
 }
 
 // ---------- Save / counters / rating retraction ----------
@@ -204,6 +212,10 @@ async function saveProject(closeOverlay) {
 			difficulty: document.getElementById("po-difficulty").value,
 			date: poDateVal,
 			routeType: document.getElementById("po-routetype").value,
+			...multiPitchFieldsFromOverlay(
+				document.getElementById("po-routetype"),
+				"po-mp",
+			),
 			attempts: document.getElementById("po-attempts").value,
 			lastAttemptDate: lastAttemptVal,
 			highPoint: document.getElementById("po-highpoint").value,
@@ -273,6 +285,15 @@ function resetAttemptFields() {
 	document.getElementById("po-attempt-notes").value = "";
 }
 
+/** Multi-Pitch plan fields exist only for Multi-Pitch routes (iOS parity:
+ * MultiPitchPlanFormFields is gated on the route type). */
+function syncMultiPitchSectionVisibility() {
+	syncMultiPitchSection(
+		document.getElementById("po-routetype"),
+		"po-mp-section",
+	);
+}
+
 /** "Add Attempt" is only offered while the project is still active — iOS
  * hides the button for completed/abandoned projects. */
 function syncAttemptSectionVisibility() {
@@ -300,7 +321,7 @@ function overlayProjectHighPoint() {
 
 /** Overlay fields + captured climb → project state for buildAttemptFields. */
 function attemptProjectStateFromOverlay() {
- return {
+	return {
 		recordName: document.getElementById("po-record-name").value,
 		route: document.getElementById("po-route").value.trim(),
 		climbingArea: document.getElementById("po-area").value,
@@ -314,6 +335,10 @@ function attemptProjectStateFromOverlay() {
 		highPoint: overlayProjectHighPoint(),
 		climbDuration: currentProject?.climbDuration ?? 0,
 		noteText: document.getElementById("po-notes").value,
+		...multiPitchFieldsFromOverlay(
+			document.getElementById("po-routetype"),
+			"po-mp",
+		),
 		date: overlayProjectDate(),
 	};
 }
@@ -367,6 +392,10 @@ function bindProjectAttemptSection(closeOverlay) {
 	const statusSelect = document.getElementById("po-status");
 	if (statusSelect) {
 		statusSelect.addEventListener("change", syncAttemptSectionVisibility);
+	}
+	const routetypeSelect = document.getElementById("po-routetype");
+	if (routetypeSelect) {
+		routetypeSelect.addEventListener("change", syncMultiPitchSectionVisibility);
 	}
 }
 

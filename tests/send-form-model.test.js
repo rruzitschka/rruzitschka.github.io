@@ -180,3 +180,32 @@ describe("buildAscentInput", () => {
 		expect(input.id).toHaveLength(36);
 	});
 });
+
+// coercePitchCount itself is unit-tested in tests/ui-theme.test.js.
+describe("multi-pitch payload fields", () => {
+	it("omits the plan fields when the caller passes undefined (non-Multi-Pitch type)", () => {
+		const payload = buildSendSavePayload({
+			route: "R",
+			routeType: "Sport",
+			sendType: "Redpoint",
+			rating: 0,
+			pitches: undefined,
+			approachNotes: undefined,
+		});
+		expect(payload.numberOfPitches).toBeUndefined();
+		expect(payload.approachNotes).toBeUndefined();
+	});
+
+	it("normalizes the plan fields when present", () => {
+		const payload = buildSendSavePayload({
+			route: "R",
+			routeType: "Multi-Pitch",
+			sendType: "Redpoint",
+			rating: 0,
+			pitches: "300",
+			approachNotes: "  hike  ",
+		});
+		expect(payload.numberOfPitches).toBe(99);
+		expect(payload.approachNotes).toBe("hike");
+	});
+});

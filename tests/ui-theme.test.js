@@ -13,6 +13,8 @@ import {
 	styleAbbreviation,
 	formatShortNumericDate,
 	formatDateInput,
+	renderMultiPitchPlanHtml,
+	coercePitchCount,
 	normalizeLegacyUtcMidnight,
 	STYLE_ABBREVIATIONS,
 	buildCompactClimbRowCellsHtml,
@@ -354,5 +356,67 @@ describe("normalizeLegacyUtcMidnight", () => {
 
 	it("passes through null", () => {
 		expect(normalizeLegacyUtcMidnight(null)).toBeNull();
+	});
+});
+
+describe("renderMultiPitchPlanHtml", () => {
+	const MP = {
+		routeType: "Multi-Pitch",
+		numberOfPitches: 7,
+		approachNotes: "45 min hike",
+		descentNotes: null,
+		gearNotes: "2×60m rope",
+	};
+
+	it("renders nothing for non-Multi-Pitch climbs", () => {
+		expect(renderMultiPitchPlanHtml({ ...MP, routeType: "Sport" })).toBe("");
+		expect(renderMultiPitchPlanHtml(null)).toBe("");
+	});
+
+	it("renders nothing when there is no plan data (iOS hasPlanDetails)", () => {
+		expect(
+			renderMultiPitchPlanHtml({
+				routeType: "Multi-Pitch",
+				numberOfPitches: 0,
+				approachNotes: null,
+				descentNotes: null,
+				gearNotes: null,
+			}),
+		).toBe("");
+	});
+
+	it("renders the header with the pitch count and the note rows", () => {
+		const html = renderMultiPitchPlanHtml(MP);
+		expect(html).toContain("Multi-Pitch Plan");
+		expect(html).toContain("7 pitches");
+		expect(html).toContain("insp-note-body");
+		expect(html).toContain("45 min hike");
+		expect(html).toContain("2×60m rope");
+		expect(html).not.toContain("Descent</span></div><div"); // empty fields skipped
+	});
+
+	it("escapes note text", () => {
+		const html = renderMultiPitchPlanHtml({
+			...MP,
+			approachNotes: "<script>alert(1)</script>",
+		});
+		expect(html).not.toContain("<script>");
+	});
+
+	it("uses singular 'pitch' for 1", () => {
+		expect(renderMultiPitchPlanHtml({ ...MP, numberOfPitches: 1 })).toContain(
+			"1 pitch</span>",
+		);
+	});
+});
+
+describe("coercePitchCount", () => {
+	it("parses and clamps to 0–99 (iOS Stepper limit)", () => {
+		expect(coercePitchCount("7")).toBe(7);
+		expect(coercePitchCount("7.9")).toBe(7);
+		expect(coercePitchCount(-3)).toBe(0);
+		expect(coercePitchCount("500")).toBe(99);
+		expect(coercePitchCount("")).toBe(0);
+		expect(coercePitchCount("abc")).toBe(0);
 	});
 });

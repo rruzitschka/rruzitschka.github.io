@@ -42,10 +42,22 @@ export async function fetchClimbs() {
   return [...MOCK_CLIMBS];
 }
 
+/** Merge-style semantics like the real buildClimbNoteDoc: keys not part of
+ * this save (undefined) keep their stored value; null = explicit clear. */
+function preservedFields(previous, climbData) {
+  const preserved = {};
+  for (const [key, value] of Object.entries(previous)) {
+    if (climbData[key] === undefined) preserved[key] = value;
+  }
+  return preserved;
+}
+
 export async function saveClimbNote(climbData) {
   const isNew = !climbData.recordName;
   const rn = climbData.recordName ?? ('mock-cn-new-' + Date.now());
+  const previous = isNew ? {} : (MOCK_CLIMBS.find(c => c.recordName === rn) ?? {});
   const saved = {
+    ...preservedFields(previous, climbData),
     ...climbData,
     recordName: rn,
     id:         climbData.id ?? crypto.randomUUID(),

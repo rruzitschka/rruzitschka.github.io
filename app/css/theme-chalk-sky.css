@@ -1355,6 +1355,26 @@ html[data-theme="chalk-sky"] .form-group select {
 	padding-bottom: 0;
 }
 
+/* Date inputs are composite native widgets: strip their default chrome and
+ * shrink the built-in calendar icon so they match the text fields. */
+html[data-theme="chalk-sky"] .form-group input[type="date"] {
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+html[data-theme="chalk-sky"] .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+	width: 14px;
+	height: 14px;
+	margin-left: 2px;
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] .form-group input[type="date"]::-webkit-datetime-edit {
+	padding: 0;
+	font-family: inherit;
+	font-size: 13px;
+}
+
 /* Keep Gym Session warm-up route-line & 2-col grid proportions intact */
 html[data-theme="chalk-sky"] .form-row-2 > .form-group {
 	min-width: 0;

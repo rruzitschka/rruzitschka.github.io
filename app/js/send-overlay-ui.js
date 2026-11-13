@@ -42,6 +42,10 @@ import {
 	syncFindRouteBtn,
 	bindOverlayCommon,
 	bindOverlayDeleteHandler,
+	syncMultiPitchSection,
+	resetMultiPitchFields,
+	fillMultiPitchFields,
+	multiPitchFieldsFromOverlay,
 	fetchRouteOwnershipThenSync,
 	maybeCreateCentralRoute,
 	maybePropagateToRoute,
@@ -149,6 +153,10 @@ function syncCragFieldForGym(isGym) {
 function syncSendOverlayForRouteType(normalize = false) {
 	const routeType = document.getElementById("so-routetype").value;
 	const isGym = GYM_ROUTE_TYPES.has(routeType);
+	syncMultiPitchSection(
+		document.getElementById("so-routetype"),
+		"so-mp-section",
+	);
 	// Area and country belong to the central route DB, which gym notes never
 	// touch (ADR 0005). Optional chaining: a cached old index.html paired
 	// with fresh JS (deploy skew) must never throw and kill the overlay.
@@ -207,6 +215,7 @@ export function showAddSendOverlay(prefill = {}) {
 	document.getElementById("so-routetype").value = prefill.routeType ?? "Sport";
 	document.getElementById("so-date").value = formatDateInput();
 	document.getElementById("so-notes").value = "";
+	resetMultiPitchFields("so-mp-pitches");
 	setStarRating(0);
 	setStylePill("Redpoint");
 	syncSendOverlayForRouteType();
@@ -260,6 +269,7 @@ export function showEditSendOverlay(climb) {
 	document.getElementById("so-routetype").value = climb.routeType ?? "Sport";
 	document.getElementById("so-date").value = formatDateInput(climb.date);
 	document.getElementById("so-notes").value = climb.noteText ?? "";
+	fillMultiPitchFields(climb, "so-mp-pitches");
 	setStarRating(climb.rating ?? 0);
 	setStylePill(climb.sendType ?? "Redpoint");
 	syncSendOverlayForRouteType();
@@ -367,6 +377,11 @@ async function saveSend(closeOverlay) {
 			routeType: routeTypeVal,
 			rating: currentStarRating,
 			noteText: document.getElementById("so-notes").value,
+			// Multi-Pitch plan fields; {} for other types (merge-preserved)
+			...multiPitchFieldsFromOverlay(
+				document.getElementById("so-routetype"),
+				"so-mp",
+			),
 			centralRouteID: centralID,
 		}),
 	);

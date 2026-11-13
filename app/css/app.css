@@ -1517,6 +1517,10 @@ body {
 	font-family: inherit;
 	background: var(--white);
 	color: var(--dark-bg);
+	resize: none; /* resize is for the multi-line textareas only */
+}
+
+.form-group textarea {
 	resize: vertical;
 }
 .form-group input:focus,

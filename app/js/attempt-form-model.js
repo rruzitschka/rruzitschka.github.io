@@ -7,7 +7,7 @@
 
 "use strict";
 
-import { parseLocalDate } from "./ui-theme.js";
+import { parseLocalDate, coercePitchCount } from "./ui-theme.js";
 
 /**
  * Formats a duration in minutes as "2h 15m", "15m", or "0m".
@@ -23,7 +23,8 @@ export function durationLabel(minutes) {
 	return hours > 0 ? `${hours}h ${rest}m` : `${rest}m`;
 }
 
-/** Trim an optional string; "" / whitespace → null. */
+/** Trim an optional string; "" / whitespace → null (matches the form-model
+ * builders so a cleared plan field is stored as null, not ""). */
 function emptyToNull(value) {
 	return value?.trim() || null;
 }
@@ -65,6 +66,24 @@ function shouldPrependNotes({ notes, durationMinutes, wasSuccessful }) {
 /** Status after the attempt: success completes; nil status → "active". */
 function projectStatusAfter(project, wasSuccessful) {
 	return wasSuccessful ? "completed" : (project.projectStatus ?? "active");
+}
+
+/** Multi-Pitch plan fields only exist for Multi-Pitch routes. */
+function isMultiPitch(project) {
+	return project.routeType === "Multi-Pitch";
+}
+
+/** Plan fields pass through for Multi-Pitch routes (overlay edits must not
+ * be lost when the attempt save rebuilds the doc); omitted otherwise so the
+ * merge keeps the stored values. */
+function multiPitchPassthrough(project) {
+	if (!isMultiPitch(project)) return {};
+	return {
+		numberOfPitches: coercePitchCount(project.pitches),
+		approachNotes: emptyToNull(project.approachNotes),
+		descentNotes: emptyToNull(project.descentNotes),
+		gearNotes: emptyToNull(project.gearNotes),
+	};
 }
 
 /** On success the send date replaces the project's date; otherwise unchanged. */
@@ -134,6 +153,7 @@ export function buildAttemptFields(project, attempt) {
 		lastAttemptDate: date,
 		highPoint: emptyToNull(attempt.highPoint) ?? project.highPoint ?? null,
 		projectNotes,
+		...multiPitchPassthrough(project),
 		projectStatus: projectStatusAfter(project, wasSuccessful),
 		sendType: wasSuccessful ? "redpoint" : "Project",
 		date: sendDateAfter(project, date, wasSuccessful),

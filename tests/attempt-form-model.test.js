@@ -180,3 +180,29 @@ describe("buildAttemptFields — edge cases", () => {
 		expect(fields.climbDuration).toBe(120);
 	});
 });
+
+describe("buildAttemptFields — multi-pitch plan passthrough", () => {
+	it("passes plan fields through for Multi-Pitch routes (cleared → null)", () => {
+		const mp = {
+			...ACTIVE_PROJECT,
+			routeType: "Multi-Pitch",
+			pitches: "7",
+			approachNotes: "  ",
+			descentNotes: "3 rappels",
+		};
+		const fields = buildAttemptFields(mp, FAILED_ATTEMPT);
+		expect(fields.numberOfPitches).toBe(7);
+		expect(fields.approachNotes).toBeNull(); // cleared field → null, not ""
+		expect(fields.descentNotes).toBe("3 rappels");
+		expect(fields.gearNotes).toBeNull();
+	});
+
+	it("omits the plan fields for other route types (merge preserves them)", () => {
+		const fields = buildAttemptFields(
+			{ ...ACTIVE_PROJECT, routeType: "Sport" },
+			FAILED_ATTEMPT,
+		);
+		expect(fields.numberOfPitches).toBeUndefined();
+		expect(fields.approachNotes).toBeUndefined();
+	});
+});

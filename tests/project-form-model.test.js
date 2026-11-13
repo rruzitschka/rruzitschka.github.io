@@ -129,3 +129,27 @@ describe("buildProjectSavePayload", () => {
 		expect(payload.attemptCount).toBe(0);
 	});
 });
+
+describe("coercePitchCount / multi-pitch payload fields", () => {
+	it("omits the plan fields when the caller passes undefined (non-Multi-Pitch type)", () => {
+		const payload = buildProjectSavePayload({
+			route: "R",
+			routeType: "Sport",
+			projectStatus: "active",
+			pitches: undefined,
+		});
+		expect(payload.numberOfPitches).toBeUndefined();
+	});
+
+	it("clamps the pitch count and normalizes the plan notes", () => {
+		const payload = buildProjectSavePayload({
+			route: "R",
+			routeType: "Multi-Pitch",
+			projectStatus: "active",
+			pitches: "-4",
+			gearNotes: " 2 ropes ",
+		});
+		expect(payload.numberOfPitches).toBe(0);
+		expect(payload.gearNotes).toBe("2 ropes");
+	});
+});
