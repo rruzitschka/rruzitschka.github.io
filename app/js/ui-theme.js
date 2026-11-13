@@ -471,6 +471,11 @@ export function renderInspectorPhotosHtml(photos) {
  * }} [meta]
  * @returns {string}
  */
+/** "7 pitches" / "1 pitch" label for the plan header. */
+function pitchCountLabel(count) {
+	return `${count} pitch${count === 1 ? "" : "es"}`;
+}
+
 /**
  * Multi-Pitch Plan section for the Route Inspector (iOS parity with
  * MultiPitchPlanSection.planDetailsCard): Pitches / Approach / Descent /
@@ -498,9 +503,7 @@ export function renderMultiPitchPlanHtml(climb) {
 	if (pitches <= 0 && !noteRows) return "";
 	const header =
 		`<div class="insp-sec"><span>Multi-Pitch Plan</span>` +
-		(pitches > 0
-			? `<span>${pitches} pitch${pitches === 1 ? "" : "es"}</span>`
-			: "") +
+		(pitches > 0 ? `<span>${pitchCountLabel(pitches)}</span>` : "") +
 		`</div>`;
 	return header + noteRows;
 }
