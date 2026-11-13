@@ -43,6 +43,11 @@ import {
 	refreshData,
 } from "./overlay-common.js";
 import { setFindRouteLinked, setFindRouteUnlinked } from "./route-link-ui.js";
+import {
+	resetPhotoOverlay,
+	fillPhotoOverlay,
+	flushPendingPhotos,
+} from "./photo-overlay-ui.js";
 import { formatDateInput } from "./ui-theme.js";
 
 // ── Mutable service references (can be overridden by mock mode) ──
@@ -99,8 +104,9 @@ export function showAddProjectOverlay() {
 	setFindRouteUnlinked("find-route-btn-project");
 	syncFindRouteBtn("find-route-btn-project");
 		syncOverlayCountrySelects();
-	overlay.classList.remove("hidden");
+		overlay.classList.remove("hidden");
 	currentProject = null;
+	resetPhotoOverlay("po");
 	syncAttemptSectionVisibility();
 	syncMultiPitchSectionVisibility();
 }
@@ -147,6 +153,7 @@ export function showEditProjectOverlay(climb) {
 	}
 	syncOverlayCountrySelects();
 	currentProject = climb;
+	fillPhotoOverlay("po", climb.recordName);
 	syncAttemptSectionVisibility();
 	syncMultiPitchSectionVisibility();
 }
@@ -203,8 +210,9 @@ async function saveProject(closeOverlay) {
 
 	const centralID = await maybeCreateCentralRoute("po", routeVal);
 
-	await saveClimbNote(
-		buildProjectSavePayload({
+	const savedRecordName =
+		(await saveClimbNote(
+			buildProjectSavePayload({
 			recordName,
 			route: routeVal,
 			climbingArea: document.getElementById("po-area").value,
@@ -223,7 +231,10 @@ async function saveProject(closeOverlay) {
 			noteText: document.getElementById("po-notes").value,
 			centralRouteID: centralID,
 		}),
-	);
+	)) || recordName;
+
+	// Photos queued while the note did not exist yet (add overlay).
+	await flushPendingPhotos("po", savedRecordName);
 
 	retractPreviousRating();
 	maybePropagateToRoute(centralID, "po", routeVal);

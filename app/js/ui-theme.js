@@ -5,6 +5,8 @@
 
 "use strict";
 
+import { splitPhotosByTopo } from "./photo-form-model.js";
+
 // ── iOS Route-type colors (mirrors StatsView.getRouteTypeColor in iOS) ──────
 
 export const ROUTE_TYPE_DOT_MAP = {
@@ -502,20 +504,50 @@ export function renderInspectorGpsHtml(route, climbName = "Route start") {
 }
 
 /**
- * Render the async Photos strip inside the Route Detail Inspector.
+ * One thumbnail of the Inspector photo strip. Wrapped in a button that the
+ * lightbox wiring (climb-inspector-ui.js) binds via data-lightbox-index.
  *
- * @param {Array<{ storageURL?: string }>} photos
+ * @param {{ storageURL?: string, isTopo?: boolean }} photo
+ * @param {number} index index in the flat lightbox photo list
+ * @returns {string}
+ */
+export function buildInspectorPhotoThumbHtml(photo, index) {
+	const url = escapeInspectorHtml(photo.storageURL);
+	const topoBadge = photo.isTopo
+		? '<span class="photo-topo-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Topo</span>'
+		: "";
+	const alt = photo.isTopo ? "Topo (area sketch)" : "Route photo";
+	return `<button type="button" class="insp-photo" data-lightbox-index="${Number(index)}"><img src="${url}" alt="${alt}" loading="lazy" />${topoBadge}</button>`;
+}
+
+/**
+ * Render the async photo strips inside the Route Detail Inspector.
+ * Route photos and topos (area sketch photos, iOS isTopo) render in two
+ * separate rows — iOS MultiPitchPlanSection / TopoViewerSheet parity.
+ * Thumbnails open the lightbox (wiring in climb-inspector-ui.js).
+ *
+ * @param {Array<{ storageURL?: string, isTopo?: boolean }>} photos
  * @returns {string}
  */
 export function renderInspectorPhotosHtml(photos) {
 	if (!photos || photos.length === 0) return "";
-	const imgs = photos
-		.map((p) => {
-			const url = escapeInspectorHtml(p.storageURL);
-			return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="Route photo" /></a>`;
-		})
-		.join("");
-	return `<div class="insp-sec"><span>Photos</span></div><div class="insp-photos-strip">${imgs}</div>`;
+	const { routePhotos, topos } = splitPhotosByTopo(photos);
+	if (routePhotos.length === 0 && topos.length === 0) return "";
+	let out = "";
+	let index = 0;
+	if (routePhotos.length > 0) {
+		out += '<div class="insp-sec"><span>Photos</span></div>';
+		out += `<div class="insp-photos-strip">${routePhotos
+			.map((p) => buildInspectorPhotoThumbHtml(p, index++))
+			.join("")}</div>`;
+	}
+	if (topos.length > 0) {
+		out += '<div class="insp-sec insp-topos-label"><span>Topos</span></div>';
+		out += `<div class="insp-photos-strip insp-topos-strip">${topos
+			.map((p) => buildInspectorPhotoThumbHtml(p, index++))
+			.join("")}</div>`;
+	}
+	return out;
 }
 
 /**

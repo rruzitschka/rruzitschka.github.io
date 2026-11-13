@@ -2347,3 +2347,216 @@ html[data-theme="chalk-sky"] .insp-cell-v .stars {
 	letter-spacing: 1px;
 }
 
+
+/* ── Photos & topos (plan item #11: upload + topos; iOS EditOverlayView /
+   TopoViewerSheet parity) ─────────────────────────────────────────────── */
+
+html[data-theme="chalk-sky"] .insp-topos-label {
+	color: var(--cs-accent);
+}
+
+/* Inspector strip: thumbnails are buttons now (they open the lightbox) */
+html[data-theme="chalk-sky"] .insp-photo {
+	position: relative;
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: zoom-in;
+	display: block;
+	line-height: 0;
+}
+
+html[data-theme="chalk-sky"] .insp-photo:hover img {
+	border-color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .photo-topo-badge {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 2px 5px;
+	border-radius: 999px;
+	background: rgba(13, 17, 23, 0.82);
+	border: 1px solid rgba(118, 214, 255, 0.45);
+	color: var(--cs-accent);
+	font-size: 9.5px;
+	font-weight: 700;
+	letter-spacing: 0.4px;
+	text-transform: uppercase;
+	line-height: 1.2;
+}
+
+/* Overlay photo section (send + project edit overlays) */
+html[data-theme="chalk-sky"] .ovl-photo-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-upload-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 8px;
+	margin-top: 8px;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-thumb {
+	position: relative;
+	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid var(--cs-border);
+	background: var(--cs-bg);
+	aspect-ratio: 4 / 3;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-thumb.is-topo {
+	border-color: rgba(118, 214, 255, 0.55);
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	cursor: zoom-in;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-thumb .photo-topo-badge {
+	left: 6px;
+	top: 6px;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-actions {
+	position: absolute;
+	right: 4px;
+	bottom: 4px;
+	display: flex;
+	gap: 4px;
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-thumb:hover .ovl-photo-actions,
+html[data-theme="chalk-sky"] .ovl-photo-thumb:focus-within .ovl-photo-actions {
+	opacity: 1;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-actions button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border-radius: 6px;
+	background: rgba(13, 17, 23, 0.88);
+	border: 1px solid var(--cs-border);
+	color: var(--cs-fg);
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-actions button:hover {
+	border-color: var(--cs-accent);
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-topo-toggle.is-topo {
+	color: var(--cs-accent);
+	border-color: rgba(118, 214, 255, 0.55);
+}
+
+html[data-theme="chalk-sky"] .ovl-photo-busy .ovl-photo-grid {
+	opacity: 0.55;
+	pointer-events: none;
+}
+
+/* Lightbox (full-screen photo viewer) */
+html[data-theme="chalk-sky"] .lightbox {
+	position: fixed;
+	inset: 0;
+	z-index: 300;
+	background: rgba(1, 4, 9, 0.94);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+html[data-theme="chalk-sky"] .lightbox.hidden {
+	display: none;
+}
+
+html[data-theme="chalk-sky"] .lightbox img {
+	max-width: calc(100vw - 140px);
+	max-height: calc(100vh - 80px);
+	object-fit: contain;
+	border-radius: 6px;
+}
+
+html[data-theme="chalk-sky"] .lightbox.lightbox-single img {
+	max-width: calc(100vw - 40px);
+}
+
+html[data-theme="chalk-sky"] .lightbox-btn {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+	border-radius: 8px;
+	background: rgba(22, 27, 34, 0.9);
+	border: 1px solid var(--cs-border);
+	color: var(--cs-fg);
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] .lightbox-btn:hover {
+	border-color: var(--cs-accent);
+	color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .lightbox-close {
+	top: 14px;
+	right: 14px;
+}
+
+html[data-theme="chalk-sky"] .lightbox-nav {
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+html[data-theme="chalk-sky"] .lightbox-prev {
+	left: 14px;
+}
+
+html[data-theme="chalk-sky"] .lightbox-next {
+	right: 14px;
+}
+
+html[data-theme="chalk-sky"] .lightbox.lightbox-single .lightbox-nav {
+	display: none;
+}
+
+html[data-theme="chalk-sky"] .lightbox-counter {
+	position: absolute;
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	color: var(--cs-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+}
+
+html[data-theme="chalk-sky"] body.lightbox-open {
+	overflow: hidden;
+}

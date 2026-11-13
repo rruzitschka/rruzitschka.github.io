@@ -31,6 +31,7 @@ import {
 	setFindRouteUnlinked,
 } from "./route-link-ui.js";
 import { renderCommunityOwnerIndicatorHtml } from "./ui-theme.js";
+import { resetPhotoOverlay } from "./photo-overlay-ui.js";
 
 // ── Mutable service references (can be overridden by mock mode) ──
 
@@ -386,6 +387,7 @@ export function bindOverlayCommon({ overlayId, fieldPrefix: p, findRouteBtnId })
 	function closeOverlay() {
 		document.getElementById(overlayId).classList.add("hidden");
 		resetOverlayState();
+		resetPhotoOverlay(p);
 		setFindRouteUnlinked(findRouteBtnId);
 		syncOverlayCountrySelects();
 	}

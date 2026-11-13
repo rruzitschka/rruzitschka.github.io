@@ -52,6 +52,11 @@ import {
 	refreshData,
 } from "./overlay-common.js";
 import { setFindRouteLinked, setFindRouteUnlinked } from "./route-link-ui.js";
+import {
+	resetPhotoOverlay,
+	fillPhotoOverlay,
+	flushPendingPhotos,
+} from "./photo-overlay-ui.js";
 
 // ── Mutable service references (can be overridden by mock mode) ──
 
@@ -252,6 +257,7 @@ export function showAddSendOverlay(prefill = {}) {
 	}
 
 	syncOverlayCountrySelects();
+	resetPhotoOverlay("so");
 	overlay.classList.remove("hidden");
 }
 
@@ -276,6 +282,7 @@ export function showEditSendOverlay(climb) {
 	document.getElementById("so-ascents-section").classList.remove("hidden");
 	document.getElementById("send-overlay-delete").classList.remove("hidden");
 	renderAscentsList(climb);
+	fillPhotoOverlay("so", climb.recordName);
 
 	overlayState.previousReportedRating = climb.reportedRating ?? 0;
 	overlayState.originalCentralRouteID = climb.centralRouteID ?? null;
@@ -365,8 +372,9 @@ async function saveSend(closeOverlay) {
 		? null
 		: await maybeCreateCentralRoute("so", routeVal);
 
-	await saveClimbNote(
-		buildSendSavePayload({
+	const savedRecordName =
+		(await saveClimbNote(
+			buildSendSavePayload({
 			recordName,
 			route: routeVal,
 			climbingArea: document.getElementById("so-area").value,
@@ -384,7 +392,11 @@ async function saveSend(closeOverlay) {
 			),
 			centralRouteID: centralID,
 		}),
-	);
+	)) || recordName;
+
+	// Photos queued while the note did not exist yet (add overlay) —
+	// uploaded now, mirroring the iOS NewLogOverlayView save flow.
+	await flushPendingPhotos("so", savedRecordName);
 
 	applySendRatingReports(centralID, { recordName, isGym });
 	maybePropagateToRoute(centralID, "so", routeVal, isGym);

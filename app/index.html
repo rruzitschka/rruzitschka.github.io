@@ -708,6 +708,18 @@
                 />
               </div>
             </div>
+            <div class="form-section" id="so-photos-section">
+              <div class="form-section-title ovl-photo-title">
+                <span>Photos</span>
+                <label class="btn btn-sm btn-secondary ovl-photo-upload-btn" for="so-photo-input">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+                  Add Photo
+                  <input type="file" id="so-photo-input" accept="image/*" multiple hidden />
+                </label>
+              </div>
+              <div class="ovl-photo-grid" id="so-photo-grid"></div>
+              <div class="form-error hidden" id="so-photo-error"></div>
+            </div>
             <div class="form-section hidden" id="so-ascents-section">
               <div
                 class="form-section-title"
@@ -929,6 +941,18 @@
                   placeholder="e.g. 2×60m rope, 12 quickdraws"
                 />
               </div>
+            </div>
+            <div class="form-section" id="po-photos-section">
+              <div class="form-section-title ovl-photo-title">
+                <span>Photos</span>
+                <label class="btn btn-sm btn-secondary ovl-photo-upload-btn" for="po-photo-input">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+                  Add Photo
+                  <input type="file" id="po-photo-input" accept="image/*" multiple hidden />
+                </label>
+              </div>
+              <div class="ovl-photo-grid" id="po-photo-grid"></div>
+              <div class="form-error hidden" id="po-photo-error"></div>
             </div>
             <div class="form-section hidden" id="po-attempt-section">
               <div class="form-section-title">
@@ -1399,5 +1423,26 @@
         await loadData();
       })();
     </script>
+
+    <!-- Lightbox: full-screen photo viewer (iOS TopoViewerSheet parity) -->
+    <div
+      id="lightbox"
+      class="lightbox hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo viewer"
+    >
+      <button type="button" class="lightbox-btn lightbox-close" id="lightbox-close" aria-label="Close viewer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <button type="button" class="lightbox-btn lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous photo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <img id="lightbox-img" alt="Photo" />
+      <button type="button" class="lightbox-btn lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next photo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="lightbox-counter" id="lightbox-counter"></div>
+    </div>
   </body>
 </html>

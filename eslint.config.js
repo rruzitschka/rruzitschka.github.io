@@ -61,6 +61,10 @@ export default [
       'app/js/project-overlay-ui.js',
       'app/js/project-form-model.js',
       'app/js/attempt-form-model.js',
+      'app/js/lightbox-ui.js',
+      'app/js/photo-dom.js',
+      'app/js/photo-form-model.js',
+      'app/js/photo-overlay-ui.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

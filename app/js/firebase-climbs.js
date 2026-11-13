@@ -14,8 +14,15 @@ import {
 	serverTimestamp,
 	Timestamp,
 } from "firebase/firestore";
-import { db } from "./firebase-config.js";
+import { db, storage } from "./firebase-config.js";
 import { getCurrentUser } from "./firebase-auth.js";
+import {
+	ref as storageRef,
+	uploadBytes,
+	getDownloadURL,
+	deleteObject,
+} from "firebase/storage";
+import { photoStoragePath } from "./photo-form-model.js";
 
 // recordName for ascents is encoded as "noteId/ascentId" so deleteAscent
 // can reconstruct the Firestore sub-collection path without a noteId parameter.
@@ -330,12 +337,109 @@ export async function fetchPhotos(noteId) {
 				id: d.id,
 				storageURL: d.data().storageURL,
 				fileName: d.data().fileName,
+				// Topos are area sketch photos (iOS isTopo flag) — the inspector
+				// renders them in their own row (TopoViewerSheet parity).
+				isTopo: d.data().isTopo === true,
 			}))
 			.filter((p) => p.storageURL);
 	} catch (err) {
 		console.warn("fetchPhotos error:", err);
 		return [];
 	}
+}
+
+/**
+ * Upload a processed photo blob to Firebase Storage and write the photo doc
+ * in the exact shape iOS expects (FirebasePhotoUploader parity: id,
+ * storageURL, fileName, isTopo, createdAt, updatedAt — serverTimestamps for
+ * conflict resolution; doc id doubles as the photoID iOS reads).
+ *
+ * @param {string} noteId
+ * @param {Blob} blob pre-processed JPEG (downscaled, EXIF-free)
+ * @param {{fileName: string, isTopo?: boolean}} meta
+ * @returns {Promise<{id: string, storageURL: string, fileName: string, isTopo: boolean}>}
+ */
+export async function uploadPhoto(noteId, blob, { fileName, isTopo = false } = {}) {
+	const user = getCurrentUser();
+	if (!user) throw new Error("uploadPhoto: not signed in");
+	return uploadProcessedPhoto({ uid: user.uid, noteId, blob, fileName, isTopo });
+}
+
+/**
+ * Storage upload + Firestore doc write + failure cleanup for an
+ * already-processed JPEG blob.
+ */
+async function uploadProcessedPhoto({ uid, noteId, blob, fileName, isTopo }) {
+	if (!noteId || !fileName) {
+		throw new Error("uploadPhoto: noteId and fileName required");
+	}
+	const objectRef = storageRef(storage, photoStoragePath(uid, noteId, fileName));
+	await uploadBytes(objectRef, blob, { contentType: "image/jpeg" });
+	try {
+		return await writePhotoDoc({ uid, noteId, fileName, isTopo, objectRef });
+	} catch (err) {
+		// Metadata write failed after the bytes landed — clean the object up
+		// so no orphaned Storage file lingers without a photo doc.
+		console.warn("photo metadata write failed — removing uploaded object:", err);
+		await deleteObject(objectRef).catch(() => {});
+		throw err;
+	}
+}
+
+/** Firestore photo-doc write (FirebasePhotoUploader doc shape parity). */
+async function writePhotoDoc({ uid, noteId, fileName, isTopo, objectRef }) {
+	const url = await getDownloadURL(objectRef);
+	const docRef = doc(collection(db, `users/${uid}/climbNotes/${noteId}/photos`));
+	await setDoc(docRef, {
+		id: docRef.id,
+		storageURL: url,
+		fileName,
+		isTopo,
+		createdAt: serverTimestamp(),
+		updatedAt: serverTimestamp(),
+	});
+	return { id: docRef.id, storageURL: url, fileName, isTopo };
+}
+
+/** Toggle the topo flag on an existing photo doc (iOS EditOverlayView parity). */
+export async function setPhotoIsTopo(noteId, photoId, isTopo) {
+	const user = getCurrentUser();
+	if (!user) throw new Error("setPhotoIsTopo: not signed in");
+	const ts = serverTimestamp();
+	await updateDoc(doc(db, `users/${user.uid}/climbNotes/${noteId}/photos/${photoId}`), {
+		isTopo,
+		updatedAt: ts,
+	});
+}
+
+/**
+ * Best-effort Storage object removal (FirebasePhotoUploader.delete parity):
+ * the tombstone written by softDeletePhoto stands even if the object is
+ * already gone.
+ */
+async function deletePhotoStorageObject(uid, noteId, fileName) {
+	if (!fileName) return;
+	try {
+		await deleteObject(storageRef(storage, photoStoragePath(uid, noteId, fileName)));
+	} catch (err) {
+		console.warn("photo Storage delete failed (tombstone stands):", err);
+	}
+}
+
+/**
+ * Soft-delete a photo doc (deletedAt tombstone — both platforms' remote-apply
+ * skips these) and remove its Storage object.
+ */
+export async function softDeletePhoto(noteId, photo) {
+	const user = getCurrentUser();
+	if (!user) throw new Error("softDeletePhoto: not signed in");
+	if (!noteId || !photo?.id) throw new Error("softDeletePhoto: noteId and photo.id required");
+	const ts = serverTimestamp();
+	await updateDoc(doc(db, `users/${user.uid}/climbNotes/${noteId}/photos/${photo.id}`), {
+		deletedAt: ts,
+		updatedAt: ts,
+	});
+	await deletePhotoStorageObject(user.uid, noteId, photo.fileName);
 }
 
 export function computeStats(climbs) {

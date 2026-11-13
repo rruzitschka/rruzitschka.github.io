@@ -1,6 +1,14 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // `firebase/storage` is CDN-loaded in the browser (index.html import
+      // map), not an installed package — stub it for the test runtime.
+      "firebase/storage": new URL("./tests/stubs/firebase-storage.js", import.meta.url)
+        .pathname,
+    },
+  },
   test: {
     coverage: {
       provider: "v8",

@@ -142,16 +142,57 @@ export async function getRoute(routeID) {
 }
 
 export async function fetchPhotos(noteId) {
-  if (noteId === 'mock-1') {
-    return [
-      {
-        id: 'mock-photo-1',
-        storageURL: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&q=80',
-        fileName: 'biographie.jpg',
-      },
-    ];
-  }
-  return [];
+  return MOCK_PHOTOS.filter(p => p.noteId === noteId && !p.deletedAt);
+}
+
+// ── Photos (item #11: upload + topos) ────────────────────────────────────
+
+// Photo docs keyed to mock climbs. mock-1 (Biographie) carries a route
+// photo AND a topo (area sketch) so the mock inspector exercises both
+// photo rows. Mock "Storage" uploads just create a doc with a placeholder
+// URL — good enough for smoke-testing the wiring.
+const MOCK_PHOTOS = [
+  {
+    id: 'mock-photo-1',
+    noteId: 'mock-1',
+    storageURL: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&q=80',
+    fileName: 'mock-1_photo1.jpg',
+    isTopo: false,
+  },
+  {
+    id: 'mock-photo-topo-1',
+    noteId: 'mock-1',
+    storageURL: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
+    fileName: 'mock-1_topo1.jpg',
+    isTopo: true,
+  },
+];
+
+export async function uploadPhoto(noteId, blob, { fileName, isTopo = false } = {}) {
+  const photo = {
+    id: 'mock-photo-' + Date.now(),
+    noteId,
+    // Object URLs of the pending blob previews stay local; a placeholder
+    // URL keeps the grid renderable after reload-less operations.
+    storageURL: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=600&q=80',
+    fileName: fileName ?? 'mock-upload.jpg',
+    isTopo: isTopo === true,
+  };
+  MOCK_PHOTOS.push(photo);
+  console.log('[Mock] uploadPhoto', noteId, fileName);
+  return photo;
+}
+
+export async function setPhotoIsTopo(noteId, photoId, isTopo) {
+  const p = MOCK_PHOTOS.find(x => x.id === photoId);
+  if (p) p.isTopo = isTopo === true;
+  console.log('[Mock] setPhotoIsTopo', photoId, isTopo);
+}
+
+export async function softDeletePhoto(noteId, photo) {
+  const p = MOCK_PHOTOS.find(x => x.id === photo?.id);
+  if (p) p.deletedAt = new Date().toISOString();
+  console.log('[Mock] softDeletePhoto', photo?.id);
 }
 
 export { computeStats, filterClimbs } from './firebase-climbs.js';

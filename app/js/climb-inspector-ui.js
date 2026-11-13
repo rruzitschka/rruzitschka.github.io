@@ -25,6 +25,10 @@ import {
 	attemptProjectStateFromClimb,
 	saveAttempt,
 } from "./attempt-form-model.js";
+import {
+	splitPhotosByTopo,
+} from "./photo-form-model.js";
+import { openLightbox } from "./lightbox-ui.js";
 import { normalizeSendType } from "./send-style.js";
 
 // ── Mutable service references (can be overridden by mock mode) ──
@@ -188,9 +192,32 @@ function loadInspectorPhotos(climb, fetchPhotos) {
 		.then((photos) => {
 			if (_selectedRecordName !== climb.recordName) return;
 			const phEl = document.getElementById("inspector-photos-container");
-			if (phEl) phEl.innerHTML = renderInspectorPhotosHtml(photos);
+			if (phEl) {
+				phEl.innerHTML = renderInspectorPhotosHtml(photos);
+				bindInspectorPhotosLightbox(phEl, photos);
+			}
 		})
 		.catch(() => {});
+}
+
+/**
+ * Bind the photo strip to the lightbox viewer (iOS TopoViewerSheet parity).
+ * The strip's thumbnails carry data-lightbox-index into the flat list
+ * [routePhotos…, topos…] — the same order renderInspectorPhotosHtml used.
+ */
+function bindInspectorPhotosLightbox(phEl, photos) {
+	if (!photos || photos.length === 0) return;
+	const { routePhotos, topos } = splitPhotosByTopo(photos);
+	const items = [...routePhotos, ...topos].map((p) => ({
+		storageURL: p.storageURL,
+		isTopo: p.isTopo === true,
+	}));
+	phEl.addEventListener("click", (e) => {
+		const btn = e.target.closest?.(".insp-photo");
+		if (!btn) return;
+		const index = Number(btn.dataset.lightboxIndex);
+		if (!Number.isNaN(index)) openLightbox(items, index);
+	});
 }
 
 function lookupMapValue(map, key) {

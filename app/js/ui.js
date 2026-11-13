@@ -29,6 +29,10 @@ import {
 	setClimbInspectorMockServices,
 } from "./climb-inspector-ui.js";
 import {
+	initPhotoOverlayUI,
+	setPhotoOverlayMockServices,
+} from "./photo-overlay-ui.js";
+import {
 	setOverlayCommonMockServices,
 	setDataLoader,
 } from "./overlay-common.js";
@@ -91,6 +95,7 @@ export function setMockServices(mocks) {
 	setAccountUIMockServices(mocks);
 	setClimbTableMockServices(mocks);
 	setClimbInspectorMockServices(mocks);
+	setPhotoOverlayMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 
@@ -219,6 +224,7 @@ function bindFilterHandlers(initialClimbs) {
 	bindProjectOverlayHandlers();
 	bindTrainingOverlayHandlers();
 	bindPeriodTabs();
+	initPhotoOverlayUI();
 
 	// Inject the full-refresh callback so the overlay modules can trigger
 	// loadData without a circular module import.
