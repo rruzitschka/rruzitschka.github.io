@@ -33,7 +33,7 @@ on a held-back branch until the release.
 | --- | --- |
 | `firebase-config.js` | Firebase init, `db` export |
 | `firebase-auth.js` | Auth (Apple sign-in), `getCurrentUser` |
-| `firebase-climbs.js` | climbNotes CRUD, ascents, stats, filters (`matchesRouteTypeFilter`: Gym filter covers Gym + Gym Boulder), `fetchSessionSends` |
+| `firebase-climbs.js` | climbNotes CRUD, ascents, stats, filters (`matchesRouteTypeFilter`: Gym filter covers Gym + Gym Boulder), `fetchSessionSends`, photo helpers (`fetchPhotos` incl. `isTopo`, `uploadPhoto`, `setPhotoIsTopo`, `softDeletePhoto`) |
 | `firebase-training.js` | trainingSessions CRUD + `computeTrainingStats` |
 | `firebase-routes.js` | Central route DB (`routes/`): search, create/update, counters, ratings |
 | `firebase-api-keys.js` | API key management (admin) |
@@ -45,6 +45,7 @@ on a held-back branch until the release.
 | `route-entries.js` | Warm-up route entries wire format (iOS `TrainingRouteEntry`): tolerant decode, iOS save semantics, byte-compatible encode |
 | `send-style.js` | Send-type vocabulary + route-type compatibility rules (boulder/gym predicates, coercion on type switch, style-tab visibility predicate) |
 | `iso-countries.js` | ISO 3166-1 alpha-2 validation/names |
+| `photo-form-model.js` | Photo feature pure helpers (unit-tested): iOS-parity constants (2048px, JPEG 0.85, `{noteId}_{uuid}.jpg` file names), Storage path builder, topo split, overlay photo-grid HTML |
 
 ### DOM-only helper modules (no module state, split out of ui.js)
 
@@ -58,6 +59,9 @@ on a held-back branch until the release.
 | `overlay-country.js` | Country select sync for overlays |
 | `reverse-geocode.js` | BigDataCloud reverse geocoding (admin GPS pin) |
 | `admin-routes-browser.js` | Admin route browser query helpers (search folding, filter order, sort — nameSearch asc default, createdAt desc "newest first" browse-all) |
+| `photo-dom.js` | Client-side image pipeline: canvas downscale + JPEG re-encode (also strips EXIF/GPS — privacy) |
+| `photo-overlay-ui.js` | Photo section in the send/project edit overlays: thumbnails with mark-as-topo toggle + confirmed delete; upload immediate on edit, queued until save on add (`flushPendingPhotos`); session guard against overlay switches; mock services via `setPhotoOverlayMockServices` |
+| `lightbox-ui.js` | Full-screen photo viewer (iOS `TopoViewerSheet` parity): prev/next/close, arrow-key + Escape navigation, backdrop close |
 
 ### View/controller modules
 
@@ -77,4 +81,4 @@ on a held-back branch until the release.
 | `stats.js` | Stats page (legacy script, window globals) |
 | `grades.js` | Grade systems + pickers (legacy script, window globals) |
 | `admin.js` | Admin panel |
-| `mock.js` | In-memory mock services for `?mock=true` (no sign-in, no data risk); `fetchClimbs` normalizes sendType on read like `firebase-climbs` (Title Case display) |
+| `mock.js` | In-memory mock services for `?mock=true` (no sign-in, no data risk); `fetchClimbs` normalizes sendType on read like `firebase-climbs` (Title Case display); photo store + upload/toggle/delete services (Mock-1 Biographie has a photo + a topo) |

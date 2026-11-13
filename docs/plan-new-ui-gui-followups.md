@@ -237,6 +237,33 @@ remaining live work is item 6 after each push.
     state holder. Active chips switch the colored label to the accent-on
     foreground (palette colors read poorly on the light accent fill).
 
+11. **Photos in the web app (upload + topos)** — ✅ implemented 2026-11-13
+    (`be59ba2`), pending live verification (item 6 duty): upload lives in
+    the full edit overlays (send + project) — file input → canvas downscale
+    (2048px) + JPEG 0.85 (iOS `PhotoStorage` parity) → EXIF/GPS stripped by
+    re-encoding (privacy) → Storage `photos/{uid}/{noteId}/{fileName}` →
+    photo doc in the exact iOS `FirebasePhotoUploader` shape
+    (`id`/`storageURL`/`fileName`/`isTopo`/`createdAt`/`updatedAt`).
+    Add-overlay picks queue until the save created the note
+    (`flushPendingPhotos`); edit overlays upload immediately. `isTopo` is
+    mapped in `fetchPhotos`, renders as a badge + separate Topos row in the
+    Inspector, has a mark-as-topo toggle per photo in the overlays, and
+    deletes use a confirmed soft-delete (tombstone + best-effort Storage
+    cleanup). A lightbox full-screen viewer (iOS `TopoViewerSheet` parity)
+    serves the Inspector and overlay thumbnails. A per-overlay session
+    guard drops photos picked mid-overlay-switch so they can never land on
+    the wrong note. New modules: `photo-form-model.js` (pure, vitest),
+    `photo-dom.js` (canvas pipeline), `photo-overlay-ui.js`,
+    `lightbox-ui.js`. **Prerequisite fixed on iOS first** (`1d9dac5`, merged
+    to main): `dispatchObject` dropped `RoutePhoto`, so isTopo toggles and
+    individual photo deletes never reached Firestore (deleted photos were
+    even resurrected by the next pull). **Infra:** bucket CORS had to be
+    widened to POST/PUT for browser uploads (`storage-cors.json`, applied
+    via the Cloud Storage JSON API — Firebase CLI cannot set CORS); the
+    Firebase Storage frontend may cache the old GET-only config for up to
+    ~24 h. Known parity gap (unchanged on iOS too): marking a project as
+    sent deletes the project's photos.
+
 ## Mock parity (fixed 2026-11-11)
 
 - `fetchAllClimbAscents` was never mocked — mock mode hit real Firestore
