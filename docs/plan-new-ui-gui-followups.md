@@ -249,6 +249,13 @@ remaining live work is item 6 after each push.
 - `training-ui.js` imported `fetchSessionSends` from `firebase-training.js`
   (it lives in `firebase-climbs.js`) — a hard module-load SyntaxError;
   fixed. Static import/export check across all `app/js` modules passes.
+- `fetchClimbs` did not normalize sendType on read (fixed 2026-11-13,
+  surfaced by #10): the attempt pipeline writes the Firestore-canonical
+  lowercase `"redpoint"`, the real fetch normalizes to Title Case, mock
+  didn't → badge fell back to "RE" instead of "RP". Mock read
+  normalization + isProject derivation now match `firebase-climbs`
+  (regression test `tests/mock-fetch.test.js`); mock-banner DOM code is
+  guarded so the module loads in the node test env.
 - `tests/training-ui.test.js` week/month/year tests were date-sensitive;
   rewritten relative to the current date.
 
