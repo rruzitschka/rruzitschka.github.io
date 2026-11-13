@@ -37,6 +37,14 @@ Known debt and risk areas. Update as items are resolved/discovered.
    `projectVersion=1.0`; large feature pushes can dip coverage/violations —
    run the scanner locally before pushing big changes.
 
+10. **Storage bucket CORS lives outside the repo** — the GCS bucket
+   `climbingnotes-a06e3.firebasestorage.app` must allow POST/PUT for browser
+   uploads; the config is recorded in `storage-cors.json` (2026-11-13,
+   applied via the Cloud Storage JSON API — the Firebase CLI cannot set
+   CORS). Two risks: the `firebasestorage.googleapis.com` frontend caches
+   the old config (up to ~24 h lag after a change), and nothing re-applies
+   the config if the bucket is recreated.
+
 9. **New-UI leftovers (post-redesign, 2026-11)** — the Chalk & Sky GUI is
    deployed as the only UI (GUI switch removed), but polish is pending:
    see `docs/plan-new-ui-gui-followups.md`. In brief: the Training detail
