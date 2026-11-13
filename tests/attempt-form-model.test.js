@@ -1,10 +1,12 @@
 // tests/attempt-form-model.test.js — Pure "Add Attempt" helpers (iOS
 // AttemptLogView parity; item #8 of docs/plan-new-ui-gui-followups.md).
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
 	durationLabel,
 	buildAttemptFields,
+	attemptProjectStateFromClimb,
+	saveAttempt,
 } from "../app/js/attempt-form-model.js";
 
 const ACTIVE_PROJECT = {
@@ -204,5 +206,102 @@ describe("buildAttemptFields — multi-pitch plan passthrough", () => {
 		);
 		expect(fields.numberOfPitches).toBeUndefined();
 		expect(fields.approachNotes).toBeUndefined();
+	});
+});
+
+describe("attemptProjectStateFromClimb — Route Inspector pane input (#10)", () => {
+	it("maps a loaded project climb to the buildAttemptFields project state", () => {
+		const climb = {
+			recordName: "mock-3",
+			route: "La Dura Dura",
+			climbingArea: "Oliana",
+			crag: "Sector Pal",
+			difficulty: "9a+",
+			routeType: "Multi-Pitch",
+			centralRouteID: "r-02",
+			attemptCount: 23,
+			projectNotes: "Need to work the lower crux more.",
+			projectStatus: "active",
+			highPoint: "Third bolt clip",
+			climbDuration: 0,
+			noteText: "",
+			numberOfPitches: 7,
+			approachNotes: "45 min approach",
+			descentNotes: "3 rappels",
+			gearNotes: "2×60m rope",
+		};
+		const state = attemptProjectStateFromClimb(climb);
+		expect(state.recordName).toBe("mock-3");
+		expect(state.attempts).toBe(23);
+		expect(state.pitches).toBe(7);
+		expect(state.approachNotes).toBe("45 min approach");
+		const fields = buildAttemptFields(state, FAILED_ATTEMPT);
+		expect(fields.attemptCount).toBe(24);
+		expect(fields.numberOfPitches).toBe(7);
+		expect(fields.descentNotes).toBe("3 rappels");
+	});
+
+	it("applies defaults for missing fields (non-Multi-Pitch, no status)", () => {
+		const state = attemptProjectStateFromClimb({ route: "Some Line" });
+		expect(state.routeType).toBe("Sport");
+		expect(state.projectStatus).toBe("active");
+		expect(state.attempts).toBe(0);
+		expect(state.pitches).toBeUndefined();
+	});
+});
+
+describe("saveAttempt — shared overlay/pane save pipeline (#10)", () => {
+	it("builds the payload, saves it, fires the route counter, then refreshes", async () => {
+		const services = {
+			saveClimbNote: vi.fn().mockResolvedValue(undefined),
+			incrementAttemptCount: vi.fn(),
+			refreshData: vi.fn().mockResolvedValue(undefined),
+		};
+		const payload = await saveAttempt(
+			attemptProjectStateFromClimb({
+				recordName: "mock-3",
+				route: "La Dura Dura",
+				centralRouteID: "r-02",
+				attemptCount: 23,
+			}),
+			FAILED_ATTEMPT,
+			services,
+		);
+		expect(services.saveClimbNote).toHaveBeenCalledTimes(1);
+		expect(services.saveClimbNote.mock.calls[0][0]).toBe(payload);
+		expect(payload.attemptCount).toBe(24);
+		expect(services.incrementAttemptCount).toHaveBeenCalledWith("r-02");
+		expect(services.refreshData).toHaveBeenCalledTimes(1);
+	});
+
+	it("skips the route counter for unlinked projects and still refreshes", async () => {
+		const services = {
+			saveClimbNote: vi.fn().mockResolvedValue(undefined),
+			incrementAttemptCount: vi.fn(),
+			refreshData: vi.fn().mockResolvedValue(undefined),
+		};
+		await saveAttempt(
+			attemptProjectStateFromClimb({ recordName: "x", route: "Y" }),
+			FAILED_ATTEMPT,
+			services,
+		);
+		expect(services.incrementAttemptCount).not.toHaveBeenCalled();
+		expect(services.refreshData).toHaveBeenCalledTimes(1);
+	});
+
+	it("propagates save failures (callers own the alert / button reset)", async () => {
+		const services = {
+			saveClimbNote: vi.fn().mockRejectedValue(new Error("offline")),
+			incrementAttemptCount: vi.fn(),
+			refreshData: vi.fn().mockResolvedValue(undefined),
+		};
+		await expect(
+			saveAttempt(
+				attemptProjectStateFromClimb({ recordName: "x", route: "Y" }),
+				FAILED_ATTEMPT,
+				services,
+			),
+		).rejects.toThrow("offline");
+		expect(services.refreshData).not.toHaveBeenCalled();
 	});
 });

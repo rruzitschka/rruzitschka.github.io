@@ -508,6 +508,54 @@ export function renderMultiPitchPlanHtml(climb) {
 	return header + noteRows;
 }
 
+/**
+ * "Log Attempt" section for the Route Inspector (item #10 of
+ * docs/plan-new-ui-gui-followups.md): a toggle button that expands a compact
+ * attempt form — same fields as the project overlay's Log Attempt section
+ * (iOS AttemptLogView parity). Rendered only for active projects; hidden for
+ * completed/abandoned projects and for sends, like iOS.
+ *
+ * The DOM wiring (expand/collapse, save) lives in climb-inspector-ui.js.
+ *
+ * @param {object|null|undefined} climb
+ * @returns {string} HTML ("" when not applicable)
+ */
+export function renderInspectorAttemptSectionHtml(climb) {
+	if (!climb?.isProject || !climb.recordName) return "";
+	const status = String(climb.projectStatus ?? "").toLowerCase();
+	if (status === "completed" || status === "abandoned") return "";
+	return `
+		<button type="button" class="btn-inspector-ghost insp-attempt-toggle" id="insp-attempt-toggle">Log Attempt</button>
+		<div class="insp-attempt-form hidden" id="insp-attempt-form">
+			<div class="insp-attempt-grid">
+				<div>
+					<label for="insp-attempt-date">Attempt Date</label>
+					<input type="date" id="insp-attempt-date" value="${formatDateInput()}" />
+				</div>
+				<div>
+					<label for="insp-attempt-duration">Duration (min)</label>
+					<input type="number" id="insp-attempt-duration" min="0" max="999" step="5" value="0" />
+				</div>
+			</div>
+			<div class="insp-attempt-field">
+				<label for="insp-attempt-highpoint">High Point</label>
+				<input type="text" id="insp-attempt-highpoint" placeholder="e.g. 'First crux', 'Halfway'" />
+			</div>
+			<div class="insp-attempt-field">
+				<label for="insp-attempt-notes">Attempt Notes</label>
+				<textarea id="insp-attempt-notes" rows="3" placeholder="What was hard? What beta worked well?"></textarea>
+			</div>
+			<div class="insp-attempt-footer">
+				<label class="insp-attempt-success-row" for="insp-attempt-success">
+					<input type="checkbox" id="insp-attempt-success" />
+					Send was successful
+				</label>
+				<button type="button" class="btn-inspector-primary" id="insp-save-attempt">Save Attempt</button>
+			</div>
+		</div>
+	`;
+}
+
 export function renderInspectorHtml(climb, meta = {}) {
 	if (!climb) return renderInspectorEmptyHtml();
 
@@ -557,6 +605,7 @@ export function renderInspectorHtml(climb, meta = {}) {
 			</div>
 		</div>
 		${renderInspectorProjectSection(climb)}
+		${renderInspectorAttemptSectionHtml(climb)}
 		${renderMultiPitchPlanHtml(climb)}
 		<div id="inspector-ascents-container"></div>
 		<div id="inspector-gps-container"><div class="insp-sec insp-coords-row"><span>Coordinates</span><span class="insp-coords-pending">—</span></div></div>

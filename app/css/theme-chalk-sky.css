@@ -875,6 +875,81 @@ html[data-theme="chalk-sky"] .insp-actions {
 	border-top: none;
 }
 
+/* ── Route Inspector — Log Attempt (compact pane form, item #10) ───────── */
+html[data-theme="chalk-sky"] .insp-attempt-toggle {
+	width: 100%;
+	margin-bottom: 8px;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-form {
+	display: grid;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-form label {
+	display: block;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #c9d1d9;
+	font-weight: 600;
+	margin-bottom: 3px;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-form input,
+html[data-theme="chalk-sky"] .insp-attempt-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	background: var(--cs-bg);
+	border: 1px solid var(--cs-border-subtle);
+	border-radius: 7px;
+	padding: 5px 8px;
+	font-size: 12px;
+	color: var(--cs-fg-bright);
+	font-family: inherit;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-form input:focus,
+html[data-theme="chalk-sky"] .insp-attempt-form textarea:focus {
+	outline: none;
+	border-color: var(--cs-accent);
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	margin-top: 2px;
+}
+
+html[data-theme="chalk-sky"] .insp-attempt-success-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	color: var(--cs-fg);
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] #insp-attempt-success {
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	accent-color: #34d399;
+	cursor: pointer;
+}
+
 html[data-theme="chalk-sky"] .btn-inspector-primary,
 html[data-theme="chalk-sky"] .btn-inspector-ghost {
 	flex: 1;

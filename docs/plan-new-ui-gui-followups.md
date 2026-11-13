@@ -117,8 +117,8 @@ remaining live work is item 6 after each push.
    `multiPitchFieldsFromOverlay`). Out of scope (iOS-only): Navigate-to-Start
    (inspector already has Coordinates) and topo photos (web RoutePhoto has
    no isTopo flag).
-10. **Log Attempt in the sidebar inspector (Projects page)** — agreed
-    2026-11-13, **NEXT**: attempt logging moves out of the edit overlay
+10. **Log Attempt in the sidebar inspector (Projects page)** — ✅ done
+    2026-11-13: attempt logging moves out of the edit overlay
     (where #8 added it) into the right-hand Route Inspector pane on the
     Projects page — no Edit-button detour. **Option b (user decision):** a
     "Log Attempt" button in the inspector pane expands a compact form
@@ -131,6 +131,30 @@ remaining live work is item 6 after each push.
       semantics (saveClimbNote → fire-and-forget incrementAttemptCount →
       close/refresh) — the pane form and the overlay section must behave
       identically.
+    - ✅ Implementation: pure `renderInspectorAttemptSectionHtml(climb)` in
+      `ui-theme.js` (toggle button + collapsed compact form `insp-attempt-*`,
+      rendered only for active projects with a recordName) inserted into
+      `renderInspectorHtml` after the Project section; pure
+      `attemptProjectStateFromClimb(climb)` + shared `saveAttempt(project,
+      attempt, services)` pipeline in `attempt-form-model.js` (payload →
+      saveClimbNote → fire-and-forget incrementAttemptCount → refreshData;
+      services injected, unit-tested — the overlay now calls the same
+      pipeline, closing over closeOverlay + refreshData in its refresh
+      callback). Pane wiring in `climb-inspector-ui.js`
+      (`bindInspectorAttemptSection`, `_selectedClimb`, expand/collapse
+      toggle label Log Attempt ↔ Cancel; refreshData re-renders the
+      inspector with the flipped status — no local reset needed). Mock
+      parity via `setClimbInspectorMockServices` registered in
+      `setMockServices`. Compact form styles `insp-attempt-*` in
+      `theme-chalk-sky.css` (cs tokens, no emojis). Review follow-up fix: on
+      a **successful** attempt the climb leaves the Projects filter (sendType
+      → redpoint ⇒ isProject false), so the standard refresh path cannot
+      reselect it — `saveAttemptFromInspector` re-renders the completed
+      detail explicitly (`{ ..._selectedClimb, ...payload }` via the last
+      inspector deps); failed attempts take the standard refresh path.
+      Known minor behavior (review suggestion, accepted): a climb selection
+      made during the sub-second save window is overridden by the explicit
+      completed-detail re-render.
     - Same visibility guard as #8: active projects only (hidden for
       completed/abandoned).
     - Two-click flow: select project row → pane shows details → expand

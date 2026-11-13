@@ -23,6 +23,7 @@ import {
 	renderCommunityOwnerIndicatorHtml,
 	renderInspectorEmptyHtml,
 	renderInspectorAscentsHtml,
+	renderInspectorAttemptSectionHtml,
 	combineAscentsWithOriginalSend,
 	renderInspectorGpsHtml,
 	renderInspectorPhotosHtml,
@@ -226,6 +227,58 @@ describe("Route Detail Inspector HTML rendering", () => {
 			isProject: true,
 		});
 		expect(html).toContain("Working");
+	});
+
+	describe("Log Attempt section (item #10)", () => {
+		const ACTIVE_PROJECT = {
+			recordName: "mock-3",
+			route: "La Dura Dura",
+			sendType: "Project",
+			isProject: true,
+			projectStatus: "active",
+		};
+
+		it("renders the toggle + compact form for active projects", () => {
+			const html = renderInspectorAttemptSectionHtml(ACTIVE_PROJECT);
+			expect(html).toContain("insp-attempt-toggle");
+			expect(html).toContain("insp-attempt-form");
+			expect(html).toContain("insp-attempt-date");
+			expect(html).toContain("insp-attempt-duration");
+			expect(html).toContain("insp-attempt-highpoint");
+			expect(html).toContain("insp-attempt-success");
+			expect(html).toContain("insp-attempt-notes");
+			expect(html).toContain("insp-save-attempt");
+			// default attempt date = today, hydrated via the local-date scheme
+			expect(html).toMatch(/id="insp-attempt-date" value="\d{4}-\d{2}-\d{2}"/);
+		});
+
+		it("appears in renderInspectorHtml for active projects with a recordName", () => {
+			const html = renderInspectorHtml(ACTIVE_PROJECT);
+			expect(html).toContain("insp-attempt-form");
+		});
+
+		it("is hidden for completed and abandoned projects", () => {
+			expect(renderInspectorAttemptSectionHtml({
+				...ACTIVE_PROJECT,
+				projectStatus: "completed",
+			})).toBe("");
+			expect(renderInspectorAttemptSectionHtml({
+				...ACTIVE_PROJECT,
+				projectStatus: "abandoned",
+			})).toBe("");
+		});
+
+		it("is hidden for sends and unsaved projects", () => {
+			expect(renderInspectorAttemptSectionHtml({
+				recordName: "x",
+				sendType: "Redpoint",
+				isProject: false,
+			})).toBe("");
+			expect(
+				renderInspectorAttemptSectionHtml({ ...ACTIVE_PROJECT, recordName: null }),
+			).toBe("");
+			expect(renderInspectorAttemptSectionHtml(null)).toBe("");
+		});
 	});
 
 	it("renderInspectorAscentsHtml handles empty and populated ascents", () => {

@@ -25,7 +25,7 @@ import {
 	projectCounterChange,
 	validateProjectDates,
 } from "./project-form-model.js";
-import { buildAttemptFields } from "./attempt-form-model.js";
+import { saveAttempt } from "./attempt-form-model.js";
 import {
 	overlayState,
 	resetOverlayState,
@@ -364,15 +364,14 @@ async function saveAttemptFromOverlay(closeOverlay) {
 	btn.disabled = true;
 	btn.textContent = "Saving…";
 	try {
-		const payload = buildAttemptFields(
-			attemptProjectStateFromOverlay(),
-			attemptInputFromOverlay(),
-		);
-		await saveClimbNote(payload);
-		// Fire-and-forget: bump the central route's attempt counter (iOS parity).
-		if (payload.centralRouteID) incrementAttemptCount(payload.centralRouteID);
-		closeOverlay();
-		await refreshData();
+		await saveAttempt(attemptProjectStateFromOverlay(), attemptInputFromOverlay(), {
+			saveClimbNote,
+			incrementAttemptCount,
+			refreshData: async () => {
+				closeOverlay();
+				await refreshData();
+			},
+		});
 	} catch (err) {
 		console.error("Save attempt failed:", err);
 		alert("Save failed: " + (err.message ?? err));

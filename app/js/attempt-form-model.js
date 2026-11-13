@@ -160,3 +160,64 @@ export function buildAttemptFields(project, attempt) {
 		climbDuration: climbDurationAfter(project, durationMinutes, wasSuccessful),
 	};
 }
+
+/**
+ * Maps a loaded project climb (firebase-climbs fetch shape) to the project
+ * state that buildAttemptFields expects — the Route Inspector pane's input
+ * (item #10). The overlay assembles the same shape from its form fields
+ * (attemptProjectStateFromOverlay in project-overlay-ui.js); Multi-Pitch plan
+ * fields pass through via `pitches` (the multiPitchPassthrough contract).
+ *
+ * @param {object} climb
+ * @returns {object}
+ */
+export function attemptProjectStateFromClimb(climb) {
+	return {
+		recordName: climb.recordName ?? null,
+		route: climb.route ?? "",
+		climbingArea: climb.climbingArea ?? null,
+		crag: climb.crag ?? null,
+		difficulty: climb.difficulty ?? null,
+		routeType: climb.routeType ?? "Sport",
+		centralRouteID: climb.centralRouteID ?? null,
+		attempts: climb.attemptCount ?? 0,
+		projectNotes: climb.projectNotes ?? null,
+		projectStatus: climb.projectStatus ?? "active",
+		highPoint: climb.highPoint ?? null,
+		climbDuration: climb.climbDuration ?? 0,
+		noteText: climb.noteText ?? "",
+		pitches: climb.numberOfPitches,
+		approachNotes: climb.approachNotes ?? null,
+		descentNotes: climb.descentNotes ?? null,
+		gearNotes: climb.gearNotes ?? null,
+		date: climb.date ?? null,
+	};
+}
+
+/**
+ * Shared "log attempt" save pipeline (item #10): the project overlay's Log
+ * Attempt section and the Route Inspector pane both build the payload with
+ * buildAttemptFields, save it, fire-and-forget the central-route attempt
+ * counter, and trigger the full data refresh — the two surfaces stay in sync
+ * by construction. Services are injected so this stays DOM- and
+ * Firebase-free and mockable.
+ *
+ * @param {object} projectState see buildAttemptFields
+ * @param {object} attempt see buildAttemptFields
+ * @param {{
+ *   saveClimbNote: (payload: object) => Promise<void>,
+ *   incrementAttemptCount?: (routeID: string) => void,
+ *   refreshData: () => Promise<void>,
+ * }} services
+ * @returns {Promise<object>} the saved payload
+ */
+export async function saveAttempt(projectState, attempt, services) {
+	const payload = buildAttemptFields(projectState, attempt);
+	await services.saveClimbNote(payload);
+	// Fire-and-forget: bump the central route's attempt counter (iOS parity).
+	if (payload.centralRouteID && typeof services.incrementAttemptCount === "function") {
+		services.incrementAttemptCount(payload.centralRouteID);
+	}
+	await services.refreshData();
+	return payload;
+}

@@ -26,6 +26,9 @@ import {
 	setProjectOverlayMockServices,
 } from "./project-overlay-ui.js";
 import {
+	setClimbInspectorMockServices,
+} from "./climb-inspector-ui.js";
+import {
 	setOverlayCommonMockServices,
 	setDataLoader,
 } from "./overlay-common.js";
@@ -87,6 +90,7 @@ export function setMockServices(mocks) {
 	setProjectOverlayMockServices(mocks);
 	setAccountUIMockServices(mocks);
 	setClimbTableMockServices(mocks);
+	setClimbInspectorMockServices(mocks);
 	setTrainingMockServices(mocks);
 }
 

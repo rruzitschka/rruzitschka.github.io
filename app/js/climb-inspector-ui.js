@@ -16,9 +16,38 @@ import {
 	buildCompactClimbRowCellsHtml,
 } from "./ui-theme.js";
 import { isoCountryName, countryFlagEmoji } from "./iso-countries.js";
+import { saveClimbNote as $saveClimbNote } from "./firebase-climbs.js";
+import {
+	incrementAttemptCount as $incrementAttemptCount,
+} from "./firebase-routes.js";
+import { refreshData } from "./overlay-common.js";
+import {
+	attemptProjectStateFromClimb,
+	saveAttempt,
+} from "./attempt-form-model.js";
+import { normalizeSendType } from "./send-style.js";
+
+// ── Mutable service references (can be overridden by mock mode) ──
+
+let saveClimbNote = $saveClimbNote;
+let incrementAttemptCount = $incrementAttemptCount;
+
+/** Override the inspector services (mock mode — see ui.js setMockServices). */
+export function setClimbInspectorMockServices(mocks) {
+	if (mocks.saveClimbNote) saveClimbNote = mocks.saveClimbNote;
+	if (mocks.incrementAttemptCount) {
+		incrementAttemptCount = mocks.incrementAttemptCount;
+	}
+}
 
 let _selectedRecordName = null;
+let _selectedClimb = null;
 let _lastClimbTypes = [];
+
+/** The deps of the most recent selectClimbInInspector call — reused to
+ * re-render the pane after an attempt save (the table refresh path cannot
+ * reselect a climb that left the Projects filter). */
+let _lastInspectorDeps = null;
 
 // ── Route-type filter chip bar (replaces #filter-routetype in Chalk & Sky) ──
 
@@ -180,6 +209,75 @@ function buildInspectorMeta(climb, deps) {
 	};
 }
 
+// ── Log Attempt in the pane (item #10; iOS AttemptLogView parity) ─────────
+
+function attemptInputFromInspector() {
+	return {
+		attemptDate: document.getElementById("insp-attempt-date")?.value ?? "",
+		durationMinutes:
+			document.getElementById("insp-attempt-duration")?.value ?? "0",
+		wasSuccessful:
+			document.getElementById("insp-attempt-success")?.checked ?? false,
+		highPoint: document.getElementById("insp-attempt-highpoint")?.value ?? "",
+		notes: document.getElementById("insp-attempt-notes")?.value ?? "",
+	};
+}
+
+async function saveAttemptFromInspector() {
+	const btn = document.getElementById("insp-save-attempt");
+	if (!btn) return;
+	const project = _selectedClimb;
+	const deps = _lastInspectorDeps;
+	if (!project || !deps) return;
+	btn.disabled = true;
+	btn.textContent = "Saving…";
+	try {
+		const payload = await saveAttempt(
+			attemptProjectStateFromClimb(project),
+			attemptInputFromInspector(),
+			{ saveClimbNote, incrementAttemptCount, refreshData },
+		);
+		if (payload.sendType === "redpoint") {
+			// Successful send: the climb left the Projects filter (sendType no
+			// longer "Project"), so the standard refresh path cannot reselect it
+			// and the pane would silently jump to another project. Re-render the
+			// completed detail explicitly (iOS shows the completed project too).
+			// The payload carries the lowercase Firestore form; the display wants
+			// Title Case (fetchClimbs applies the same normalization on read).
+			const updated = {
+				...project,
+				...payload,
+				sendType: normalizeSendType(payload.sendType),
+			};
+			selectClimbInInspector(updated, deps);
+		}
+		// Failed attempt: refreshData re-rendered the table + inspector with
+		// the updated climb (attempt count/notes), so no local reset.
+	} catch (err) {
+		console.error("Save attempt failed:", err);
+		alert("Save failed: " + (err.message ?? err));
+	} finally {
+		btn.disabled = false;
+		btn.textContent = "Save Attempt";
+	}
+}
+
+/** Two-click flow: "Log Attempt" expands the compact form; the toggle turns
+ * into Cancel. Fields keep their values while collapsing. */
+function bindInspectorAttemptSection() {
+	const toggle = document.getElementById("insp-attempt-toggle");
+	const form = document.getElementById("insp-attempt-form");
+	if (!toggle || !form) return;
+	toggle.addEventListener("click", () => {
+		const hidden = form.classList.toggle("hidden");
+		toggle.textContent = hidden ? "Log Attempt" : "Cancel";
+	});
+	const saveBtn = document.getElementById("insp-save-attempt");
+	if (saveBtn) {
+		saveBtn.addEventListener("click", () => saveAttemptFromInspector());
+	}
+}
+
 function bindInspectorButtons(climb, deps) {
 	const editBtn = document.getElementById("inspector-edit-btn");
 	if (editBtn) {
@@ -206,14 +304,18 @@ export function selectClimbInInspector(climb, deps) {
 
 	if (!climb) {
 		_selectedRecordName = null;
+		_selectedClimb = null;
 		inspector.innerHTML = renderInspectorEmptyHtml();
 		return;
 	}
 
 	_selectedRecordName = climb.recordName ?? null;
+	_selectedClimb = climb;
+	_lastInspectorDeps = deps;
 	highlightSelectedRow(_selectedRecordName);
 	inspector.innerHTML = renderInspectorHtml(climb, buildInspectorMeta(climb, deps));
 	bindInspectorButtons(climb, deps);
+	bindInspectorAttemptSection();
 
 	loadInspectorRoute(climb, deps);
 	loadInspectorAscents(climb, deps);
