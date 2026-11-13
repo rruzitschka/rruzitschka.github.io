@@ -117,6 +117,84 @@ remaining live work is item 6 after each push.
    `multiPitchFieldsFromOverlay`). Out of scope (iOS-only): Navigate-to-Start
    (inspector already has Coordinates) and topo photos (web RoutePhoto has
    no isTopo flag).
+10. **Log Attempt in the sidebar inspector (Projects page)** — agreed
+    2026-11-13, **NEXT**: attempt logging moves out of the edit overlay
+    (where #8 added it) into the right-hand Route Inspector pane on the
+    Projects page — no Edit-button detour. **Option b (user decision):** a
+    "Log Attempt" button in the inspector pane expands a compact form
+    (attempt date, duration, "Send was successful" checkbox, attempt
+    notes — same fields as the #8 overlay section). NOT a bare quick-bump
+    button (accidental increments with no undo), NOT a row-level table
+    button (mis-click prone).
+
+    - Reuse `buildAttemptFields` (attempt-form-model.js) + the #8 merge
+      semantics (saveClimbNote → fire-and-forget incrementAttemptCount →
+      close/refresh) — the pane form and the overlay section must behave
+      identically.
+    - Same visibility guard as #8: active projects only (hidden for
+      completed/abandoned).
+    - Two-click flow: select project row → pane shows details → expand
+      form → Save Attempt.
+    - Files: climb-inspector-ui.js (pane wiring — new, inspector currently
+      only renders climbs; the attempt form is the first interactive pane
+      section), project-overlay-ui.js (share the save pipeline; consider
+      extracting the shared "read attempt fields → save" flow into a helper
+      so overlay + pane stay in sync), ui-theme.js (pure form-row renderer
+      if needed), theme-chalk-sky.css (compact form styles for the 350px
+      pane).
+    - Question settled: after a successful attempt the pane must re-render
+      the project detail (status flips to completed — same as the overlay
+      save → refreshData path).
+    - Gates: standard sequence (vitest, eslint, code_health_review,
+      pre_commit_code_health_safeguard, graphify update ., reviewer on
+      staged diff via the /tmp diff-file workaround, mock smoke, one
+      commit).
+11. **Photos in the web app (upload + topos)** — agreed 2026-11-13, after
+    #10. The "plan on the big screen → climb at the crag" loop: web gets
+    photo upload; topos (climbing-area sketch photos) become visible and
+    manageable on web; iOS renders plan + topos already (project detail
+    shows MultiPitchPlanSection + topo photos).
+
+    Verified facts (2026-11-13):
+    - iOS `isTopo` is fully in the sync chain: FirebasePhotoUploader writes
+      `"isTopo"` to Firestore, RemoteApply reads `doc["isTopo"] ?? false` —
+      **web-written photo docs + isTopo flags flow into iOS via the existing
+      pull; no iOS changes needed for the sync itself.**
+    - Web today: read-only photo consumer — fetchPhotos reads the photos
+      subcollection, renderInspectorPhotosHtml renders plain <img> links;
+      NO upload code; isTopo is not read; Storage client already
+      initialized (firebase-config.js `getStorage`).
+    - **iOS sync gap (must fix or verify as a sub-task):** the iOS edit
+      overlay's isTopo toggle (EditOverlayView.swift:473
+      `photo.isTopo.toggle()`) does NOT appear to push an update — the
+      iOS push path only soft-deletes photos (FirestoreSyncManager.swift
+      softDeletePhotoInBatch). So iOS-local isTopo toggles may never reach
+      Firestore → web and iOS could disagree on the flag for photos
+      uploaded before the toggle. Fix on the iOS side (push photo doc
+      updates) or verify first.
+
+    Scope (user-agreed):
+    - **Upload lives in the full edit overlay** (send + project overlays),
+      NOT the inspector pane — planning is mostly multi-pitch, so there may
+      be more data to enter and the overlay is the right surface.
+    - Upload flow: file input (drag-drop optional) → client-side
+      downscale/compress (canvas → JPEG/WebP) → **EXIF stripping (GPS data —
+      privacy!)** → upload to Storage `photos/{uid}/{noteID}/{fileName}` →
+      write photo doc to `climbNotes/{id}/photos/{photoId}` with the fields
+      iOS expects (fileName, storageURL, isTopo, createdAt/updatedAt).
+    - isTopo on web: read the flag in fetchPhotos; badge + separate topos
+      row in the inspector; mark-as-topo toggle in the edit overlay next to
+      each photo (iOS EditOverlayView parity); lightbox full-screen viewer
+      (TopoViewerSheet parity).
+    - isTopo toggle handling is acceptable per user **with the iOS sync gap
+      noted above — fix or verify before/with this item**.
+    - Out of scope (iOS-only): topo annotation/drawing (iOS topos are plain
+      flagged photos, no annotations); offline web caching.
+    - Legacy constraint: never break legacy CSV/ZIP import — verify photo
+      filenames/paths stay compatible (iOS SendLogExporter ZIP layout).
+    - Gates: standard sequence; functions/src needs no changes unless
+      Storage rules or photo-doc shape change (check Firebase Storage rules
+      for web-domain CORS + write access for the web app auth user).
 
 ## Mock parity (fixed 2026-11-11)
 
