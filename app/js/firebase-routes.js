@@ -645,6 +645,15 @@ export function completedProject(routeID) {
 	}).catch((err) => console.warn("completedProject counters failed:", err));
 }
 
+/** Central-route attempt counter — bump when an attempt is logged (iOS parity
+ * with RouteRepository.incrementAttemptCount). Fire-and-forget. */
+export function incrementAttemptCount(routeID) {
+	updateDoc(doc(db, "routes", routeID), {
+		attemptCount: increment(1),
+		updatedAt: serverTimestamp(),
+	}).catch((err) => console.warn("incrementAttemptCount failed:", err));
+}
+
 // ── Community rating ────────────────────────────────────────────────────────
 
 /**

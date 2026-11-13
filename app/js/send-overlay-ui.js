@@ -18,6 +18,7 @@ import {
 	deleteAscent as $deleteAscent,
 	fetchAscents as $fetchAscents,
 } from "./firebase-climbs.js";
+import { formatDateInput } from "./ui-theme.js";
 import {
 	incrementSendCount as $incrementSendCount,
 	completedProject as $completedProject,
@@ -204,9 +205,7 @@ export function showAddSendOverlay(prefill = {}) {
 		prefill.difficulty ?? null,
 	);
 	document.getElementById("so-routetype").value = prefill.routeType ?? "Sport";
-	document.getElementById("so-date").value = new Date()
-		.toISOString()
-		.slice(0, 10);
+	document.getElementById("so-date").value = formatDateInput();
 	document.getElementById("so-notes").value = "";
 	setStarRating(0);
 	setStylePill("Redpoint");
@@ -259,9 +258,7 @@ export function showEditSendOverlay(climb) {
 		climb.difficulty ?? null,
 	);
 	document.getElementById("so-routetype").value = climb.routeType ?? "Sport";
-	document.getElementById("so-date").value = climb.date
-		? climb.date.toISOString().slice(0, 10)
-		: "";
+	document.getElementById("so-date").value = formatDateInput(climb.date);
 	document.getElementById("so-notes").value = climb.noteText ?? "";
 	setStarRating(climb.rating ?? 0);
 	setStylePill(climb.sendType ?? "Redpoint");

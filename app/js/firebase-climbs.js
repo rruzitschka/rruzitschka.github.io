@@ -23,6 +23,7 @@ import { getCurrentUser } from "./firebase-auth.js";
 // Send-type vocabulary and route-type compatibility rules live in the pure
 // send-style.js module (unit-tested); re-exported here for compatibility.
 import { normalizeSendType, canonicalizeSendType } from "./send-style.js";
+import { parseLocalDate, normalizeLegacyUtcMidnight } from "./ui-theme.js";
 export {
 	normalizeSendType,
 	canonicalizeSendType,
@@ -77,11 +78,12 @@ export async function fetchClimbs() {
 				noteText: d.noteText ?? "",
 				rating: d.rating ?? 0,
 				attemptCount: d.attemptCount ?? 0,
-				date: d.date?.toDate() ?? null,
-				lastAttemptDate: d.lastAttemptDate?.toDate() ?? null,
+				date: normalizeLegacyUtcMidnight(d.date?.toDate()) ?? null,
+				lastAttemptDate: normalizeLegacyUtcMidnight(d.lastAttemptDate?.toDate()) ?? null,
 				projectStatus: d.projectStatus ?? null,
 				projectNotes: d.projectNotes ?? null,
 				highPoint: d.highPoint ?? null,
+				climbDuration: d.climbDuration ?? 0,
 				centralRouteID: d.centralRouteID ?? null,
 				reportedRating: d.reportedRating ?? 0,
 				ascents: [], // loaded lazily via fetchAscents() when detail modal opens
@@ -116,7 +118,7 @@ export async function fetchSessionSends(sessionId) {
 				difficulty: d.difficulty ?? "",
 				sendType: normalizeSendType(d.sendType),
 				routeType: d.routeType ?? "Sport",
-				date: d.date?.toDate() ?? null,
+				date: normalizeLegacyUtcMidnight(d.date?.toDate()) ?? null,
 			};
 		});
 }
@@ -141,7 +143,7 @@ export async function fetchAscents(noteId) {
 			return {
 				recordName: `${noteId}/${a.id}`,
 				id: ad.id ?? a.id,
-				date: ad.date?.toDate() ?? null,
+				date: normalizeLegacyUtcMidnight(ad.date?.toDate()) ?? null,
 				sendType: normalizeSendType(ad.sendType),
 				notes: ad.notes ?? null,
 			};
@@ -175,7 +177,7 @@ export async function fetchAllClimbAscents(climbs) {
 					return {
 						recordName: `${climb.recordName}/${d.id}`,
 						id: ad.id ?? d.id,
-						date: ad.date?.toDate() ?? null,
+						date: normalizeLegacyUtcMidnight(ad.date?.toDate()) ?? null,
 						sendType: normalizeSendType(ad.sendType),
 						notes: ad.notes ?? null,
 						climbNoteRecordName: climb.recordName,
@@ -203,8 +205,15 @@ function buildClimbNoteDoc(id, note) {
 		attemptCount: note.attemptCount ?? 0,
 		updatedAt: serverTimestamp(),
 	};
-	if (note.date) docData.date = Timestamp.fromDate(new Date(note.date));
+	if (note.date) docData.date = Timestamp.fromDate(parseLocalDate(note.date));
 	else if (note.date !== undefined) docData.date = null;
+	applyOptionalNoteFields(docData, note);
+	return docData;
+}
+
+/** Optional note fields — written only when set, so a merge-style save
+ * keeps the stored value otherwise. Dates convert to Firestore Timestamps. */
+function applyOptionalNoteFields(docData, note) {
 	if (note.lastAttemptDate)
 		docData.lastAttemptDate = Timestamp.fromDate(
 			new Date(note.lastAttemptDate),
@@ -213,8 +222,8 @@ function buildClimbNoteDoc(id, note) {
 		docData.projectStatus = canonicalizeProjectStatus(note.projectStatus);
 	if (note.projectNotes) docData.projectNotes = note.projectNotes;
 	if (note.highPoint) docData.highPoint = note.highPoint;
+	if (note.climbDuration != null) docData.climbDuration = note.climbDuration;
 	if (note.centralRouteID) docData.centralRouteID = note.centralRouteID;
-	return docData;
 }
 
 export async function saveClimbNote(note) {
@@ -249,10 +258,10 @@ export async function saveAscent(ascent) {
 		{
 			id,
 			sendType: canonicalizeSendType(ascent.sendType ?? "redpoint"),
-			notes: ascent.notes ?? "",
-			date: ascent.date
-				? Timestamp.fromDate(new Date(ascent.date))
-				: Timestamp.now(),
+				notes: ascent.notes ?? "",
+				date: ascent.date
+					? Timestamp.fromDate(parseLocalDate(ascent.date))
+					: Timestamp.now(),
 			updatedAt: serverTimestamp(),
 		},
 		{ merge: true },

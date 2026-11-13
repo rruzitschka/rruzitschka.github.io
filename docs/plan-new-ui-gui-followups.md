@@ -80,16 +80,29 @@ remaining live work is item 6 after each push.
    (`showTrainingDetailModal`) was deleted — no modal fallback, the pane
    stacks below the list on narrow screens.
 8. **"Add Attempt" flow in the project overlay (iOS parity, agreed
-   2026-11-11)** — the web project overlay only has the raw Attempts count
-   field. iOS `AttemptLogView.swift` has the real flow: date, duration,
-   was-successful toggle, high point, notes → increments attemptCount,
-   sets lastAttemptDate, prepends "Attempt #N" (+ duration when it was a
-   failed try) to the project notes, sets status `active` if unset, and on
-   success marks the project `completed`, flips sendType to `redpoint`,
-   sets the send date + climbDuration, and bumps the central route's
-   attempt counter (fire-and-forget). Port as a section in the project
-   overlay: pure attempt-entry builder in a form-model module + unit
-   tests, wired like `send-form-model.js`.
+   2026-11-11)** — ✅ done 2026-11-12: "Log Attempt" section in the project
+   overlay (edit mode, hidden for completed/abandoned projects — like iOS).
+   Pure builder `app/js/attempt-form-model.js` (`durationLabel`,
+   `buildAttemptFields`, unit-tested in `tests/attempt-form-model.test.js`,
+   mirroring `AttemptLogView.saveAttempt()`: increment attemptCount,
+   lastAttemptDate, highPoint preserve-or-update, prepended
+   "Attempt #N - <date> (duration)" project notes, nil status → `active`,
+   success → `completed` + `redpoint` + send date + `climbDuration`).
+   `incrementAttemptCount` fire-and-forget in `firebase-routes.js` + mock
+   no-op; `climbDuration` added to the climbNotes read/write mapping.
+   Follow-on fix surfaced by review: **repo-wide uniform local-date scheme**
+   — `parseLocalDate`/`formatDateInput` in `ui-theme.js` replace all
+   `new Date("YYYY-MM-DD")` UTC parses and `toISOString().slice(0,10)`
+   hydration (project/send/training/attempt forms); iOS writes local-midnight
+   dates, web's UTC-midnight writes were the outlier. Legacy web records
+   (exactly `00:00:00.000Z`) are normalized at read time by
+   `normalizeLegacyUtcMidnight` (no-op for iOS writes and real datetimes).
+   Note: a successful attempt does NOT call `completedProject` on the route
+   (project/send counters) — iOS `AttemptLogView.saveAttempt` only bumps the
+   attempt counter; `completedProject` is exclusive to the Convert-to-Send
+   flow. Known limitation (pre-existing, shared with Save Project): clearing
+   a central-route link cannot clear the stored `centralRouteID` via
+   merge-save.
 9. **Multi-Pitch UI (web gap, agreed 2026-11-11)** — the web treats
    Multi-Pitch identically to Sport (rope style tabs, nothing else);
    selecting it changes nothing. iOS has the richer model

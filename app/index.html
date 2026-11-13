@@ -856,14 +856,55 @@
                 placeholder="Beta, conditions, goals…"
               ></textarea>
             </div>
-            <div class="form-section hidden" id="po-mark-sent-section">
+            <div class="form-section hidden" id="po-attempt-section">
               <div class="form-section-title">
-                Ready to Celebrate?
+                Log Attempt
                 <span class="badge-edit-only">Edit only</span>
               </div>
-              <button class="btn-success" id="po-mark-sent" style="width: 100%">
-                Mark as Sent
-              </button>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="po-attempt-date">Attempt Date</label>
+                  <input type="date" id="po-attempt-date" />
+                </div>
+                <div class="form-group">
+                  <label for="po-attempt-duration"
+                    >Duration (min)</label
+                  >
+                  <input
+                    type="number"
+                    id="po-attempt-duration"
+                    min="0"
+                    max="999"
+                    step="5"
+                    value="0"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="po-attempt-highpoint">High Point</label>
+                <input
+                  type="text"
+                  id="po-attempt-highpoint"
+                  placeholder="e.g. 'First crux', 'Halfway'"
+                />
+              </div>
+              <div class="form-group">
+                <label for="po-attempt-notes">Attempt Notes</label>
+                <textarea
+                  id="po-attempt-notes"
+                  rows="3"
+                  placeholder="What was hard? What beta worked well?"
+                ></textarea>
+              </div>
+              <div class="po-attempt-footer">
+                <label class="po-attempt-success-row" for="po-attempt-success">
+                  <input type="checkbox" id="po-attempt-success" />
+                  Send was successful
+                </label>
+                <button class="btn-success" id="po-save-attempt">
+                  Save Attempt
+                </button>
+              </div>
             </div>
           </div>
           <div class="edit-overlay-footer">

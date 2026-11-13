@@ -20,6 +20,8 @@ import {
 	renderTrainingDetailHtml,
 	renderInspectorEmptyHtml,
 	buildSessionSendsTableHtml,
+	formatDateInput,
+	parseLocalDate,
 } from "./ui-theme.js";
 import {
 	setGymFields,
@@ -212,7 +214,7 @@ function showAddTrainingOverlay() {
 	document.getElementById("training-overlay-title").textContent = "Log Session";
 	document.getElementById("to-record-name").value = "";
 	document.getElementById("to-type").value = "Hangboard";
-	document.getElementById("to-date").value = new Date().toISOString().slice(0, 10);
+	document.getElementById("to-date").value = formatDateInput();
 	document.getElementById("to-duration").value = "60";
 	document.getElementById("to-notes").value = "";
 	setGymFields(null, null);
@@ -227,9 +229,7 @@ export function showEditTrainingOverlay(session) {
 	document.getElementById("training-overlay-title").textContent = "Edit Session";
 	document.getElementById("to-record-name").value = session.recordName ?? "";
 	document.getElementById("to-type").value = session.type ?? "Gym Session";
-	document.getElementById("to-date").value = session.date
-		? session.date.toISOString().slice(0, 10)
-		: "";
+	document.getElementById("to-date").value = formatDateInput(session.date);
 	document.getElementById("to-duration").value = session.duration ?? 60;
 	document.getElementById("to-notes").value = session.notes ?? "";
 	setGymFields(session.gym, session.routes);
@@ -253,7 +253,7 @@ export function sessionFormPayload() {
 		recordName,
 		id: recordName ? undefined : crypto.randomUUID(),
 		type: document.getElementById("to-type").value,
-		date: dateVal ? new Date(dateVal) : new Date(),
+		date: parseLocalDate(dateVal) ?? new Date(),
 		duration: Number(document.getElementById("to-duration").value),
 		intensity: lastActive ? Number(lastActive.dataset.value) : 3,
 		notes: document.getElementById("to-notes").value.trim() || null,

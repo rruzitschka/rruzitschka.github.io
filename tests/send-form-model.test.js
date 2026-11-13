@@ -47,7 +47,7 @@ describe("buildSendSavePayload", () => {
 		expect(payload.route).toBe("Biographie");
 		expect(payload.climbingArea).toBe("Ceüse");
 		expect(payload.crag).toBeNull();
-		expect(payload.date).toEqual(new Date("2026-03-01"));
+		expect(payload.date).toEqual(new Date(2026, 2, 1)); // local calendar date
 		expect(payload.noteText).toBeNull();
 		expect(payload.centralRouteID).toBe("r-1");
 		// unrated → reportedRating 0
@@ -170,7 +170,7 @@ describe("buildAscentInput", () => {
 			climbNoteRecordName: "rn",
 		});
 		expect(input.id).toBe("a-1");
-		expect(input.date).toEqual(new Date("2026-01-05"));
+		expect(input.date).toEqual(new Date(2026, 0, 5)); // local calendar date
 		expect(input.notes).toBeNull();
 	});
 

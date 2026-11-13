@@ -6,6 +6,8 @@
 
 "use strict";
 
+import { parseLocalDate } from "./ui-theme.js";
+
 /** Trim and collapse an optional string to null when empty. */
 function emptyToNull(value) {
 	return value?.trim() || null;
@@ -45,7 +47,7 @@ export function buildSendSavePayload(fields) {
 		climbingArea: emptyToNull(fields.climbingArea),
 		crag: emptyToNull(fields.crag),
 		difficulty: fields.difficulty || null,
-		date: fields.date ? new Date(fields.date) : null,
+		date: parseLocalDate(fields.date),
 		sendType: fields.sendType,
 		routeType: fields.routeType,
 		rating,
@@ -119,7 +121,7 @@ export function buildAscentInput({
 }) {
 	return {
 		id: id ?? crypto.randomUUID(),
-		date: date ? new Date(date) : new Date(),
+		date: parseLocalDate(date) ?? new Date(),
 		sendType,
 		notes: notes?.trim() || null,
 		climbNoteRecordName,

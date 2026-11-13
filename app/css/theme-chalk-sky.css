@@ -442,6 +442,36 @@ html[data-theme="chalk-sky"] .btn-action:hover {
 }
 
 /* ── Split Workspace: Climbs Table (left) + Route Inspector (right) ──────── */
+/* ── Project overlay — Log Attempt section (iOS AttemptLogView parity) ─── */
+html[data-theme="chalk-sky"] .po-attempt-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+}
+
+html[data-theme="chalk-sky"] .po-attempt-footer .btn-success {
+	width: auto;
+	white-space: nowrap;
+}
+
+html[data-theme="chalk-sky"] .po-attempt-success-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	color: var(--cs-fg);
+	cursor: pointer;
+}
+
+html[data-theme="chalk-sky"] #po-attempt-success {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: #34d399;
+	cursor: pointer;
+}
+
 html[data-theme="chalk-sky"] .logbook-workspace {
 	display: grid;
 	grid-template-columns: 1fr 350px;
@@ -1312,6 +1342,17 @@ html[data-theme="chalk-sky"] .ascent-add-row select {
 	padding: 7px 10px;
 	font-size: 13px;
 	font-family: inherit;
+}
+
+/* Uniform control height: native <select> and <input type="date"> render
+ * taller than text inputs at the same padding — pin them all so every field
+ * in the edit overlays lines up (Route Name vs Status/Grade/Type/Country). */
+html[data-theme="chalk-sky"] .form-group input:not([type="checkbox"]),
+html[data-theme="chalk-sky"] .form-group select {
+	height: 34px;
+	box-sizing: border-box;
+	padding-top: 0;
+	padding-bottom: 0;
 }
 
 /* Keep Gym Session warm-up route-line & 2-col grid proportions intact */

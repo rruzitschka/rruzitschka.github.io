@@ -95,10 +95,10 @@ describe("buildProjectSavePayload", () => {
 		expect(payload.crag).toBeNull();
 		expect(payload.difficulty).toBe("9a+");
 		expect(payload.sendType).toBe("Project");
-		expect(payload.date).toEqual(new Date("2026-03-01"));
+		expect(payload.date).toEqual(new Date(2026, 2, 1)); // local calendar date
 		expect(payload.routeType).toBe("Sport");
 		expect(payload.attemptCount).toBe(23);
-		expect(payload.lastAttemptDate).toEqual(new Date("2026-04-01"));
+		expect(payload.lastAttemptDate).toEqual(new Date(2026, 3, 1));
 		expect(payload.highPoint).toBe("Third bolt");
 		expect(payload.projectStatus).toBe("active");
 		expect(payload.noteText).toBeNull();

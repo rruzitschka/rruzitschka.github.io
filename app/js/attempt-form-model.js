@@ -1,0 +1,142 @@
+// attempt-form-model.js — Pure, DOM-free helpers for the "Add Attempt" flow
+// in the project overlay (iOS parity with AttemptLogView.swift; item #8 of
+// docs/plan-new-ui-gui-followups.md).
+//
+// The DOM wiring lives in project-overlay-ui.js; everything here is testable
+// without a document.
+
+"use strict";
+
+import { parseLocalDate } from "./ui-theme.js";
+
+/**
+ * Formats a duration in minutes as "2h 15m", "15m", or "0m".
+ * Mirrors iOS DurationFormatter.label(forMinutes:).
+ *
+ * @param {number} minutes
+ * @returns {string}
+ */
+export function durationLabel(minutes) {
+	const mins = Math.max(0, Math.floor(Number(minutes) || 0));
+	const hours = Math.floor(mins / 60);
+	const rest = mins % 60;
+	return hours > 0 ? `${hours}h ${rest}m` : `${rest}m`;
+}
+
+/** Trim an optional string; "" / whitespace → null. */
+function emptyToNull(value) {
+	return value?.trim() || null;
+}
+
+/** Attempt duration in minutes: clamped to 0–999 (iOS Stepper limit). */
+function durationMinutesOf(value) {
+	const n = Math.floor(Number(value) || 0);
+	return Math.min(999, Math.max(0, n));
+}
+
+/** Attempt date as a Date; date-only strings parse as a LOCAL calendar date
+ * (see parseLocalDate), falling back to now (iOS defaults to today). */
+function attemptDateAsDate(value) {
+	return parseLocalDate(value) ?? new Date();
+}
+
+/**
+ * "Attempt #N - Nov 12, 2026 (2h 15m)" header + notes, mirroring the iOS
+ * prepend: the duration suffix is only appended for failed tries with a
+ * recorded duration.
+ */
+function buildAttemptEntry({ attemptNumber, date, durationMinutes, wasSuccessful, notes }) {
+	let header = `Attempt #${attemptNumber} - ${date.toLocaleDateString("en-US", { dateStyle: "medium" })}`;
+	if (durationMinutes > 0 && !wasSuccessful) {
+		header += ` (${durationLabel(durationMinutes)})`;
+	}
+	return `${header}\n${notes ?? ""}\n\n`;
+}
+
+/**
+ * Whether iOS prepends an attempt entry to the project notes: notes given,
+ * or a failed try with a recorded duration (duration-only failed attempts
+ * are logged too — that is what the header's duration suffix is for).
+ */
+function shouldPrependNotes({ notes, durationMinutes, wasSuccessful }) {
+	return Boolean(notes) || (durationMinutes > 0 && !wasSuccessful);
+}
+
+/** Status after the attempt: success completes; nil status → "active". */
+function projectStatusAfter(project, wasSuccessful) {
+	return wasSuccessful ? "completed" : (project.projectStatus ?? "active");
+}
+
+/** On success the send date replaces the project's date; otherwise unchanged. */
+function sendDateAfter(project, attemptDate, wasSuccessful) {
+	return wasSuccessful ? attemptDate : (project.date ?? null);
+}
+
+/** On success with a recorded duration the send's climb duration is stored;
+ * otherwise the previous value is kept (never cleared — iOS parity). */
+function climbDurationAfter(project, durationMinutes, wasSuccessful) {
+	if (wasSuccessful && durationMinutes > 0) {
+		return durationMinutes;
+	}
+	return project.climbDuration ?? 0;
+}
+
+/**
+ * Builds the saveClimbNote payload for logging one attempt against a project
+ * (pure). Mirrors AttemptLogView.saveAttempt():
+ *
+ * - attemptCount += 1, lastAttemptDate = attempt date
+ * - highPoint updated only when provided (otherwise preserved)
+ * - "Attempt #N" entry prepended to the project notes
+ * - status set to "active" if unset; on success "completed"
+ * - on success: sendType "redpoint", send date = attempt date,
+ *   climbDuration = duration when > 0 (fire-and-forget route counter is
+ *   applied by the caller, not here)
+ *
+ * @param {object} project current project state (overlay fields + loaded
+ *   climb): attempts, projectNotes, projectStatus, highPoint, date,
+ *   centralRouteID, plus route/climbingArea/crag/difficulty/routeType
+ *   passed through so the merged save does not clear them.
+ * @param {object} attempt attempt input: attemptDate, durationMinutes,
+ *   wasSuccessful, highPoint, notes
+ */
+export function buildAttemptFields(project, attempt) {
+	const attemptCount = (Number(project.attempts) || 0) + 1;
+	const date = attemptDateAsDate(attempt.attemptDate);
+	const durationMinutes = durationMinutesOf(attempt.durationMinutes);
+	const wasSuccessful = attempt.wasSuccessful === true;
+
+	let projectNotes = project.projectNotes ?? null;
+	if (shouldPrependNotes({ notes: attempt.notes, durationMinutes, wasSuccessful })) {
+		const entry = buildAttemptEntry({
+			attemptNumber: attemptCount,
+			date,
+			durationMinutes,
+			wasSuccessful,
+			notes: attempt.notes,
+		});
+		projectNotes = project.projectNotes ? entry + project.projectNotes : entry;
+	}
+
+	return {
+		recordName: project.recordName || undefined,
+		id: project.recordName ? undefined : crypto.randomUUID().toUpperCase(),
+		route: project.route,
+		climbingArea: project.climbingArea ?? null,
+		crag: project.crag ?? null,
+		difficulty: project.difficulty ?? null,
+		routeType: project.routeType,
+		noteText: emptyToNull(project.noteText) ?? "",
+		centralRouteID: project.centralRouteID ?? null,
+		reportedRating: 0, // projects never contribute to community rating
+
+		attemptCount,
+		lastAttemptDate: date,
+		highPoint: emptyToNull(attempt.highPoint) ?? project.highPoint ?? null,
+		projectNotes,
+		projectStatus: projectStatusAfter(project, wasSuccessful),
+		sendType: wasSuccessful ? "redpoint" : "Project",
+		date: sendDateAfter(project, date, wasSuccessful),
+		climbDuration: climbDurationAfter(project, durationMinutes, wasSuccessful),
+	};
+}

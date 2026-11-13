@@ -13,6 +13,7 @@ import {
 	serverTimestamp,
 	Timestamp,
 } from "firebase/firestore";
+import { normalizeLegacyUtcMidnight } from "./ui-theme.js";
 import { db } from "./firebase-config.js";
 import { getCurrentUser } from "./firebase-auth.js";
 import {
@@ -57,7 +58,7 @@ export async function fetchTrainingSessions() {
 			return {
 				recordName: d.id,
 				id: data.id ?? d.id,
-				date: data.date?.toDate() ?? null,
+				date: normalizeLegacyUtcMidnight(data.date?.toDate()) ?? null,
 				type: data.type ?? "Gym Session",
 				duration: data.duration ?? 60,
 				intensity: data.intensity ?? 3,

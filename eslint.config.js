@@ -60,6 +60,7 @@ export default [
       'app/js/send-form-model.js',
       'app/js/project-overlay-ui.js',
       'app/js/project-form-model.js',
+      'app/js/attempt-form-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

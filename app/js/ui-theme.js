@@ -101,6 +101,44 @@ export function renderRouteTypeChipsHtml(types, activeType = "") {
  *
  * @returns {string}
  */
+/** Local calendar date (YYYY-MM-DD) for <input type="date"> hydration and
+ * defaults — toISOString() would shift the day in non-UTC timezones, which
+ * round-trips badly with date inputs that were parsed as local dates. */
+export function formatDateInput(date = new Date()) {
+	if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+	const pad = (n) => String(n).padStart(2, "0");
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** Legacy-web compatibility: previous web versions parsed date-only inputs
+ * as UTC midnight, so their stored timestamps sit exactly at 00:00:00.000Z
+ * (iOS writes local-midnight dates instead). Normalize such timestamps to
+ * local midnight of the intended (UTC calendar) date so hydration doesn't
+ * shift the day in non-UTC timezones. New local-midnight records are
+ * untouched. */
+export function normalizeLegacyUtcMidnight(date) {
+	if (!(date instanceof Date) || Number.isNaN(date.getTime())) return date;
+	// Exact UTC midnight ⇔ the epoch milliseconds are a whole number of days.
+	if (date.getTime() % 86400000 !== 0) return date;
+	if (date.getTimezoneOffset() === 0) return date; // UTC zone: no shift
+	return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+/** Parse a date value as a LOCAL calendar date: "YYYY-MM-DD" strings become
+ * local midnight — matching iOS, which writes local-midnight dates (Core Data
+ * calendar dates). new Date("YYYY-MM-DD") parses as UTC midnight and shifts
+ * the day in non-UTC timezones. Date values pass through unchanged. */
+export function parseLocalDate(value) {
+	if (value instanceof Date) return value;
+	if (/^\d{4}-\d{2}-\d{2}$/.test(value ?? "")) {
+		const [y, m, d] = value.split("-").map(Number);
+		return new Date(y, m - 1, d);
+	}
+	if (!value) return null;
+	const parsed = new Date(value);
+	return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function renderInspectorEmptyHtml(message) {
 	const text = escapeInspectorHtml(
 		message ?? "Select a climb row to inspect route details, ascents, and coordinates.",

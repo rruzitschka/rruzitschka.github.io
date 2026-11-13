@@ -12,6 +12,8 @@ import {
 	renderRouteTypeChipsHtml,
 	styleAbbreviation,
 	formatShortNumericDate,
+	formatDateInput,
+	normalizeLegacyUtcMidnight,
 	STYLE_ABBREVIATIONS,
 	buildCompactClimbRowCellsHtml,
 	renderRouteCellIndicatorsHtml,
@@ -303,5 +305,54 @@ describe("Route Detail Inspector HTML rendering", () => {
 		]);
 		expect(html).toContain("insp-photos-strip");
 		expect(html).toContain("https://example.com/p1.jpg");
+	});
+});
+
+describe("formatDateInput", () => {
+	it("renders the local calendar date, not the UTC date", () => {
+		// 2026-11-12T00:30Z = 2026-11-12 01:30 local (UTC+1): the UTC slice
+		// would still be the 12th, but at 23:00Z local (UTC+1, 00:00 local)
+		// the UTC date is the previous day.
+		const localEvening = new Date(2026, 10, 12, 0, 30, 0); // local midnight
+		expect(formatDateInput(localEvening)).toBe("2026-11-12");
+	});
+
+	it("pads month and day", () => {
+		expect(formatDateInput(new Date(2026, 0, 5))).toBe("2026-01-05");
+	});
+
+	it("defaults to today, returns empty for null or invalid dates", () => {
+		expect(formatDateInput()).toBe(formatDateInput(new Date()));
+		expect(formatDateInput(null)).toBe("");
+		expect(formatDateInput(new Date("nonsense"))).toBe("");
+	});
+});
+
+describe("normalizeLegacyUtcMidnight", () => {
+	it("converts exact UTC-midnight timestamps (legacy web writes) to local midnight of the UTC date", () => {
+		const legacy = new Date("2026-03-01T00:00:00.000Z");
+		if (legacy.getTimezoneOffset() === 0) {
+			// Runner is in UTC: local midnight == UTC midnight, no shift possible.
+			expect(normalizeLegacyUtcMidnight(legacy)).toEqual(legacy);
+			return;
+		}
+		const fixed = normalizeLegacyUtcMidnight(legacy);
+		expect(fixed.getUTCHours()).not.toBe(0); // moved away from UTC midnight
+		// The intended date is the UTC calendar date — the local getters must
+		// re-express exactly that date.
+		expect(fixed.getFullYear()).toBe(2026);
+		expect(fixed.getMonth()).toBe(2);
+		expect(fixed.getDate()).toBe(1);
+	});
+
+	it("leaves timestamps with a time component untouched (iOS local-midnight writes, real datetimes)", () => {
+		const iosWrite = new Date("2026-02-28T23:00:00.000Z"); // local midnight in UTC+1
+		expect(normalizeLegacyUtcMidnight(iosWrite)).toEqual(iosWrite);
+		const realTime = new Date("2026-03-01T14:35:00.000Z");
+		expect(normalizeLegacyUtcMidnight(realTime)).toEqual(realTime);
+	});
+
+	it("passes through null", () => {
+		expect(normalizeLegacyUtcMidnight(null)).toBeNull();
 	});
 });

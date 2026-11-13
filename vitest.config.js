@@ -19,6 +19,7 @@ export default defineConfig({
         "app/js/ui-theme.js",
         "app/js/send-form-model.js",
         "app/js/project-form-model.js",
+        "app/js/attempt-form-model.js",
         "app/js/training-ui.js",
         "app/js/climb-table-ui.js",
       ],

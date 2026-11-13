@@ -6,6 +6,8 @@
 
 "use strict";
 
+import { parseLocalDate } from "./ui-theme.js";
+
 /** Trim and collapse an optional string to null when empty. */
 export function emptyToNull(value) {
 	return value?.trim() || null;
@@ -50,10 +52,10 @@ export function buildProjectSavePayload(fields) {
 		crag: emptyToNull(fields.crag),
 		difficulty: fields.difficulty || null,
 		sendType: "Project",
-		date: fields.date ? new Date(fields.date) : null,
+		date: parseLocalDate(fields.date),
 		routeType: fields.routeType,
 		attemptCount: coerceAttemptCount(fields.attempts),
-		lastAttemptDate: fields.lastAttemptDate ? new Date(fields.lastAttemptDate) : null,
+		lastAttemptDate: parseLocalDate(fields.lastAttemptDate),
 		highPoint: emptyToNull(fields.highPoint),
 		projectStatus: fields.projectStatus,
 		noteText: emptyToNull(fields.noteText),
