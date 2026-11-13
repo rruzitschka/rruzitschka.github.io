@@ -532,3 +532,33 @@ footer {
 @media (max-width: 480px) {
     .screenshots { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Web-app screenshots (Photos & Topos section) ──────────────────── */
+
+.web-shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.8rem;
+    margin: 0.7rem 0 0.3rem;
+}
+
+.web-shot-container {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    aspect-ratio: 16/10;
+}
+
+.web-shots img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+    display: block;
+    cursor: pointer;
+    border-radius: 0;
+    filter: brightness(0.85) saturate(0.7);
+    transition: filter 0.2s;
+}
+
+.web-shots img:hover { filter: brightness(1) saturate(1); }

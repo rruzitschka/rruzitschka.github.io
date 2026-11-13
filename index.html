@@ -40,6 +40,7 @@
     <div class="nav-container">
       <nav>
         <a href="#whats-new">What's New</a>
+        <a href="#web-photos">Photos &amp; Topos on Web</a>
         <a href="#screenshots">Screenshots</a>
         <a href="#faq">FAQ</a>
         <a href="#about-me">About Me</a>
@@ -147,13 +148,66 @@
         <img id="lightbox-img" src="" alt="Enlarged Screenshot" />
       </div>
 
+      <h2 id="web-photos">New: Photos &amp; Topos in the Web App</h2>
+      <div class="web-photos-intro">
+        <p>
+          The web app now shares the iOS app's dark redesign: plan your
+          project on the big screen, then climb at the crag. Route
+          photos and topos (area sketch photos) are fully in the loop: upload
+          them on the web, and they appear on your iPhone, and the other way
+          around.
+        </p>
+      </div>
+      <div class="web-shots">
+        <div class="web-shot-container">
+          <img
+            src="images/web-photos-inspector_thumb.png"
+            alt="Web app logbook with the Route Detail inspector showing photos and a topo"
+            onclick="showLightbox('images/web-photos-inspector.png', 8)"
+          />
+        </div>
+        <div class="web-shot-container">
+          <img
+            src="images/web-photos-overlay_thumb.png"
+            alt="Web edit overlay with a photo section, add-photo button and topo toggle"
+            onclick="showLightbox('images/web-photos-overlay.png', 9)"
+          />
+        </div>
+      </div>
+      <div class="whats-new-list">
+        <ul>
+          <li>
+            <strong>Upload from the browser:</strong> add photos to any climb
+            directly in the edit overlay. Images are downscaled and
+            re-encoded in your browser before upload, which also strips GPS
+            metadata (EXIF) for privacy.
+          </li>
+          <li>
+            <strong>Topos, marked and separated:</strong> sketch photos of
+            the climbing area carry a "Topo" badge and get their own row in
+            the Route Detail inspector: the crag plan you need at the wall,
+            now readable on any device.
+          </li>
+          <li>
+            <strong>Full-screen viewer:</strong> click any photo or topo to
+            open it in a full-screen overlay window with keyboard navigation
+            (arrow keys, Escape).
+          </li>
+          <li>
+            <strong>Manage in place:</strong> mark-as-topo toggle and delete
+            (with confirmation) sit right next to every photo in the edit
+            overlay.
+          </li>
+        </ul>
+      </div>
+
       <h2 id="features">App Features</h2>
       <div class="feature-grid">
         <div class="feature-card">
           <h3>Log Climbing Routes</h3>
           <p>
             Route name, area, date, grade, send type, personal rating and notes
-            — all in one quick form.
+            : all in one quick form.
           </p>
         </div>
         <div class="feature-card">
@@ -209,7 +263,7 @@
         <div class="feature-card">
           <h3>Multi-Pitch & Route Types</h3>
           <p>
-            Sport, Boulder, and Multi-Pitch — colour-coded, filterable, and
+            Sport, Boulder, and Multi-Pitch: colour-coded, filterable, and
             tracked separately.
           </p>
         </div>
@@ -266,8 +320,8 @@
         <ul>
           <li>
             <strong>Gym Logging:</strong> New "Gym" and "Gym Boulder" route
-            types for indoor climbing. The log form adapts — gym name instead
-            of crag, no community-database search or GPS capture — and gym
+            types for indoor climbing. The log form adapts: gym name instead
+            of crag, no community-database search or GPS capture, and gym
             sends count toward your stats and goals. Boulder logs use
             boulder-native send types (Flash / Top), and Gym Boulder grades
             follow a new "Boulder Grade System" setting (Fontainebleau
@@ -278,7 +332,7 @@
             sessions get a dedicated wizard: gym name with autocomplete,
             optional route lines (grade, lead/top-rope, sent/failed), and
             attaching notable same-day gym sends. The session detail shows a
-            day summary ("2 h, 5 warm-ups, 1 send") — warm-up volume never
+            day summary ("2 h, 5 warm-ups, 1 send"); warm-up volume never
             appears in your send list or grade stats.
           </li>
           <li>
@@ -309,13 +363,13 @@
           </li>
           <li>
             <strong>Unified Detail Screens:</strong> Sends and projects share
-            the same clear structure — location with a "Route Start" map
+            the same clear structure: location with a "Route Start" map
             link, route details, rating stars and the community badge in one
             compact row, photos, multi-pitch plan, and notes.
           </li>
           <li>
             <strong>Country Flags:</strong> Routes from the community database
-            show their country flag right in your log list — also for routes
+            show their country flag right in your log list, also for routes
             without a GPS start point.
           </li>
           <li>
@@ -326,7 +380,7 @@
           <li>
             <strong>Smarter Search:</strong> Community route search ignores
             apostrophe variants, so "L'Ocaive" is found no matter which
-            quote you type — or none at all.
+            quote you type, or none at all.
           </li>
         </ul>
       </div>
@@ -336,7 +390,7 @@
         <ul>
           <li>
             <strong>Search Your Logs:</strong> A search field on the SendLogs
-            tab filters your entries by route, crag, or area — case- and
+            tab filters your entries by route, crag, or area, case- and
             accent-insensitive, live as you type.
           </li>
           <li>
@@ -352,8 +406,8 @@
         <ul>
           <li>
             <strong>Multi-Pitch Route Planning:</strong> Route Type
-            "Multi-Pitch" unlocks a dedicated planning section — number of
-            pitches, approach notes, descent notes, and gear notes —
+            "Multi-Pitch" unlocks a dedicated planning section with number of
+            pitches, approach notes, descent notes, and gear notes.
             editable when creating or editing a send or project.
           </li>
           <li>
@@ -386,7 +440,7 @@
           </li>
           <li>
             <strong>Photos in Project Detail:</strong> Projects now show a
-            full photo strip with the same carousel — useful for attaching
+            full photo strip with the same carousel, useful for attaching
             topo screenshots when planning a route.
           </li>
           <li>
@@ -415,13 +469,13 @@
           <li>
             <strong>Stats Filter Chips:</strong> Period, Unique Only / All
             Climbs, and Incl. / Excl. Training are now a compact horizontal chip
-            strip instead of stacked buttons — faster to switch and easier to
+            strip instead of stacked buttons: faster to switch and easier to
             read at a glance.
           </li>
           <li>
             <strong>Training Session Detail View:</strong> Tap any training row
             to open a full detail view with Type, Date, Duration, Intensity, and
-            Notes. Edit or Delete straight from the header — same pattern as
+            Notes. Edit or Delete straight from the header, same pattern as
             climb details.
           </li>
           <li>
@@ -437,7 +491,7 @@
         <ul>
           <li>
             <strong>Community Ratings:</strong> Routes in the Central Route
-            Database now show a community star rating — the average of all
+            Database now show a community star rating: the average of all
             individual ratings contributed by climbers who have logged that
             route. The rating appears in search results and in the route detail
             view, so you can see how the community rates a climb before you get
@@ -450,10 +504,10 @@
       <div class="whats-new-list">
         <ul>
           <li>
-            <strong>Goals — Full Feature:</strong> Edit and delete goals at any
+            <strong>Goals, Full Feature:</strong> Edit and delete goals at any
             time. Achieved grade goals are kept permanently as a milestone
             history. A confetti animation plays when a goal is first reached.
-            Grade goals only count actual sends — a route sitting in your
+            Grade goals only count actual sends: a route sitting in your
             projects does not count.
           </li>
           <li>
@@ -485,7 +539,7 @@
           <li>
             <strong>Route Search Overlay:</strong> New 🔍 icon next to the Route
             Name field opens an instant search overlay. Select a route to
-            pre-fill name, crag, area, and grade — or create a new route if it
+            pre-fill name, crag, area, and grade, or create a new route if it
             doesn't exist yet.
           </li>
           <li>
@@ -501,7 +555,7 @@
           <li>
             <strong>Cloud Sync:</strong> Optional Firebase-powered backup and
             cross-device sync for climbs, ascents, and photos. Sign in with
-            Apple — app stays fully offline by default
+            Apple, app stays fully offline by default
           </li>
           <li>
             <strong>Grade Expansion:</strong> French 5b+ and 5c+ added as
@@ -510,12 +564,12 @@
           </li>
           <li>
             <strong>Duplicate Send:</strong> New ⧉ button in the send detail
-            view — opens a pre-filled form with the same area, crag, grade, and
+            view: it opens a pre-filled form with the same area, crag, grade, and
             type so logging similar routes is instant
           </li>
           <li>
             <strong>Account Deletion:</strong> Delete your cloud account
-            directly from Settings — local data is preserved and the app
+            directly from Settings; local data is preserved and the app
             continues in offline mode
           </li>
           <li>
@@ -621,7 +675,7 @@
           <div class="faq-answer">
             By default, all your data is stored locally on your device and never
             leaves it. If you choose to enable Cloud Sync, your data is stored
-            in Firebase (Google Cloud) and protected by Sign in with Apple — no
+            in Firebase (Google Cloud) and protected by Sign in with Apple, no
             password is ever created or stored.
           </div>
         </div>
@@ -635,7 +689,7 @@
             Cloud Sync is entirely optional. Turn it on in Settings &rarr; Cloud
             Sync and sign in with Apple. Your climbs, ascents, and photos are
             then backed up and accessible across all your devices. The app
-            continues to work fully offline at all times — Cloud Sync only runs
+            continues to work fully offline at all times; Cloud Sync only runs
             when a connection is available.
           </div>
         </div>
@@ -687,7 +741,7 @@
             <span class="faq-chevron">&#9660;</span>
           </button>
           <div class="faq-answer">
-            No. SendLog works entirely offline — all your climbing logs and
+            No. SendLog works entirely offline: all your climbing logs and
             statistics are always available, even at the crag. An internet
             connection is only needed if you choose to enable the optional Cloud
             Sync feature.
@@ -713,7 +767,7 @@
           </button>
           <div class="faq-answer">
             The app automatically calculates your highest grade based on
-            successfully completed (sent) routes only — projects are excluded.
+            successfully completed (sent) routes only; projects are excluded.
             This gives you a clear and honest view of your climbing progression
             over time.
           </div>
@@ -729,7 +783,7 @@
             climbing routes. When logging a send or project, tap the &#128269;
             icon next to the Route Name field to search for the route. Selecting
             it pre-fills the form and links your log to the shared route record
-            — so you can see how many other SendLog users have sent or projected
+            , so you can see how many other SendLog users have sent or projected
             the same route, and the community star rating.
           </div>
         </div>
@@ -742,7 +796,7 @@
           <div class="faq-answer">
             Yes. Once Cloud Sync is enabled, you can generate personal read-only
             API keys in the Web App under My Account &rarr; API Keys. Keys give
-            third-party tools — dashboards and spreadsheets — scoped access to
+            third-party tools (dashboards and spreadsheets): scoped access to
             your climbs, training, and goals data. Full documentation is at
             <a href="pages/api.html">sendlog.at/docs/api</a>.
           </div>
@@ -811,6 +865,8 @@
         "images/screenshot6.png",
         "images/screenshot7.png",
         "images/screenshot8.png",
+        "images/web-photos-inspector.png",
+        "images/web-photos-overlay.png",
       ];
 
       let currentIndex = 0;
