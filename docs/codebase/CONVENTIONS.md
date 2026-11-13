@@ -48,8 +48,16 @@ Hard rules. Breaking any of these is a bug.
     Classic fallback anymore; never add `classic-only`/`cs-only` switches.
 17. **Design tokens**: `#0d1117` canvas, `#161b22` cards, `#30363d` borders,
     accent `#76D6FF` (the iOS `CardBackground` asset), iOS route-type colors
-    (Sport blue, Boulder orange, Multi-Pitch purple, Trad green, Gym mint).
+    (Sport blue, Boulder orange, Multi-Pitch purple, Trad green, Gym mint)
+    as CSS variables `--rt-color-*` — never hardcode the hexes.
     Accent-on-accent text is `#042436`.
+17a. **Route-type color system**: chips show the type color as label font
+    (no dots); the table's Type badge uses the same font color
+    (`rt-text-*` classes via `routeTypeColorClass()`). Chip order is
+    canonical (`ROUTE_TYPE_CHIP_ORDER`), not alphabetical, and Gym Boulder
+    is merged into one "Gym" chip/filter (`matchesRouteTypeFilter`) — but
+    table badges keep the per-type color (Gym teal vs Gym Boulder green):
+    the color encodes the row's actual type, the chip encodes the filter.
 18. **No emojis in the new UI** — use stroke SVG icons or text; send styles
     are abbreviated (`RP/OS/TR/AF/PP/PJ/FL/TP`, `styleAbbreviation()` in
     `ui-theme.js`) with the full name as `title` tooltip everywhere.

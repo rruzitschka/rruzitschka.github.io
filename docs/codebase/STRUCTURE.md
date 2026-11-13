@@ -33,7 +33,7 @@ on a held-back branch until the release.
 | --- | --- |
 | `firebase-config.js` | Firebase init, `db` export |
 | `firebase-auth.js` | Auth (Apple sign-in), `getCurrentUser` |
-| `firebase-climbs.js` | climbNotes CRUD, ascents, stats, filters, `fetchSessionSends` |
+| `firebase-climbs.js` | climbNotes CRUD, ascents, stats, filters (`matchesRouteTypeFilter`: Gym filter covers Gym + Gym Boulder), `fetchSessionSends` |
 | `firebase-training.js` | trainingSessions CRUD + `computeTrainingStats` |
 | `firebase-routes.js` | Central route DB (`routes/`): search, create/update, counters, ratings |
 | `firebase-api-keys.js` | API key management (admin) |
@@ -53,8 +53,8 @@ on a held-back branch until the release.
 | `route-line-ui.js` | Training overlay gym route lines (DOM wiring only — detail-card HTML builders moved to `ui-theme.js`) |
 | `admin.js` | Admin panel; markup built with semantic `ad-*` classes (no inline styles) |
 | `route-link-ui.js` | Find-route button state for the soft-link UI |
-| `ui-theme.js` | New-UI pure helpers: route-type chips, compact climb rows (shorthand styles, locale dates), shared Route Detail card renderer, training-session detail card (`renderTrainingDetailHtml`), star rows (`renderStarsHtml`) |
-| `climb-inspector-ui.js` | New-UI DOM wiring: route-type chip bar (synced with #filter-routetype), right-hand Route Detail Inspector, theme switch (removed toggle — new UI is unconditional) |
+| `ui-theme.js` | New-UI pure helpers: route-type chips (canonical order via `orderRouteTypeFilterValues`, Gym Boulder merged into Gym, colored label font), compact climb rows (shorthand styles, locale dates, colored Type badge), shared Route Detail card renderer incl. the Log Attempt section (`renderInspectorAttemptSectionHtml`), training-session detail card (`renderTrainingDetailHtml`), star rows (`renderStarsHtml`) |
+| `climb-inspector-ui.js` | New-UI DOM wiring: route-type chip bar (synced with #filter-routetype), right-hand Route Detail Inspector incl. the interactive Log Attempt section (expandable pane form; on success re-renders the completed detail explicitly since the climb left the Projects filter), mock services via `setClimbInspectorMockServices` |
 | `overlay-country.js` | Country select sync for overlays |
 | `reverse-geocode.js` | BigDataCloud reverse geocoding (admin GPS pin) |
 | `admin-routes-browser.js` | Admin route browser query helpers (search folding, filter order, sort — nameSearch asc default, createdAt desc "newest first" browse-all) |
@@ -73,7 +73,8 @@ on a held-back branch until the release.
 | `send-form-model.js` | Pure send-overlay helpers (unit-tested): save-payload builder, community-rating delta logic (`sendRatingReportCalls`), style-pill class, ascent input builder |
 | `project-overlay-ui.js` | Project overlay: add/edit project, attempts counters, mark-as-sent (project → send transition), community-rating retraction |
 | `project-form-model.js` | Pure project-overlay helpers (unit-tested): save-payload builder, counter bookkeeping (`projectCounterChange`), attempt-count coercion, date validation |
+| `attempt-form-model.js` | Pure Log-Attempt helpers (unit-tested, iOS `AttemptLogView` parity): `buildAttemptFields` payload builder, shared `saveAttempt` pipeline (save → fire-and-forget route counter → refresh) used by both the project overlay and the inspector pane, `attemptProjectStateFromClimb` |
 | `stats.js` | Stats page (legacy script, window globals) |
 | `grades.js` | Grade systems + pickers (legacy script, window globals) |
 | `admin.js` | Admin panel |
-| `mock.js` | In-memory mock services for `?mock=true` (no sign-in, no data risk) |
+| `mock.js` | In-memory mock services for `?mock=true` (no sign-in, no data risk); `fetchClimbs` normalizes sendType on read like `firebase-climbs` (Title Case display) |
