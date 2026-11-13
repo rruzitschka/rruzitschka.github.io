@@ -15,6 +15,7 @@ import {
 	formatDateInput,
 	renderMultiPitchPlanHtml,
 	coercePitchCount,
+	parseLocalDate,
 	normalizeLegacyUtcMidnight,
 	STYLE_ABBREVIATIONS,
 	buildCompactClimbRowCellsHtml,
@@ -418,5 +419,22 @@ describe("coercePitchCount", () => {
 		expect(coercePitchCount("500")).toBe(99);
 		expect(coercePitchCount("")).toBe(0);
 		expect(coercePitchCount("abc")).toBe(0);
+	});
+});
+
+describe("parseLocalDate", () => {
+	it("returns null for missing values", () => {
+		expect(parseLocalDate("")).toBeNull();
+		expect(parseLocalDate(null)).toBeNull();
+		expect(parseLocalDate(undefined)).toBeNull();
+	});
+
+	it("passes Date values through unchanged", () => {
+		const d = new Date(2026, 4, 1, 12, 30);
+		expect(parseLocalDate(d)).toBe(d);
+	});
+
+	it("returns null for unparseable strings", () => {
+		expect(parseLocalDate("not a date")).toBeNull();
 	});
 });
